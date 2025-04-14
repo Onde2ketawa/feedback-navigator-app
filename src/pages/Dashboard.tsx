@@ -326,7 +326,7 @@ const Dashboard: React.FC = () => {
                   <SelectValue placeholder="All Channels" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Channels</SelectItem>
+                  <SelectItem value="all">All Channels</SelectItem>
                   <SelectItem value="LINE Bank">LINE Bank</SelectItem>
                   <SelectItem value="MyHana">MyHana</SelectItem>
                 </SelectContent>
@@ -358,7 +358,7 @@ const Dashboard: React.FC = () => {
                   <SelectValue placeholder="All Years" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Years</SelectItem>
+                  <SelectItem value="all">All Years</SelectItem>
                   <SelectItem value="2025">2025</SelectItem>
                   <SelectItem value="2024">2024</SelectItem>
                   <SelectItem value="2023">2023</SelectItem>
@@ -372,7 +372,7 @@ const Dashboard: React.FC = () => {
                   <SelectValue placeholder="All Months" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Months</SelectItem>
+                  <SelectItem value="all">All Months</SelectItem>
                   <SelectItem value="1">January</SelectItem>
                   <SelectItem value="2">February</SelectItem>
                   <SelectItem value="3">March</SelectItem>

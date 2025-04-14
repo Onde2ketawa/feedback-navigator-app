@@ -199,4 +199,4 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
       </form>
     </Form>
   );
-};
+}
