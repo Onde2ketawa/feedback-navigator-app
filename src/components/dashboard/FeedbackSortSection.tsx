@@ -11,15 +11,10 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FeedbackFilter } from '@/hooks/useFeedbackData';
 
 interface SortSectionProps {
-  onFilterChange: (filters: {
-    channel: string | null;
-    year: string | null;
-    month: string | null;
-    ratingMin: number;
-    ratingMax: number;
-  }) => void;
+  onFilterChange: (filters: FeedbackFilter) => void;
 }
 
 export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange }) => {
@@ -46,7 +41,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
         ...(channelsData?.map(c => c.name) || [])
       ]);
 
-      // Fetch unique years
+      // Fetch unique years from submit_date
       const { data: yearsData } = await supabase
         .from('customer_feedback')
         .select('submit_date')
@@ -54,7 +49,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
       
       const uniqueYears = Array.from(
         new Set(yearsData?.map(item => new Date(item.submit_date).getFullYear().toString()))
-      ).sort((a, b) => parseInt(b) - parseInt(a));
+      ).sort((a, b) => parseInt(b) - parseInt(a)); // Latest year first
       
       setAvailableYears(['all', ...uniqueYears]);
     };
@@ -73,7 +68,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
       const { data } = await supabase
         .from('customer_feedback')
         .select('submit_date')
-        .gt('submit_date', `${selectedYear}-01-01`)
+        .gte('submit_date', `${selectedYear}-01-01`)
         .lt('submit_date', `${parseInt(selectedYear) + 1}-01-01`);
       
       const months = Array.from(
@@ -114,7 +109,12 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
           <label className="block text-sm font-medium mb-2">Channel</label>
           <Select 
             value={selectedChannel} 
-            onValueChange={setSelectedChannel}
+            onValueChange={(value) => {
+              setSelectedChannel(value);
+              // Reset year and month when channel changes
+              setSelectedYear('all');
+              setSelectedMonth('all');
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select Channel" />
@@ -161,7 +161,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
               disabled={selectedYear === 'all'}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select Month" />
+                <SelectValue placeholder={selectedYear === 'all' ? 'Select Year First' : 'Select Month'} />
               </SelectTrigger>
               <SelectContent>
                 {availableMonths.map(month => (
@@ -185,7 +185,6 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
             step={1}
             value={ratingRange}
             onValueChange={setRatingRange}
-            minStepsBetweenThumbs={0}
           />
         </div>
 
