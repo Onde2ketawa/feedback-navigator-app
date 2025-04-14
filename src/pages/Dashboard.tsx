@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,15 +19,16 @@ const Dashboard: React.FC = () => {
   
   const [filter, setFilter] = useState({
     channel: null as string | null,
-    rating: 0,
     year: null as string | null,
     month: null as string | null,
+    ratingMin: 1,
+    ratingMax: 5
   });
   
-  // Fetch feedback data from Supabase with dynamic filtering
   const { data: feedbackData, isLoading, error } = useQuery({
     queryKey: ['feedback', filter],
     queryFn: async () => {
+      console.log("Applying filters:", filter);
       let query = supabase
         .from('customer_feedback')
         .select(`
@@ -43,7 +43,6 @@ const Dashboard: React.FC = () => {
           sentiment_score
         `);
       
-      // Apply filters
       if (filter.channel) {
         query = query.eq('channel_id.name', filter.channel);
       }
@@ -58,15 +57,13 @@ const Dashboard: React.FC = () => {
                      .lt('submit_date', `${filter.year}-${(parseInt(filter.month) + 1).toString().padStart(2, '0')}-01`);
       }
       
-      if (filter.rating > 0) {
-        query = query.eq('rating', filter.rating);
-      }
+      query = query.gte('rating', filter.ratingMin)
+                   .lte('rating', filter.ratingMax);
       
       const { data, error } = await query;
       
       if (error) throw error;
       
-      // Transform the data to match our Feedback interface
       return data.map(item => ({
         id: item.id,
         channel: item.channel?.name || '',
@@ -88,11 +85,13 @@ const Dashboard: React.FC = () => {
     ratingMin: number;
     ratingMax: number;
   }) => {
+    console.log("Filters changed:", filters);
     setFilter({
       channel: filters.channel,
       year: filters.year,
       month: filters.month,
-      rating: filters.ratingMin // For simplicity, we'll use the min rating
+      ratingMin: filters.ratingMin,
+      ratingMax: filters.ratingMax
     });
   };
 
@@ -105,7 +104,6 @@ const Dashboard: React.FC = () => {
   
   const handleCategoryChange = async (feedbackId: string, category: string, subcategory: string) => {
     try {
-      // Update the category and subcategory in Supabase
       const { error } = await supabase
         .from('customer_feedback')
         .update({ 
