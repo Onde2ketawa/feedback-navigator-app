@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { FeedbackTable } from '@/components/dashboard/FeedbackTable';
 import { BulkActionButtons } from '@/components/dashboard/BulkActionButtons';
-import { FeedbackFilters } from '@/components/dashboard/FeedbackFilters';
+import { FeedbackSortSection } from '@/components/dashboard/FeedbackSortSection';
 import { FeedbackCategoryDialog } from '@/components/dashboard/FeedbackCategoryDialog';
 import { Feedback, mockCategories, mockSubcategories } from '@/models/feedback';
 import { useQuery } from '@tanstack/react-query';
@@ -19,17 +19,17 @@ const Dashboard: React.FC = () => {
   const { toast } = useToast();
   
   const [filter, setFilter] = useState({
-    channel: '',
+    channel: null as string | null,
     rating: 0,
-    year: '',
-    month: '',
+    year: null as string | null,
+    month: null as string | null,
   });
   
-  // Fetch feedback data from Supabase
+  // Fetch feedback data from Supabase with dynamic filtering
   const { data: feedbackData, isLoading, error } = useQuery({
-    queryKey: ['feedback'],
+    queryKey: ['feedback', filter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('customer_feedback')
         .select(`
           id,
@@ -42,6 +42,27 @@ const Dashboard: React.FC = () => {
           sentiment,
           sentiment_score
         `);
+      
+      // Apply filters
+      if (filter.channel) {
+        query = query.eq('channel_id.name', filter.channel);
+      }
+      
+      if (filter.year) {
+        query = query.gte('submit_date', `${filter.year}-01-01`)
+                     .lt('submit_date', `${parseInt(filter.year) + 1}-01-01`);
+      }
+      
+      if (filter.month) {
+        query = query.gte('submit_date', `${filter.year}-${filter.month.padStart(2, '0')}-01`)
+                     .lt('submit_date', `${filter.year}-${(parseInt(filter.month) + 1).toString().padStart(2, '0')}-01`);
+      }
+      
+      if (filter.rating > 0) {
+        query = query.eq('rating', filter.rating);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       
@@ -60,23 +81,21 @@ const Dashboard: React.FC = () => {
     }
   });
   
-  // Filter data based on current filter settings
-  const filteredData = feedbackData ? feedbackData.filter(item => {
-    if (filter.channel && filter.channel !== 'all' && item.channel !== filter.channel) return false;
-    if (filter.rating > 0 && item.rating !== filter.rating) return false;
-    
-    if (filter.year && filter.year !== 'all' || filter.month && filter.month !== 'all') {
-      const date = new Date(item.submitDate);
-      const year = date.getFullYear().toString();
-      const month = (date.getMonth() + 1).toString();
-      
-      if (filter.year && filter.year !== 'all' && year !== filter.year) return false;
-      if (filter.month && filter.month !== 'all' && month !== filter.month) return false;
-    }
-    
-    return true;
-  }) : [];
-  
+  const handleFilterChange = (filters: {
+    channel: string | null;
+    year: string | null;
+    month: string | null;
+    ratingMin: number;
+    ratingMax: number;
+  }) => {
+    setFilter({
+      channel: filters.channel,
+      year: filters.year,
+      month: filters.month,
+      rating: filters.ratingMin // For simplicity, we'll use the min rating
+    });
+  };
+
   const handleExport = () => {
     toast({
       title: "Export Started",
@@ -155,20 +174,25 @@ const Dashboard: React.FC = () => {
         />
       </PageHeader>
       
-      <FeedbackFilters filter={filter} setFilter={setFilter} />
-      
-      <Card>
-        <CardContent className="pt-6">
-          <FeedbackTable
-            data={filteredData}
-            categories={mockCategories}
-            subcategories={mockSubcategories}
-            selectedRows={selectedRows}
-            setSelectedRows={setSelectedRows}
-            openTagDialog={openTagDialog}
-          />
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="md:col-span-1">
+          <FeedbackSortSection onFilterChange={handleFilterChange} />
+        </div>
+        <div className="md:col-span-3">
+          <Card>
+            <CardContent className="pt-6">
+              <FeedbackTable
+                data={feedbackData || []}
+                categories={mockCategories}
+                subcategories={mockSubcategories}
+                selectedRows={selectedRows}
+                setSelectedRows={setSelectedRows}
+                openTagDialog={openTagDialog}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
       
       <FeedbackCategoryDialog
         isOpen={isDialogOpen}
