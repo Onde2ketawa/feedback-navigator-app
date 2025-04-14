@@ -10,6 +10,7 @@ import { useFeedbackData, FeedbackFilter } from '@/hooks/useFeedbackData';
 import { LoadingState } from '@/components/dashboard/LoadingState';
 import { ErrorState } from '@/components/dashboard/ErrorState';
 import { DashboardContent } from '@/components/dashboard/DashboardContent';
+import { DashboardStats } from '@/components/dashboard/DashboardStats';
 
 const Dashboard: React.FC = () => {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
@@ -98,6 +99,8 @@ const Dashboard: React.FC = () => {
           onBulkTag={handleBulkTag} 
         />
       </PageHeader>
+      
+      <DashboardStats />
       
       <DashboardContent
         feedbackData={feedbackData || []}
