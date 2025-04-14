@@ -7,8 +7,10 @@ import {
   useReactTable,
   SortingState,
   ColumnFiltersState,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
 } from '@tanstack/react-table';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DataTablePagination } from '@/components/ui/data-table-pagination';
 import { DataTableContent } from '@/components/ui/data-table-content';
 
@@ -36,11 +38,11 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: pagination ? require('@tanstack/react-table').getPaginationRowModel() : undefined,
+    getPaginationRowModel: pagination ? getPaginationRowModel() : undefined,
     onSortingChange: setSorting,
-    getSortedRowModel: require('@tanstack/react-table').getSortedRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: filtering ? require('@tanstack/react-table').getFilteredRowModel() : undefined,
+    getFilteredRowModel: filtering ? getFilteredRowModel() : undefined,
     manualPagination: !!onPaginationChange,
     pageCount: pageCount,
     state: {
