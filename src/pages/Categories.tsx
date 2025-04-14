@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { 
   Card, 
@@ -24,7 +24,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { 
   DropdownMenu,
@@ -32,8 +31,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, MoreVertical, Pencil, Trash, Tag } from 'lucide-react';
+import { Plus, MoreVertical, Pencil, Trash, Tag, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface CategoryType {
   id: string;
@@ -42,31 +43,11 @@ interface CategoryType {
 
 interface SubcategoryType {
   id: string;
-  categoryId: string;
+  category_id: string;
   name: string;
 }
 
 const Categories: React.FC = () => {
-  // Mock data
-  const [categories, setCategories] = useState<CategoryType[]>([
-    { id: 'cat1', name: 'Technical Issues' },
-    { id: 'cat2', name: 'Customer Service' },
-    { id: 'cat3', name: 'Product Features' },
-    { id: 'cat4', name: 'Usability' },
-  ]);
-  
-  const [subcategories, setSubcategories] = useState<SubcategoryType[]>([
-    { id: 'sub1', categoryId: 'cat1', name: 'Login Problems' },
-    { id: 'sub2', categoryId: 'cat1', name: 'App Crashes' },
-    { id: 'sub3', categoryId: 'cat1', name: 'Slow Performance' },
-    { id: 'sub4', categoryId: 'cat2', name: 'Response Time' },
-    { id: 'sub5', categoryId: 'cat2', name: 'Staff Knowledge' },
-    { id: 'sub6', categoryId: 'cat3', name: 'Missing Features' },
-    { id: 'sub7', categoryId: 'cat3', name: 'Feature Requests' },
-    { id: 'sub8', categoryId: 'cat4', name: 'UI Design' },
-    { id: 'sub9', categoryId: 'cat4', name: 'Navigation' },
-  ]);
-  
   // State for dialogs
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddSubcategoryOpen, setIsAddSubcategoryOpen] = useState(false);
@@ -82,6 +63,221 @@ const Categories: React.FC = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState<SubcategoryType | null>(null);
   
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Fetch categories from Supabase
+  const { data: categories, isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+        
+      if (error) throw error;
+      return data as CategoryType[];
+    }
+  });
+  
+  // Fetch subcategories from Supabase
+  const { data: subcategories, isLoading: subcategoriesLoading } = useQuery({
+    queryKey: ['subcategories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subcategories')
+        .select('*')
+        .order('name');
+        
+      if (error) throw error;
+      return data as SubcategoryType[];
+    }
+  });
+  
+  // Add category mutation
+  const addCategoryMutation = useMutation({
+    mutationFn: async (categoryName: string) => {
+      const { data, error } = await supabase
+        .from('categories')
+        .insert([{ name: categoryName }])
+        .select();
+        
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      setIsAddCategoryOpen(false);
+      setNewCategoryName('');
+      toast({
+        title: "Category added",
+        description: `"${newCategoryName}" has been added successfully.`,
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add category. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Edit category mutation
+  const editCategoryMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { data, error } = await supabase
+        .from('categories')
+        .update({ name })
+        .eq('id', id)
+        .select();
+        
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      setIsEditCategoryOpen(false);
+      toast({
+        title: "Category updated",
+        description: `Category has been updated to "${editCategoryName}".`,
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update category. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Delete category mutation
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+      
+      const categoryToDelete = categories?.find(cat => cat.id === id);
+      
+      toast({
+        title: "Category deleted",
+        description: `"${categoryToDelete?.name}" has been deleted.`,
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete category. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Add subcategory mutation
+  const addSubcategoryMutation = useMutation({
+    mutationFn: async ({ categoryId, name }: { categoryId: string; name: string }) => {
+      const { data, error } = await supabase
+        .from('subcategories')
+        .insert([{ 
+          category_id: categoryId, 
+          name 
+        }])
+        .select();
+        
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+      setIsAddSubcategoryOpen(false);
+      setNewSubcategoryName('');
+      
+      toast({
+        title: "Subcategory added",
+        description: `"${newSubcategoryName}" has been added to "${selectedCategory?.name}".`,
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding subcategory:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add subcategory. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Edit subcategory mutation
+  const editSubcategoryMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { data, error } = await supabase
+        .from('subcategories')
+        .update({ name })
+        .eq('id', id)
+        .select();
+        
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+      setIsEditSubcategoryOpen(false);
+      
+      toast({
+        title: "Subcategory updated",
+        description: `Subcategory has been updated to "${editSubcategoryName}".`,
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating subcategory:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update subcategory. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Delete subcategory mutation
+  const deleteSubcategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('subcategories')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+      
+      const subcategoryToDelete = subcategories?.find(sub => sub.id === id);
+      
+      toast({
+        title: "Subcategory deleted",
+        description: `"${subcategoryToDelete?.name}" has been deleted.`,
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting subcategory:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete subcategory. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
   
   // Handlers
   const handleAddCategory = () => {
@@ -94,15 +290,7 @@ const Categories: React.FC = () => {
       return;
     }
     
-    const newId = `cat${categories.length + 1}`;
-    setCategories([...categories, { id: newId, name: newCategoryName }]);
-    setNewCategoryName('');
-    setIsAddCategoryOpen(false);
-    
-    toast({
-      title: "Category added",
-      description: `"${newCategoryName}" has been added successfully.`,
-    });
+    addCategoryMutation.mutate(newCategoryName);
   };
   
   const handleEditCategory = () => {
@@ -117,21 +305,12 @@ const Categories: React.FC = () => {
       return;
     }
     
-    setCategories(categories.map(cat => 
-      cat.id === selectedCategory.id ? { ...cat, name: editCategoryName } : cat
-    ));
-    
-    setIsEditCategoryOpen(false);
-    
-    toast({
-      title: "Category updated",
-      description: `Category has been updated to "${editCategoryName}".`,
-    });
+    editCategoryMutation.mutate({ id: selectedCategory.id, name: editCategoryName });
   };
   
   const handleDeleteCategory = (categoryId: string) => {
     // Check if category has subcategories
-    const hasSubcategories = subcategories.some(sub => sub.categoryId === categoryId);
+    const hasSubcategories = subcategories?.some(sub => sub.category_id === categoryId);
     
     if (hasSubcategories) {
       toast({
@@ -142,13 +321,7 @@ const Categories: React.FC = () => {
       return;
     }
     
-    const categoryToDelete = categories.find(cat => cat.id === categoryId);
-    setCategories(categories.filter(cat => cat.id !== categoryId));
-    
-    toast({
-      title: "Category deleted",
-      description: `"${categoryToDelete?.name}" has been deleted.`,
-    });
+    deleteCategoryMutation.mutate(categoryId);
   };
   
   const handleAddSubcategory = () => {
@@ -163,22 +336,9 @@ const Categories: React.FC = () => {
       return;
     }
     
-    const newId = `sub${subcategories.length + 1}`;
-    setSubcategories([
-      ...subcategories, 
-      { 
-        id: newId, 
-        categoryId: selectedCategory.id, 
-        name: newSubcategoryName 
-      }
-    ]);
-    
-    setNewSubcategoryName('');
-    setIsAddSubcategoryOpen(false);
-    
-    toast({
-      title: "Subcategory added",
-      description: `"${newSubcategoryName}" has been added to "${selectedCategory.name}".`,
+    addSubcategoryMutation.mutate({
+      categoryId: selectedCategory.id,
+      name: newSubcategoryName
     });
   };
   
@@ -194,26 +354,14 @@ const Categories: React.FC = () => {
       return;
     }
     
-    setSubcategories(subcategories.map(sub => 
-      sub.id === selectedSubcategory.id ? { ...sub, name: editSubcategoryName } : sub
-    ));
-    
-    setIsEditSubcategoryOpen(false);
-    
-    toast({
-      title: "Subcategory updated",
-      description: `Subcategory has been updated to "${editSubcategoryName}".`,
+    editSubcategoryMutation.mutate({
+      id: selectedSubcategory.id,
+      name: editSubcategoryName
     });
   };
   
   const handleDeleteSubcategory = (subcategoryId: string) => {
-    const subcategoryToDelete = subcategories.find(sub => sub.id === subcategoryId);
-    setSubcategories(subcategories.filter(sub => sub.id !== subcategoryId));
-    
-    toast({
-      title: "Subcategory deleted",
-      description: `"${subcategoryToDelete?.name}" has been deleted.`,
-    });
+    deleteSubcategoryMutation.mutate(subcategoryId);
   };
   
   const openEditCategoryDialog = (category: CategoryType) => {
@@ -233,6 +381,18 @@ const Categories: React.FC = () => {
     setIsEditSubcategoryOpen(true);
   };
 
+  // Loading state
+  if (categoriesLoading || subcategoriesLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading categories...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fade-in">
       <PageHeader 
@@ -246,7 +406,7 @@ const Categories: React.FC = () => {
       </PageHeader>
       
       <div className="grid grid-cols-1 gap-6">
-        {categories.map(category => (
+        {categories && categories.map(category => (
           <Card key={category.id}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xl font-bold">{category.name}</CardTitle>
@@ -280,18 +440,18 @@ const Categories: React.FC = () => {
               <CardDescription className="mb-4 flex items-center">
                 <Tag className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>
-                  {subcategories.filter(sub => sub.categoryId === category.id).length} subcategories
+                  {subcategories ? subcategories.filter(sub => sub.category_id === category.id).length : 0} subcategories
                 </span>
               </CardDescription>
               
-              {subcategories.filter(sub => sub.categoryId === category.id).length > 0 ? (
+              {subcategories && subcategories.filter(sub => sub.category_id === category.id).length > 0 ? (
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="subcategories">
                     <AccordionTrigger>Subcategories</AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-2">
                         {subcategories
-                          .filter(sub => sub.categoryId === category.id)
+                          .filter(sub => sub.category_id === category.id)
                           .map(subcategory => (
                             <div 
                               key={subcategory.id} 
@@ -338,6 +498,22 @@ const Categories: React.FC = () => {
             </CardFooter>
           </Card>
         ))}
+
+        {categories && categories.length === 0 && (
+          <Card className="bg-muted/50">
+            <CardContent className="flex flex-col items-center justify-center py-10">
+              <Tag className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No categories yet</h3>
+              <p className="text-muted-foreground text-center mb-4">
+                Create categories to organize and classify your feedback.
+              </p>
+              <Button onClick={() => setIsAddCategoryOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Your First Category
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
       
       {/* Add Category Dialog */}
@@ -359,7 +535,13 @@ const Categories: React.FC = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddCategoryOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddCategory}>Add Category</Button>
+            <Button 
+              onClick={handleAddCategory} 
+              disabled={addCategoryMutation.isPending}
+            >
+              {addCategoryMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Add Category
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -383,7 +565,13 @@ const Categories: React.FC = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditCategoryOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditCategory}>Save Changes</Button>
+            <Button 
+              onClick={handleEditCategory}
+              disabled={editCategoryMutation.isPending}
+            >
+              {editCategoryMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -407,7 +595,13 @@ const Categories: React.FC = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddSubcategoryOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddSubcategory}>Add Subcategory</Button>
+            <Button 
+              onClick={handleAddSubcategory}
+              disabled={addSubcategoryMutation.isPending}
+            >
+              {addSubcategoryMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Add Subcategory
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -431,7 +625,13 @@ const Categories: React.FC = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditSubcategoryOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditSubcategory}>Save Changes</Button>
+            <Button 
+              onClick={handleEditSubcategory}
+              disabled={editSubcategoryMutation.isPending}
+            >
+              {editSubcategoryMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
