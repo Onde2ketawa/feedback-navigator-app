@@ -2,7 +2,8 @@
 import React from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
-import { UploadForm, UploadFormValues } from '@/components/upload/UploadForm';
+import { UploadForm } from '@/components/upload/UploadForm';
+import { UploadFormValues } from '@/components/upload/upload-form-schema';
 import { useToast } from '@/hooks/use-toast';
 import { SubmitHandler } from 'react-hook-form';
 
