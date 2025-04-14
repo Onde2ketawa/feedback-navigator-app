@@ -1,4 +1,26 @@
 
+// Define the feedback data model
+export interface Feedback {
+  id: string;
+  channel: string;
+  rating: number;
+  submitDate: string;
+  feedback?: string;
+  category?: string;
+  subcategory?: string;
+}
+
+// Define the category data models
+export interface Category {
+  id: string;
+  name: string;
+}
+
+export interface Subcategory {
+  id: string;
+  name: string;
+}
+
 // Update the existing mockCategories and mockSubcategories
 
 export const mockCategories: Category[] = [
