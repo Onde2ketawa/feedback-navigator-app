@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,7 +15,7 @@ import {
   Bar,
   Cell,
 } from 'recharts';
-import { tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const RatingAnalytics: React.FC = () => {
   const [channelFilter, setChannelFilter] = useState<string>('all');
