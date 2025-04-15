@@ -55,6 +55,12 @@ export function useFeedbackData(filter: FeedbackFilter) {
       query = query.gte('rating', filter.ratingMin)
                    .lte('rating', filter.ratingMax);
       
+      // Apply consistent sorting as required:
+      // First by channel, then rating, then year and month
+      query = query.order('channel_id.name', { ascending: true })
+                   .order('rating', { ascending: false })
+                   .order('submit_date', { ascending: false });
+      
       const { data, error } = await query;
       
       if (error) throw error;

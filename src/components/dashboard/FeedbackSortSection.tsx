@@ -30,11 +30,15 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
   // Fetch filter options from database
   useEffect(() => {
     const fetchFilterOptions = async () => {
-      // Fetch unique channels
-      const { data: channelsData } = await supabase
+      // Fetch unique channels from the channel table
+      const { data: channelsData, error: channelError } = await supabase
         .from('channel')
         .select('name')
         .order('name');
+      
+      if (channelError) {
+        console.error('Error fetching channels:', channelError);
+      }
       
       setAvailableChannels([
         'all', 
