@@ -59,17 +59,31 @@ export function useFeedbackData(filter: FeedbackFilter) {
         }
       }
       
-      // Apply year filter if selected
+      // Apply year filter if selected - Fixed approach using date comparisons
       if (filter.year && filter.year !== 'all') {
-        // Use EXTRACT to get year part from timestamp
+        const startOfYear = `${filter.year}-01-01`;
+        const endOfYear = `${parseInt(filter.year) + 1}-01-01`;
+        
         query = query.filter('submit_date', 'not.is', null)
-                     .filter(`EXTRACT(YEAR FROM submit_date)::text`, 'eq', filter.year);
+                     .gte('submit_date', startOfYear)
+                     .lt('submit_date', endOfYear);
       }
       
-      // Apply month filter if selected (and year is selected)
+      // Apply month filter if selected (and year is selected) - Fixed approach using date comparisons
       if (filter.year && filter.year !== 'all' && filter.month && filter.month !== 'all') {
-        // Use EXTRACT to get month part from timestamp
-        query = query.filter(`EXTRACT(MONTH FROM submit_date)::text`, 'eq', filter.month);
+        const month = parseInt(filter.month);
+        const year = parseInt(filter.year);
+        
+        // Create date range for the specific month
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0); // Last day of the month
+        
+        // Format dates as ISO strings and take just the date part
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0] + " 23:59:59";
+        
+        query = query.gte('submit_date', startDateStr)
+                     .lte('submit_date', endDateStr);
       }
       
       // Apply rating range filter
