@@ -55,9 +55,10 @@ export function useFeedbackData(filter: FeedbackFilter) {
       query = query.gte('rating', filter.ratingMin)
                    .lte('rating', filter.ratingMax);
       
-      // Apply consistent sorting as required:
-      // First by channel, then rating, then year and month
-      query = query.order('channel_id.name', { ascending: true })
+      // Fix: Apply ordering with proper syntax for Supabase
+      // Instead of using channel_id.name which causes parsing issues,
+      // order by channel_id first since we're fetching the related channel name anyway
+      query = query.order('channel_id', { ascending: true })
                    .order('rating', { ascending: false })
                    .order('submit_date', { ascending: false });
       
