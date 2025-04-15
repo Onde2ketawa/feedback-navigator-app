@@ -8,7 +8,7 @@ interface CsvParseResult {
 }
 
 export const parseCsvFile = (file: File): Promise<CsvParseResult> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
