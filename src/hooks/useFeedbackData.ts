@@ -32,6 +32,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
       
       // Apply channel filter if selected
       if (filter.channel) {
+        // Join with channel table and filter by name
         query = query.eq('channel_id.name', filter.channel);
       }
       
@@ -56,15 +57,17 @@ export function useFeedbackData(filter: FeedbackFilter) {
                    .lte('rating', filter.ratingMax);
       
       // Fix: Apply ordering with proper syntax for Supabase
-      // Instead of using channel_id.name which causes parsing issues,
-      // order by channel_id first since we're fetching the related channel name anyway
+      // Use separate order calls instead of combining them
       query = query.order('channel_id', { ascending: true })
                    .order('rating', { ascending: false })
                    .order('submit_date', { ascending: false });
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching feedback data:", error);
+        throw error;
+      }
       
       return data.map(item => ({
         id: item.id,

@@ -10,12 +10,14 @@ import { RatingFilter } from './filters/RatingFilter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 interface SortSectionProps {
   onFilterChange: (filters: FeedbackFilter) => void;
 }
 
 export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange }) => {
+  const { toast } = useToast();
   const { 
     availableChannels, 
     availableYears, 
@@ -35,34 +37,54 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
 
   // Fetch months when year changes
   useEffect(() => {
-    fetchMonthsForYear(selectedYear);
-  }, [selectedYear]);
+    if (selectedYear !== 'all') {
+      console.log("Fetching months for year:", selectedYear);
+      fetchMonthsForYear(selectedYear);
+    }
+  }, [selectedYear, fetchMonthsForYear]);
 
   const handleChannelChange = (value: string) => {
+    console.log("Channel changed to:", value);
     setSelectedChannel(value);
-    // Reset year and month when channel changes
-    setSelectedYear('all');
-    setSelectedMonth('all');
   };
 
   const handleYearChange = (value: string) => {
+    console.log("Year changed to:", value);
     setSelectedYear(value);
     setSelectedMonth('all'); // Reset month when year changes
+  };
+
+  const handleMonthChange = (value: string) => {
+    console.log("Month changed to:", value);
+    setSelectedMonth(value);
   };
 
   // Apply filters with loading state
   const applyFilters = () => {
     setIsApplyingFilters(true);
+    
+    // Prepare filter object
+    const filters: FeedbackFilter = {
+      channel: selectedChannel === 'all' ? null : selectedChannel,
+      year: selectedYear === 'all' ? null : selectedYear,
+      month: selectedMonth === 'all' ? null : selectedMonth,
+      ratingMin: ratingRange[0],
+      ratingMax: ratingRange[1]
+    };
+    
+    console.log("Applying filters:", filters);
+    
+    // Apply filters with a small delay to show loading state
     setTimeout(() => {
-      onFilterChange({
-        channel: selectedChannel === 'all' ? null : selectedChannel,
-        year: selectedYear === 'all' ? null : selectedYear,
-        month: selectedMonth === 'all' ? null : selectedMonth,
-        ratingMin: ratingRange[0],
-        ratingMax: ratingRange[1]
-      });
+      onFilterChange(filters);
       setIsApplyingFilters(false);
-    }, 300); // Small delay to show loading state
+      
+      // Show toast notification
+      toast({
+        title: "Filters Applied",
+        description: "The feedback list has been updated based on your filters."
+      });
+    }, 300);
   };
 
   // Retry loading if there was an error
@@ -140,7 +162,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
           selectedYear={selectedYear}
           selectedMonth={selectedMonth}
           onYearChange={handleYearChange}
-          onMonthChange={setSelectedMonth}
+          onMonthChange={handleMonthChange}
           isLoading={isLoading}
           isLoadingMonths={isLoadingMonths}
           error={monthsError}
