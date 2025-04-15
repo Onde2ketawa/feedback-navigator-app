@@ -98,11 +98,15 @@ export function useFeedbackData(filter: FeedbackFilter) {
       // Apply ordering with proper syntax for Supabase
       query = query.order('submit_date', { ascending: false });
       
-      // Debug: Log the generated SQL (comment out in production)
-      const debugQuery = query.toSql();
-      console.log("Generated SQL:", debugQuery);
+      // Debug: Log the query parameters but not the SQL
+      console.log("Query parameters:", { 
+        channel: filter.channel, 
+        year: filter.year, 
+        month: filter.month, 
+        rating: `${filter.ratingMin}-${filter.ratingMax}` 
+      });
       
-      // Execute the query and log the SQL for debugging
+      // Execute the query
       const { data, error, count } = await query;
       
       if (error) {
@@ -112,14 +116,6 @@ export function useFeedbackData(filter: FeedbackFilter) {
       
       console.log("Fetched feedback data:", data ? data.length : 0, "items");
       
-      // Log query parameters for debugging
-      console.log("SQL query params:", { 
-        channel: filter.channel, 
-        year: filter.year, 
-        month: filter.month, 
-        rating: `${filter.ratingMin}-${filter.ratingMax}` 
-      });
-
       // Check if we have any data
       if (!data || data.length === 0) {
         console.log("No feedback data found matching the filters");
