@@ -40,8 +40,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     if (selectedYear !== 'all') {
       console.log("Fetching months for year:", selectedYear);
       fetchMonthsForYear(selectedYear);
-    } else {
-      // If "all years" selected, reset available months to just "all months"
+      // Reset month selection when year changes
       setSelectedMonth('all');
     }
   }, [selectedYear, fetchMonthsForYear]);
@@ -54,13 +53,22 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
   const handleYearChange = (value: string) => {
     console.log("Year changed to:", value);
     setSelectedYear(value);
-    // Reset month when year changes
-    setSelectedMonth('all');
+    // Month will be reset in the useEffect
   };
 
   const handleMonthChange = (value: string) => {
     console.log("Month changed to:", value);
     setSelectedMonth(value);
+  };
+
+  // Reset time filters
+  const handleResetTimeFilters = () => {
+    setSelectedYear('all');
+    setSelectedMonth('all');
+    toast({
+      title: "Date filters reset",
+      description: "Year and month filters have been reset to 'All'",
+    });
   };
 
   // Apply filters with loading state
@@ -167,6 +175,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
           selectedMonth={selectedMonth}
           onYearChange={handleYearChange}
           onMonthChange={handleMonthChange}
+          onReset={handleResetTimeFilters}
           isLoading={isLoading}
           isLoadingMonths={isLoadingMonths}
           error={monthsError}

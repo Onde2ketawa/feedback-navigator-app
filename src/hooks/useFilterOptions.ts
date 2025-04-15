@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ChannelOption {
@@ -69,6 +69,9 @@ export function useFilterOptions() {
         } else {
           setAvailableYears(['all']); // Default to just 'all' if no data
         }
+
+        // Initialize months with "all" option
+        setAvailableMonths([{ value: 'all', label: 'All Months' }]);
       } catch (err) {
         console.error('Error in fetchFilterOptions:', err);
         setError(err instanceof Error ? err : new Error('An unknown error occurred'));
@@ -80,8 +83,8 @@ export function useFilterOptions() {
     fetchFilterOptions();
   }, []);
 
-  // Function to fetch months for a specific year
-  const fetchMonthsForYear = async (selectedYear: string) => {
+  // Function to fetch months for a specific year (memoized with useCallback)
+  const fetchMonthsForYear = useCallback(async (selectedYear: string) => {
     if (selectedYear === 'all') {
       setAvailableMonths([{ value: 'all', label: 'All Months' }]);
       return;
@@ -112,14 +115,19 @@ export function useFilterOptions() {
         const uniqueMonths = Array.from(new Set(months))
           .sort((a, b) => parseInt(a) - parseInt(b));
         
-        setAvailableMonths([
+        // Map month numbers to names
+        const monthOptions: MonthOption[] = [
           { value: 'all', label: 'All Months' },
           ...uniqueMonths.map(m => ({
             value: m,
             label: new Date(2000, parseInt(m) - 1, 1).toLocaleString('default', { month: 'long' })
           }))
-        ]);
+        ];
+        
+        console.log(`Found ${uniqueMonths.length} months for year ${selectedYear}:`, monthOptions);
+        setAvailableMonths(monthOptions);
       } else {
+        console.log(`No months found for year ${selectedYear}`);
         setAvailableMonths([{ value: 'all', label: 'All Months' }]);
       }
     } catch (err) {
@@ -129,7 +137,7 @@ export function useFilterOptions() {
     } finally {
       setIsLoadingMonths(false);
     }
-  };
+  }, []);
 
   return {
     availableChannels,
