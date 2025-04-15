@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Select, 
@@ -12,7 +11,12 @@ import { AlertCircle, RefreshCcw, Calendar, ChevronDown, Loader2 } from 'lucide-
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { MonthOption } from '@/hooks/useFilterOptions';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/dropdown-menu';
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
 
 interface TimeFilterProps {
   availableYears: string[];
