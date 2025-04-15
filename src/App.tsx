@@ -14,6 +14,7 @@ import RatingAnalytics from "./pages/RatingAnalytics";
 import CategoryAnalytics from "./pages/CategoryAnalytics";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import CsvUpload from "./pages/CsvUpload";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,13 @@ const App = () => (
               <ProtectedRoute requireAdmin>
                 <MainLayout>
                   <Categories />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/csv-upload" element={
+              <ProtectedRoute requireAdmin>
+                <MainLayout>
+                  <CsvUpload />
                 </MainLayout>
               </ProtectedRoute>
             } />

@@ -9,7 +9,8 @@ import {
   PieChart,
   Tags,
   Menu,
-  X
+  X,
+  FileSpreadsheet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -35,6 +36,12 @@ const MainSidebar: React.FC<SidebarProps> = ({
       name: 'Upload',
       href: '/upload',
       icon: <UploadCloud className="h-5 w-5" />,
+      requireAdmin: true
+    },
+    {
+      name: 'CSV Upload',
+      href: '/csv-upload',
+      icon: <FileSpreadsheet className="h-5 w-5" />,
       requireAdmin: true
     },
     {
