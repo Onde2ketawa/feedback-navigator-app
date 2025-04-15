@@ -59,8 +59,9 @@ export function useFeedbackData(filter: FeedbackFilter) {
         }
       }
       
-      // Apply year filter if selected - Fixed approach using date comparisons
+      // Apply year filter if selected - Using simple date range comparisons
       if (filter.year && filter.year !== 'all') {
+        console.log(`Filtering by year: ${filter.year}`);
         const startOfYear = `${filter.year}-01-01`;
         const endOfYear = `${parseInt(filter.year) + 1}-01-01`;
         
@@ -69,8 +70,9 @@ export function useFeedbackData(filter: FeedbackFilter) {
                      .lt('submit_date', endOfYear);
       }
       
-      // Apply month filter if selected (and year is selected) - Fixed approach using date comparisons
+      // Apply month filter if selected (and year is selected)
       if (filter.year && filter.year !== 'all' && filter.month && filter.month !== 'all') {
+        console.log(`Filtering by year: ${filter.year} and month: ${filter.month}`);
         const month = parseInt(filter.month);
         const year = parseInt(filter.year);
         
@@ -82,6 +84,9 @@ export function useFeedbackData(filter: FeedbackFilter) {
         const startDateStr = startDate.toISOString().split('T')[0];
         const endDateStr = endDate.toISOString().split('T')[0] + " 23:59:59";
         
+        console.log(`Date range: ${startDateStr} to ${endDateStr}`);
+        
+        // Update the query with month filtering
         query = query.gte('submit_date', startDateStr)
                      .lte('submit_date', endDateStr);
       }
@@ -93,15 +98,15 @@ export function useFeedbackData(filter: FeedbackFilter) {
       // Apply ordering with proper syntax for Supabase
       query = query.order('submit_date', { ascending: false });
       
-      // Execute the query
-      const { data, error } = await query;
+      // Execute the query and log the SQL for debugging
+      const { data, error, count } = await query;
       
       if (error) {
         console.error("Error fetching feedback data:", error);
         throw error;
       }
       
-      console.log("Fetched feedback data:", data);
+      console.log("Fetched feedback data:", data ? data.length : 0, "items");
       // Log query parameters for debugging
       console.log("SQL query params:", { 
         channel: filter.channel, 
