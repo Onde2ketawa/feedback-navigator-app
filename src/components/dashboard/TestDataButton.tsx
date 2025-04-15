@@ -94,12 +94,14 @@ export const TestDataButton: React.FC<TestDataButtonProps> = ({ filter, onDataAd
       if (insertError) throw insertError;
       
       // Refresh data
-      await onDataAdded();
+      const result = await onDataAdded();
       
       toast({
         title: "Test Data Added",
         description: `Added sample feedback for ${year}`,
       });
+      
+      return result;
     } catch (error) {
       console.error('Error seeding test data:', error);
       toast({
@@ -107,6 +109,7 @@ export const TestDataButton: React.FC<TestDataButtonProps> = ({ filter, onDataAd
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsSeeding(false);
     }
