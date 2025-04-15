@@ -98,6 +98,10 @@ export function useFeedbackData(filter: FeedbackFilter) {
       // Apply ordering with proper syntax for Supabase
       query = query.order('submit_date', { ascending: false });
       
+      // Debug: Log the generated SQL (comment out in production)
+      const debugQuery = query.toSql();
+      console.log("Generated SQL:", debugQuery);
+      
       // Execute the query and log the SQL for debugging
       const { data, error, count } = await query;
       
@@ -107,6 +111,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
       }
       
       console.log("Fetched feedback data:", data ? data.length : 0, "items");
+      
       // Log query parameters for debugging
       console.log("SQL query params:", { 
         channel: filter.channel, 
@@ -118,6 +123,21 @@ export function useFeedbackData(filter: FeedbackFilter) {
       // Check if we have any data
       if (!data || data.length === 0) {
         console.log("No feedback data found matching the filters");
+        
+        // For debugging: check if there's any data in the table at all
+        const { data: allData, error: allError } = await supabase
+          .from('customer_feedback')
+          .select('id')
+          .limit(1);
+          
+        if (!allError && allData && allData.length === 0) {
+          console.log("The customer_feedback table appears to be empty");
+        } else {
+          console.log("The table has data, but none matches the current filters");
+        }
+        
+        // Return empty array when no data matches
+        return [];
       }
       
       return data.map(item => ({
@@ -131,6 +151,8 @@ export function useFeedbackData(filter: FeedbackFilter) {
         sentiment: item.sentiment,
         sentiment_score: item.sentiment_score
       })) as Feedback[];
-    }
+    },
+    // Ensure we don't retry too aggressively
+    retry: 1
   });
 }
