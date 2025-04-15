@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { QueryObserverResult } from '@tanstack/react-query';
+import { Feedback } from '@/models/feedback';
 
 interface TestDataButtonProps {
   filter: {
@@ -10,7 +12,7 @@ interface TestDataButtonProps {
     year: string | null;
     month: string | null;
   };
-  onDataAdded: () => Promise<void>;
+  onDataAdded: () => Promise<QueryObserverResult<Feedback[], Error>>;
 }
 
 export const TestDataButton: React.FC<TestDataButtonProps> = ({ filter, onDataAdded }) => {

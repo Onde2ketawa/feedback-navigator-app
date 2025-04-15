@@ -4,11 +4,13 @@ import { BulkActionButtons } from '@/components/dashboard/BulkActionButtons';
 import { TestDataButton } from '@/components/dashboard/TestDataButton';
 import { useToast } from '@/hooks/use-toast';
 import { FeedbackFilter } from '@/hooks/useFeedbackData';
+import { QueryObserverResult } from '@tanstack/react-query';
+import { Feedback } from '@/models/feedback';
 
 interface DashboardActionsProps {
   selectedRows: string[];
   filter: FeedbackFilter;
-  onRefetch: () => Promise<void>;
+  onRefetch: () => Promise<QueryObserverResult<Feedback[], Error>>;
 }
 
 export const DashboardActions: React.FC<DashboardActionsProps> = ({
