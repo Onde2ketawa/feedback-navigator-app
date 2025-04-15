@@ -82,7 +82,8 @@ export function useFeedbackData(filter: FeedbackFilter) {
       }
       
       console.log("Fetched feedback data:", data);
-      console.log("SQL query executed:", query.toSQL());
+      // Remove the toSQL() call as it doesn't exist on the PostgrestFilterBuilder
+      console.log("SQL query params:", { channel: filter.channel, year: filter.year, month: filter.month, rating: `${filter.ratingMin}-${filter.ratingMax}` });
       
       return data.map(item => ({
         id: item.id,
