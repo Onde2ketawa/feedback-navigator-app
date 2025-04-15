@@ -40,6 +40,9 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     if (selectedYear !== 'all') {
       console.log("Fetching months for year:", selectedYear);
       fetchMonthsForYear(selectedYear);
+    } else {
+      // If "all years" selected, reset available months to just "all months"
+      // This is to prevent showing months from a specific year when "all years" is selected
     }
   }, [selectedYear, fetchMonthsForYear]);
 
@@ -51,7 +54,8 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
   const handleYearChange = (value: string) => {
     console.log("Year changed to:", value);
     setSelectedYear(value);
-    setSelectedMonth('all'); // Reset month when year changes
+    // Reset month when year changes
+    setSelectedMonth('all');
   };
 
   const handleMonthChange = (value: string) => {

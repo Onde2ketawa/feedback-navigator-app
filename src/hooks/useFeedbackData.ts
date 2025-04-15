@@ -20,7 +20,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
         .from('customer_feedback')
         .select(`
           id,
-          channel:channel_id(name),
+          channel:channel_id(id, name),
           rating,
           submit_date,
           feedback,
@@ -33,7 +33,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
       // Apply channel filter if selected
       if (filter.channel) {
         // Join with channel table and filter by name
-        query = query.eq('channel_id.name', filter.channel);
+        query = query.eq('channel.name', filter.channel);
       }
       
       // Apply year filter if selected
@@ -56,8 +56,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
       query = query.gte('rating', filter.ratingMin)
                    .lte('rating', filter.ratingMax);
       
-      // Fix: Apply ordering with proper syntax for Supabase
-      // Use separate order calls instead of combining them
+      // Apply ordering with proper syntax for Supabase
       query = query.order('channel_id', { ascending: true })
                    .order('rating', { ascending: false })
                    .order('submit_date', { ascending: false });
@@ -68,6 +67,8 @@ export function useFeedbackData(filter: FeedbackFilter) {
         console.error("Error fetching feedback data:", error);
         throw error;
       }
+      
+      console.log("Fetched feedback data:", data);
       
       return data.map(item => ({
         id: item.id,
