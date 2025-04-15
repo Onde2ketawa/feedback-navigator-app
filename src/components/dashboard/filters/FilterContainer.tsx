@@ -12,11 +12,13 @@ export const FilterContainer: React.FC<FilterContainerProps> = ({
   children 
 }) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
+    <Card className="border-gray-200 dark:border-gray-700 shadow-sm">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          {title}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5 pt-2">
         {children}
       </CardContent>
     </Card>

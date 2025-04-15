@@ -10,6 +10,7 @@ import { FilterContainer } from './filters/FilterContainer';
 import { FilterErrorMessage } from './filters/FilterErrorMessage';
 import { LoadingFilterSkeleton } from './filters/LoadingFilterSkeleton';
 import { useFilterState } from './filters/useFilterState';
+import { Separator } from '@/components/ui/separator';
 
 interface SortSectionProps {
   onFilterChange: (filters: FeedbackFilter) => void;
@@ -90,6 +91,8 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
         error={error}
       />
 
+      <Separator className="my-4" />
+
       <TimeFilter 
         availableYears={availableYears}
         availableMonths={availableMonths}
@@ -102,6 +105,8 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
         isLoadingMonths={isLoadingMonths}
         error={monthsError}
       />
+
+      <Separator className="my-4" />
 
       <RatingFilter 
         ratingRange={ratingRange}

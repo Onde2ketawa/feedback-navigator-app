@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2 } from 'lucide-react';
 
 interface ApplyFiltersButtonProps {
   onClick: () => void;
@@ -15,12 +15,12 @@ export const ApplyFiltersButton: React.FC<ApplyFiltersButtonProps> = ({
   return (
     <Button 
       onClick={onClick} 
-      className="w-full mt-4"
+      className="w-full mt-6 bg-primary hover:bg-primary/90 text-white font-medium"
       disabled={isLoading}
     >
       {isLoading ? (
         <>
-          <Skeleton className="h-4 w-4 rounded-full mr-2" /> 
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
           Applying...
         </>
       ) : (
