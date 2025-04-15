@@ -1,7 +1,15 @@
 
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useFilterOptions } from '../useFilterOptions';
+import { fetchChannels } from '@/api/filters/channelApi';
+import { fetchYears } from '@/api/filters/yearApi';
+import { fetchMonthsForYear } from '@/api/filters/monthApi';
 import { supabase } from '@/integrations/supabase/client';
+
+// Mock the API modules
+jest.mock('@/api/filters/channelApi');
+jest.mock('@/api/filters/yearApi');
+jest.mock('@/api/filters/monthApi');
 
 // Mock the Supabase client
 jest.mock('@/integrations/supabase/client', () => ({
@@ -19,56 +27,41 @@ describe('useFilterOptions Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Reset the mock implementation before each test
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        order: jest.fn().mockResolvedValue({
-          data: [],
-          error: null
-        })
-      })
-    });
+    // Default mock implementations
+    (fetchChannels as jest.Mock).mockResolvedValue([
+      { value: 'all', label: 'All Channels' }
+    ]);
+    (fetchYears as jest.Mock).mockResolvedValue(['all']);
+    (fetchMonthsForYear as jest.Mock).mockResolvedValue([
+      { value: 'all', label: 'All Months' }
+    ]);
   });
   
-  it('initializes with loading state and empty arrays', () => {
+  it('initializes with loading state and default arrays', () => {
     const { result } = renderHook(() => useFilterOptions());
     
     expect(result.current.isLoading).toBe(true);
-    expect(result.current.availableChannels).toEqual([]);
-    expect(result.current.availableYears).toEqual([]);
-    expect(result.current.availableMonths).toEqual([]);
+    expect(result.current.availableChannels).toEqual([
+      { value: 'all', label: 'All Channels' }
+    ]);
+    expect(result.current.availableYears).toEqual(['all']);
+    expect(result.current.availableMonths).toEqual([
+      { value: 'all', label: 'All Months' }
+    ]);
     expect(result.current.error).toBe(null);
   });
   
   it('fetches channels and years on mount', async () => {
-    // Mock the return value for channel query
-    (supabase.from as jest.Mock).mockImplementation((tableName) => {
-      if (tableName === 'channel') {
-        return {
-          select: jest.fn().mockReturnValue({
-            order: jest.fn().mockResolvedValue({
-              data: [{ name: 'Channel 1' }, { name: 'Channel 2' }],
-              error: null
-            })
-          })
-        };
-      } else if (tableName === 'customer_feedback') {
-        return {
-          select: jest.fn().mockResolvedValue({
-            data: [{ submit_date: '2024-01-01' }, { submit_date: '2023-01-01' }],
-            error: null
-          })
-        };
-      }
-      return {
-        select: jest.fn().mockReturnValue({
-          order: jest.fn().mockResolvedValue({
-            data: [],
-            error: null
-          })
-        })
-      };
-    });
+    // Mock the return values
+    (fetchChannels as jest.Mock).mockResolvedValue([
+      { value: 'all', label: 'All Channels' },
+      { value: 'Channel 1', label: 'Channel 1' },
+      { value: 'Channel 2', label: 'Channel 2' }
+    ]);
+    
+    (fetchYears as jest.Mock).mockResolvedValue([
+      'all', '2024', '2023'
+    ]);
     
     const { result } = renderHook(() => useFilterOptions());
     
@@ -88,26 +81,7 @@ describe('useFilterOptions Hook', () => {
   
   it('handles errors during data fetching', async () => {
     // Mock the channel query to return an error
-    (supabase.from as jest.Mock).mockImplementation((tableName) => {
-      if (tableName === 'channel') {
-        return {
-          select: jest.fn().mockReturnValue({
-            order: jest.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'Database error' }
-            })
-          })
-        };
-      }
-      return {
-        select: jest.fn().mockReturnValue({
-          order: jest.fn().mockResolvedValue({
-            data: [],
-            error: null
-          })
-        })
-      };
-    });
+    (fetchChannels as jest.Mock).mockRejectedValue(new Error('Database error'));
     
     const { result } = renderHook(() => useFilterOptions());
     
@@ -115,34 +89,16 @@ describe('useFilterOptions Hook', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     
     expect(result.current.error).toBeTruthy();
-    expect(result.current.error?.message).toContain('Failed to fetch channels');
+    expect(result.current.error?.message).toBe('Database error');
   });
   
   it('fetches months for a specific year', async () => {
     // Mock the implementation for fetchMonthsForYear
-    (supabase.from as jest.Mock).mockImplementation((tableName) => {
-      if (tableName === 'customer_feedback') {
-        return {
-          select: jest.fn().mockReturnThis(),
-          gte: jest.fn().mockReturnThis(),
-          lt: jest.fn().mockResolvedValue({
-            data: [
-              { submit_date: '2024-01-15' },
-              { submit_date: '2024-02-20' }
-            ],
-            error: null
-          })
-        };
-      }
-      return {
-        select: jest.fn().mockReturnValue({
-          order: jest.fn().mockResolvedValue({
-            data: [],
-            error: null
-          })
-        })
-      };
-    });
+    (fetchMonthsForYear as jest.Mock).mockResolvedValue([
+      { value: 'all', label: 'All Months' },
+      { value: '1', label: 'January' },
+      { value: '2', label: 'February' }
+    ]);
     
     const { result } = renderHook(() => useFilterOptions());
     
@@ -159,40 +115,9 @@ describe('useFilterOptions Hook', () => {
     ]);
   });
   
-  it('sets all months when year is "all"', async () => {
-    const { result } = renderHook(() => useFilterOptions());
-    
-    act(() => {
-      result.current.fetchMonthsForYear('all');
-    });
-    
-    expect(result.current.availableMonths).toEqual([
-      { value: 'all', label: 'All Months' }
-    ]);
-  });
-  
   it('handles errors when fetching months', async () => {
     // Mock an error when fetching months
-    (supabase.from as jest.Mock).mockImplementation((tableName) => {
-      if (tableName === 'customer_feedback') {
-        return {
-          select: jest.fn().mockReturnThis(),
-          gte: jest.fn().mockReturnThis(),
-          lt: jest.fn().mockResolvedValue({
-            data: null,
-            error: { message: 'Month fetch error' }
-          })
-        };
-      }
-      return {
-        select: jest.fn().mockReturnValue({
-          order: jest.fn().mockResolvedValue({
-            data: [],
-            error: null
-          })
-        })
-      };
-    });
+    (fetchMonthsForYear as jest.Mock).mockRejectedValue(new Error('Month fetch error'));
     
     const { result } = renderHook(() => useFilterOptions());
     
@@ -203,7 +128,7 @@ describe('useFilterOptions Hook', () => {
     await waitFor(() => expect(result.current.isLoadingMonths).toBe(false));
     
     expect(result.current.monthsError).toBeTruthy();
-    expect(result.current.monthsError?.message).toContain('Failed to fetch months');
+    expect(result.current.monthsError?.message).toBe('Month fetch error');
     expect(result.current.availableMonths).toEqual([
       { value: 'all', label: 'All Months' }
     ]);
