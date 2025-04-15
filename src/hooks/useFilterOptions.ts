@@ -17,12 +17,16 @@ export function useFilterOptions() {
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [availableMonths, setAvailableMonths] = useState<MonthOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMonths, setIsLoadingMonths] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [monthsError, setMonthsError] = useState<Error | null>(null);
 
   // Fetch channels and years on mount
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         
         // Fetch unique channels from the channel table
         const { data: channelsData, error: channelError } = await supabase
@@ -32,6 +36,7 @@ export function useFilterOptions() {
         
         if (channelError) {
           console.error('Error fetching channels:', channelError);
+          throw new Error(`Failed to fetch channels: ${channelError.message}`);
         }
         
         // Set channels with 'all' option first
@@ -47,7 +52,7 @@ export function useFilterOptions() {
         
         if (yearsError) {
           console.error('Error fetching years:', yearsError);
-          return;
+          throw new Error(`Failed to fetch years: ${yearsError.message}`);
         }
 
         if (yearsData && yearsData.length > 0) {
@@ -61,7 +66,12 @@ export function useFilterOptions() {
             .sort((a, b) => parseInt(b) - parseInt(a)); // Latest year first
           
           setAvailableYears(['all', ...uniqueYears]);
+        } else {
+          setAvailableYears(['all']); // Default to just 'all' if no data
         }
+      } catch (err) {
+        console.error('Error in fetchFilterOptions:', err);
+        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       } finally {
         setIsLoading(false);
       }
@@ -78,6 +88,9 @@ export function useFilterOptions() {
     }
 
     try {
+      setIsLoadingMonths(true);
+      setMonthsError(null);
+
       const { data, error } = await supabase
         .from('customer_feedback')
         .select('submit_date')
@@ -86,7 +99,7 @@ export function useFilterOptions() {
       
       if (error) {
         console.error('Error fetching months:', error);
-        return;
+        throw new Error(`Failed to fetch months: ${error.message}`);
       }
 
       if (data && data.length > 0) {
@@ -109,9 +122,12 @@ export function useFilterOptions() {
       } else {
         setAvailableMonths([{ value: 'all', label: 'All Months' }]);
       }
-    } catch (error) {
-      console.error('Error fetching months:', error);
+    } catch (err) {
+      console.error('Error in fetchMonthsForYear:', err);
+      setMonthsError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setAvailableMonths([{ value: 'all', label: 'All Months' }]);
+    } finally {
+      setIsLoadingMonths(false);
     }
   };
 
@@ -120,6 +136,9 @@ export function useFilterOptions() {
     availableYears,
     availableMonths,
     isLoading,
+    isLoadingMonths,
+    error,
+    monthsError,
     fetchMonthsForYear
   };
 }

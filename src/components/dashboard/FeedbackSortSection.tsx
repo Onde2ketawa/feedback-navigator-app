@@ -7,6 +7,9 @@ import { useFilterOptions } from '@/hooks/useFilterOptions';
 import { ChannelFilter } from './filters/ChannelFilter';
 import { TimeFilter } from './filters/TimeFilter';
 import { RatingFilter } from './filters/RatingFilter';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface SortSectionProps {
   onFilterChange: (filters: FeedbackFilter) => void;
@@ -18,13 +21,17 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     availableYears, 
     availableMonths,
     fetchMonthsForYear,
-    isLoading
+    isLoading,
+    isLoadingMonths,
+    error,
+    monthsError
   } = useFilterOptions();
   
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [ratingRange, setRatingRange] = useState<number[]>([1, 5]);
+  const [isApplyingFilters, setIsApplyingFilters] = useState(false);
 
   // Fetch months when year changes
   useEffect(() => {
@@ -43,16 +50,52 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     setSelectedMonth('all'); // Reset month when year changes
   };
 
-  // Apply filters
+  // Apply filters with loading state
   const applyFilters = () => {
-    onFilterChange({
-      channel: selectedChannel === 'all' ? null : selectedChannel,
-      year: selectedYear === 'all' ? null : selectedYear,
-      month: selectedMonth === 'all' ? null : selectedMonth,
-      ratingMin: ratingRange[0],
-      ratingMax: ratingRange[1]
-    });
+    setIsApplyingFilters(true);
+    setTimeout(() => {
+      onFilterChange({
+        channel: selectedChannel === 'all' ? null : selectedChannel,
+        year: selectedYear === 'all' ? null : selectedYear,
+        month: selectedMonth === 'all' ? null : selectedMonth,
+        ratingMin: ratingRange[0],
+        ratingMax: ratingRange[1]
+      });
+      setIsApplyingFilters(false);
+    }, 300); // Small delay to show loading state
   };
+
+  // Retry loading if there was an error
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
+  // If there's a critical error that prevents filters from working
+  if (error && !isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Filter Feedback</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex flex-col space-y-2">
+              <p>Error loading filters: {error.message}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="self-start" 
+                onClick={handleRetry}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" /> Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -87,6 +130,8 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
           availableChannels={availableChannels}
           selectedChannel={selectedChannel}
           onChannelChange={handleChannelChange}
+          isLoading={isLoading}
+          error={error}
         />
 
         <TimeFilter 
@@ -96,15 +141,31 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
           selectedMonth={selectedMonth}
           onYearChange={handleYearChange}
           onMonthChange={setSelectedMonth}
+          isLoading={isLoading}
+          isLoadingMonths={isLoadingMonths}
+          error={monthsError}
         />
 
         <RatingFilter 
           ratingRange={ratingRange}
           onRatingChange={setRatingRange}
+          isLoading={isLoading}
+          error={error}
         />
 
-        <Button onClick={applyFilters} className="w-full mt-4">
-          Apply Filters
+        <Button 
+          onClick={applyFilters} 
+          className="w-full mt-4"
+          disabled={isApplyingFilters}
+        >
+          {isApplyingFilters ? (
+            <>
+              <Skeleton className="h-4 w-4 rounded-full mr-2" /> 
+              Applying...
+            </>
+          ) : (
+            'Apply Filters'
+          )}
         </Button>
       </CardContent>
     </Card>
