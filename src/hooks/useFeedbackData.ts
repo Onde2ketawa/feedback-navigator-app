@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Feedback } from '@/models/feedback';
@@ -21,7 +20,6 @@ export function useFeedbackData(filter: FeedbackFilter) {
       let query = supabase
         .from('customer_feedback')
         .select(`
-          id,
           channel_id,
           rating,
           submit_date,
@@ -168,7 +166,6 @@ export function useFeedbackData(filter: FeedbackFilter) {
       }
       
       return data.map(item => ({
-        id: item.id,
         channel: item.channel?.name || '',
         rating: item.rating,
         submitDate: item.submit_date || new Date().toISOString().split('T')[0],
