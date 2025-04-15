@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Feedback } from '@/models/feedback';
@@ -16,7 +17,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
     queryFn: async () => {
       console.log("Applying filters:", filter);
       
-      // First, build the base query
+      // First, build the base query with date constraints and category not null
       let query = supabase
         .from('customer_feedback')
         .select(`
@@ -29,7 +30,10 @@ export function useFeedbackData(filter: FeedbackFilter) {
           sentiment,
           sentiment_score,
           channel:channel_id(id, name)
-        `);
+        `)
+        .gte('submit_date', '2024-01-01')  // Greater than or equal to January 1, 2024
+        .lte('submit_date', '2025-03-31')  // Less than or equal to March 31, 2025
+        .not('category', 'is', null);      // Category is not null
       
       // Apply channel filter if selected
       if (filter.channel && filter.channel !== 'all') {
