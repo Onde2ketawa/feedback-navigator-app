@@ -42,16 +42,27 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
       ]);
 
       // Fetch unique years from submit_date
-      const { data: yearsData } = await supabase
+      const { data: yearsData, error: yearsError } = await supabase
         .from('customer_feedback')
-        .select('submit_date')
-        .not('submit_date', 'is', null);
+        .select('submit_date');
       
-      const uniqueYears = Array.from(
-        new Set(yearsData?.map(item => new Date(item.submit_date).getFullYear().toString()))
-      ).sort((a, b) => parseInt(b) - parseInt(a)); // Latest year first
-      
-      setAvailableYears(['all', ...uniqueYears]);
+      if (yearsError) {
+        console.error('Error fetching years:', yearsError);
+        return;
+      }
+
+      if (yearsData && yearsData.length > 0) {
+        // Extract years from submit_date and filter out null values
+        const years = yearsData
+          .filter(item => item.submit_date) // Filter out null dates
+          .map(item => new Date(item.submit_date).getFullYear().toString());
+        
+        // Get unique years and sort them in descending order
+        const uniqueYears = Array.from(new Set(years))
+          .sort((a, b) => parseInt(b) - parseInt(a)); // Latest year first
+        
+        setAvailableYears(['all', ...uniqueYears]);
+      }
     };
 
     fetchFilterOptions();
@@ -65,23 +76,37 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
         return;
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('customer_feedback')
         .select('submit_date')
         .gte('submit_date', `${selectedYear}-01-01`)
         .lt('submit_date', `${parseInt(selectedYear) + 1}-01-01`);
       
-      const months = Array.from(
-        new Set(data?.map(item => (new Date(item.submit_date).getMonth() + 1).toString()))
-      ).sort((a, b) => parseInt(a) - parseInt(b));
-      
-      setAvailableMonths([
-        { value: 'all', label: 'All Months' },
-        ...months.map(m => ({
-          value: m,
-          label: new Date(2000, parseInt(m) - 1, 1).toLocaleString('default', { month: 'long' })
-        }))
-      ]);
+      if (error) {
+        console.error('Error fetching months:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        // Extract months from submit_date and filter out null values
+        const months = data
+          .filter(item => item.submit_date) // Filter out null dates
+          .map(item => (new Date(item.submit_date).getMonth() + 1).toString());
+        
+        // Get unique months and sort them
+        const uniqueMonths = Array.from(new Set(months))
+          .sort((a, b) => parseInt(a) - parseInt(b));
+        
+        setAvailableMonths([
+          { value: 'all', label: 'All Months' },
+          ...uniqueMonths.map(m => ({
+            value: m,
+            label: new Date(2000, parseInt(m) - 1, 1).toLocaleString('default', { month: 'long' })
+          }))
+        ]);
+      } else {
+        setAvailableMonths([{ value: 'all', label: 'All Months' }]);
+      }
     };
 
     fetchMonthsForYear();
