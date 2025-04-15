@@ -16,6 +16,8 @@ export function useFeedbackData(filter: FeedbackFilter) {
     queryKey: ['feedback', filter],
     queryFn: async () => {
       console.log("Applying filters:", filter);
+      
+      // First, build the base query
       let query = supabase
         .from('customer_feedback')
         .select(`
@@ -33,21 +35,27 @@ export function useFeedbackData(filter: FeedbackFilter) {
       
       // Apply channel filter if selected
       if (filter.channel) {
-        // Filter by channel name
-        const { data: channelData, error: channelError } = await supabase
-          .from('channel')
-          .select('id')
-          .eq('name', filter.channel)
-          .single();
-        
-        if (channelError) {
-          console.error("Error finding channel:", channelError);
-          throw channelError;
-        }
-        
-        if (channelData) {
-          console.log("Filtering by channel ID:", channelData.id);
-          query = query.eq('channel_id', channelData.id);
+        try {
+          // First, get the channel ID from the name
+          const { data: channelData, error: channelError } = await supabase
+            .from('channel')
+            .select('id')
+            .eq('name', filter.channel)
+            .single();
+          
+          if (channelError) {
+            console.error("Error finding channel:", channelError);
+            throw channelError;
+          }
+          
+          if (channelData) {
+            console.log("Filtering by channel ID:", channelData.id);
+            query = query.eq('channel_id', channelData.id);
+          } else {
+            console.warn("No channel found with name:", filter.channel);
+          }
+        } catch (err) {
+          console.error("Error in channel filter:", err);
         }
       }
       
@@ -74,6 +82,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
       // Apply ordering with proper syntax for Supabase
       query = query.order('submit_date', { ascending: false });
       
+      // Execute the query
       const { data, error } = await query;
       
       if (error) {
@@ -82,8 +91,18 @@ export function useFeedbackData(filter: FeedbackFilter) {
       }
       
       console.log("Fetched feedback data:", data);
-      // Remove the toSQL() call as it doesn't exist on the PostgrestFilterBuilder
-      console.log("SQL query params:", { channel: filter.channel, year: filter.year, month: filter.month, rating: `${filter.ratingMin}-${filter.ratingMax}` });
+      // Log query parameters for debugging
+      console.log("SQL query params:", { 
+        channel: filter.channel, 
+        year: filter.year, 
+        month: filter.month, 
+        rating: `${filter.ratingMin}-${filter.ratingMax}` 
+      });
+
+      // Check if we have any data
+      if (!data || data.length === 0) {
+        console.log("No feedback data found matching the filters");
+      }
       
       return data.map(item => ({
         id: item.id,

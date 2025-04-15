@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { useToast } from '@/hooks/use-toast';
 import { BulkActionButtons } from '@/components/dashboard/BulkActionButtons';
@@ -27,6 +27,20 @@ const Dashboard: React.FC = () => {
   });
   
   const { data: feedbackData, isLoading, error } = useFeedbackData(filter);
+  
+  // Effect to show toast when data is empty
+  useEffect(() => {
+    if (feedbackData && feedbackData.length === 0 && !isLoading && !error) {
+      // Only show the toast if filters have been applied (not on initial load)
+      if (filter.channel || filter.year || filter.month) {
+        toast({
+          title: "No Results Found",
+          description: "No feedback matches the selected filters. Try adjusting your criteria.",
+          variant: "default"
+        });
+      }
+    }
+  }, [feedbackData, isLoading, error, filter, toast]);
 
   const handleFilterChange = (filters: FeedbackFilter) => {
     console.log("Applying filters:", filters);
