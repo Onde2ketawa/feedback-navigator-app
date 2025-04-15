@@ -22,7 +22,7 @@ describe('useFeedbackFilters Hook', () => {
     const { result } = renderHook(() => useFeedbackFilters());
     
     expect(result.current.selectedChannel).toBe('all');
-    expect(result.current.selectedYear).toBe('all');
+    expect(result.current.selectedYear).toBe('2024'); // Changed from 'all' to '2024'
     expect(result.current.selectedMonth).toBe('all');
     expect(result.current.ratingRange).toEqual([1, 5]);
     expect(result.current.isApplyingFilters).toBe(false);
@@ -48,10 +48,10 @@ describe('useFeedbackFilters Hook', () => {
     
     // Then change the year
     act(() => {
-      result.current.handleYearChange('2024');
+      result.current.handleYearChange('2025');
     });
     
-    expect(result.current.selectedYear).toBe('2024');
+    expect(result.current.selectedYear).toBe('2025');
     expect(result.current.selectedMonth).toBe('all'); // Month should be reset
   });
   
@@ -63,7 +63,7 @@ describe('useFeedbackFilters Hook', () => {
     
     // First set values to non-default
     act(() => {
-      result.current.handleYearChange('2024');
+      result.current.handleYearChange('2025');
       result.current.handleMonthChange('6');
     });
     
@@ -72,7 +72,7 @@ describe('useFeedbackFilters Hook', () => {
       result.current.handleResetTimeFilters();
     });
     
-    expect(result.current.selectedYear).toBe('all');
+    expect(result.current.selectedYear).toBe('2024'); // Changed from 'all' to '2024'
     expect(result.current.selectedMonth).toBe('all');
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
       title: "Date filters reset"

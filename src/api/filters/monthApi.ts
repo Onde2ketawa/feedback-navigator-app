@@ -8,7 +8,7 @@ import { MonthOption } from '@/hooks/useFilterOptions';
 export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOption[]> => {
   // Return default for "all years" selection
   if (selectedYear === 'all') {
-    return [{ value: 'all', label: 'All Months' }];
+    return getDefaultMonths();
   }
 
   try {
@@ -36,6 +36,12 @@ export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOpt
       // Get unique months and sort them
       const uniqueMonths = Array.from(new Set(months)).sort((a, b) => a - b);
       
+      // If no months found, provide default values
+      if (uniqueMonths.length === 0) {
+        console.log(`No months found for year ${selectedYear}, providing all months`);
+        return getDefaultMonths();
+      }
+      
       // Convert month numbers to options with names
       const monthOptions: MonthOption[] = [
         { value: 'all', label: 'All Months' },
@@ -49,10 +55,29 @@ export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOpt
       return monthOptions;
     } 
     
-    console.log(`No months found for year ${selectedYear}`);
-    return [{ value: 'all', label: 'All Months' }];
+    console.log(`No months found for year ${selectedYear}, providing all months`);
+    return getDefaultMonths();
   } catch (err) {
     console.error('Error in fetchMonthsForYear:', err);
-    throw err;
+    return getDefaultMonths();
   }
 };
+
+// Helper function to get default months
+function getDefaultMonths(): MonthOption[] {
+  return [
+    { value: 'all', label: 'All Months' },
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' }
+  ];
+}

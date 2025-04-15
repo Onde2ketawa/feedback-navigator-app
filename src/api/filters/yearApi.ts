@@ -27,13 +27,22 @@ export const fetchYears = async (): Promise<string[]> => {
         .sort((a, b) => parseInt(b) - parseInt(a)); // Latest year first
       
       console.log('Years extracted from query:', uniqueYears);
+      
+      // If no years found, provide default values
+      if (uniqueYears.length === 0) {
+        console.log('No years found in data, providing default years');
+        return ['all', '2025', '2024', '2023'];
+      }
+      
       return ['all', ...uniqueYears];
     }
     
-    console.log('No year data found in query');
-    return ['all'];
+    console.log('No year data found in query, providing default years');
+    // Provide default years when no data is found
+    return ['all', '2025', '2024', '2023'];
   } catch (err) {
     console.error('Error in fetchYears:', err);
-    throw err;
+    // Return default years even if there's an error
+    return ['all', '2025', '2024', '2023'];
   }
 };

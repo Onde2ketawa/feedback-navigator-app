@@ -20,7 +20,7 @@ const Dashboard: React.FC = () => {
   
   const [filter, setFilter] = useState<FeedbackFilter>({
     channel: null,
-    year: null,
+    year: '2024', // Default to 2024 instead of null
     month: null,
     ratingMin: 1,
     ratingMax: 5
