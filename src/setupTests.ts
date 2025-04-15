@@ -27,16 +27,33 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock IntersectionObserver
-class MockIntersectionObserver {
-  constructor(callback) {
-    this.callback = callback;
-  }
-  observe() {
-    this.callback([{ isIntersecting: true }]);
-  }
-  unobserve() {}
-  disconnect() {}
-}
+// Mock IntersectionObserver with a properly typed implementation
+global.IntersectionObserver = class MockIntersectionObserver implements IntersectionObserver {
+  readonly root: Element | null = null;
+  readonly rootMargin: string = '';
+  readonly thresholds: readonly number[] = [0];
+  
+  private readonly _callback: IntersectionObserverCallback;
 
-global.IntersectionObserver = MockIntersectionObserver;
+  constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+    this._callback = callback;
+  }
+  
+  observe(target: Element): void {
+    // Simulate an intersection immediately
+    this._callback([{
+      isIntersecting: true,
+      boundingClientRect: target.getBoundingClientRect(),
+      intersectionRatio: 1,
+      intersectionRect: target.getBoundingClientRect(),
+      rootBounds: null,
+      target,
+      time: Date.now()
+    }], this);
+  }
+  
+  unobserve(): void {}
+  disconnect(): void {}
+  takeRecords(): IntersectionObserverEntry[] { return []; }
+};
+
