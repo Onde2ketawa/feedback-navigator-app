@@ -12,7 +12,128 @@ export interface MonthOption {
   label: string;
 }
 
+/**
+ * Fetches unique channels from the database
+ */
+const fetchChannels = async (): Promise<ChannelOption[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('channel')
+      .select('name')
+      .order('name');
+    
+    if (error) {
+      console.error('Error fetching channels:', error);
+      throw new Error(`Failed to fetch channels: ${error.message}`);
+    }
+    
+    return [
+      { value: 'all', label: 'All Channels' },
+      ...(data?.map(c => ({ value: c.name, label: c.name })) || [])
+    ];
+  } catch (err) {
+    console.error('Error in fetchChannels:', err);
+    throw err;
+  }
+};
+
+/**
+ * Fetches unique years from feedback submissions
+ */
+const fetchYears = async (): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('customer_feedback')
+      .select('submit_date')
+      .not('submit_date', 'is', null);
+      
+    if (error) {
+      console.error('Error fetching years:', error);
+      throw new Error(`Failed to fetch years: ${error.message}`);
+    }
+
+    if (data && data.length > 0) {
+      // Extract years from submit_date and filter out null values
+      const years = data
+        .filter(item => item.submit_date) 
+        .map(item => new Date(item.submit_date).getFullYear().toString());
+      
+      // Get unique years and sort them in descending order
+      const uniqueYears = Array.from(new Set(years))
+        .sort((a, b) => parseInt(b) - parseInt(a)); // Latest year first
+      
+      console.log('Years extracted from query:', uniqueYears);
+      return ['all', ...uniqueYears];
+    }
+    
+    console.log('No year data found in query');
+    return ['all'];
+  } catch (err) {
+    console.error('Error in fetchYears:', err);
+    throw err;
+  }
+};
+
+/**
+ * Fetches months for a specific year
+ */
+const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOption[]> => {
+  // Return default for "all years" selection
+  if (selectedYear === 'all') {
+    return [{ value: 'all', label: 'All Months' }];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('customer_feedback')
+      .select('submit_date')
+      .not('submit_date', 'is', null)
+      .gte('submit_date', `${selectedYear}-01-01`)
+      .lt('submit_date', `${parseInt(selectedYear) + 1}-01-01`);
+    
+    if (error) {
+      console.error('Error fetching months:', error);
+      throw new Error(`Failed to fetch months: ${error.message}`);
+    }
+
+    if (data && data.length > 0) {
+      // Extract months from submit_date
+      const months = data
+        .filter(item => item.submit_date)
+        .map(item => {
+          const date = new Date(item.submit_date);
+          return date.getMonth() + 1; // JavaScript months are 0-indexed
+        });
+      
+      // Get unique months and sort them
+      const uniqueMonths = Array.from(new Set(months)).sort((a, b) => a - b);
+      
+      // Convert month numbers to options with names
+      const monthOptions: MonthOption[] = [
+        { value: 'all', label: 'All Months' },
+        ...uniqueMonths.map(m => ({
+          value: m.toString(),
+          label: new Date(2000, m - 1, 1).toLocaleString('default', { month: 'long' })
+        }))
+      ];
+      
+      console.log(`Found ${uniqueMonths.length} months for year ${selectedYear}:`, monthOptions);
+      return monthOptions;
+    } 
+    
+    console.log(`No months found for year ${selectedYear}`);
+    return [{ value: 'all', label: 'All Months' }];
+  } catch (err) {
+    console.error('Error in fetchMonthsForYear:', err);
+    throw err;
+  }
+};
+
+/**
+ * Custom hook that provides filtering options for feedback data
+ */
 export function useFilterOptions() {
+  // State definitions
   const [availableChannels, setAvailableChannels] = useState<ChannelOption[]>([
     { value: 'all', label: 'All Channels' }
   ]);
@@ -25,121 +146,42 @@ export function useFilterOptions() {
   const [error, setError] = useState<Error | null>(null);
   const [monthsError, setMonthsError] = useState<Error | null>(null);
 
-  // Fetch channels and years on mount
+  // Load initial filter options
   useEffect(() => {
-    const fetchFilterOptions = async () => {
+    const loadFilterOptions = async () => {
       try {
         setIsLoading(true);
         setError(null);
         
-        // Fetch unique channels from the channel table
-        const { data: channelsData, error: channelError } = await supabase
-          .from('channel')
-          .select('name')
-          .order('name');
-        
-        if (channelError) {
-          console.error('Error fetching channels:', channelError);
-          throw new Error(`Failed to fetch channels: ${channelError.message}`);
-        }
-        
-        // Set channels with 'all' option first
-        setAvailableChannels([
-          { value: 'all', label: 'All Channels' },
-          ...(channelsData?.map(c => ({ value: c.name, label: c.name })) || [])
+        // Fetch channels and years in parallel for better performance
+        const [channelsResult, yearsResult] = await Promise.all([
+          fetchChannels(),
+          fetchYears()
         ]);
-
-        // Fetch unique years from submit_date using direct query instead of RPC
-        const { data: yearsData, error: yearsError } = await supabase
-          .from('customer_feedback')
-          .select('submit_date')
-          .not('submit_date', 'is', null);
-          
-        if (yearsError) {
-          console.error('Error fetching years:', yearsError);
-          throw new Error(`Failed to fetch years: ${yearsError.message}`);
-        }
-
-        if (yearsData && yearsData.length > 0) {
-          // Extract years from submit_date and filter out null values
-          const years = yearsData
-            .filter(item => item.submit_date) 
-            .map(item => new Date(item.submit_date).getFullYear().toString());
-          
-          // Get unique years and sort them in descending order
-          const uniqueYears = Array.from(new Set(years))
-            .sort((a, b) => parseInt(b) - parseInt(a)); // Latest year first
-          
-          console.log('Years extracted from query:', uniqueYears);
-          setAvailableYears(['all', ...uniqueYears]);
-        } else {
-          console.log('No year data found in query');
-          setAvailableYears(['all']);
-        }
+        
+        setAvailableChannels(channelsResult);
+        setAvailableYears(yearsResult);
       } catch (err) {
-        console.error('Error in fetchFilterOptions:', err);
+        console.error('Error in loadFilterOptions:', err);
         setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchFilterOptions();
+    loadFilterOptions();
   }, []);
 
-  // Function to fetch months for a specific year (memoized with useCallback)
-  const fetchMonthsForYear = useCallback(async (selectedYear: string) => {
-    if (selectedYear === 'all') {
-      setAvailableMonths([{ value: 'all', label: 'All Months' }]);
-      return;
-    }
-
+  // Memoized function to fetch months for a specific year
+  const fetchMonths = useCallback(async (selectedYear: string) => {
     try {
       setIsLoadingMonths(true);
       setMonthsError(null);
 
-      // Direct query to get months for a specific year
-      const { data: monthsData, error: monthsError } = await supabase
-        .from('customer_feedback')
-        .select('submit_date')
-        .not('submit_date', 'is', null)
-        .gte('submit_date', `${selectedYear}-01-01`)
-        .lt('submit_date', `${parseInt(selectedYear) + 1}-01-01`);
-      
-      if (monthsError) {
-        console.error('Error fetching months:', monthsError);
-        throw new Error(`Failed to fetch months: ${monthsError.message}`);
-      }
-
-      if (monthsData && monthsData.length > 0) {
-        // Extract months from submit_date
-        const months = monthsData
-          .filter(item => item.submit_date)
-          .map(item => {
-            const date = new Date(item.submit_date);
-            return date.getMonth() + 1; // JavaScript months are 0-indexed
-          });
-        
-        // Get unique months and sort them
-        const uniqueMonths = Array.from(new Set(months)).sort((a, b) => a - b);
-        
-        // Convert month numbers to options with names
-        const monthOptions: MonthOption[] = [
-          { value: 'all', label: 'All Months' },
-          ...uniqueMonths.map(m => ({
-            value: m.toString(),
-            label: new Date(2000, m - 1, 1).toLocaleString('default', { month: 'long' })
-          }))
-        ];
-        
-        console.log(`Found ${uniqueMonths.length} months for year ${selectedYear}:`, monthOptions);
-        setAvailableMonths(monthOptions);
-      } else {
-        console.log(`No months found for year ${selectedYear}`);
-        setAvailableMonths([{ value: 'all', label: 'All Months' }]);
-      }
+      const monthOptions = await fetchMonthsForYear(selectedYear);
+      setAvailableMonths(monthOptions);
     } catch (err) {
-      console.error('Error in fetchMonthsForYear:', err);
+      console.error('Error in fetchMonths:', err);
       setMonthsError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setAvailableMonths([{ value: 'all', label: 'All Months' }]);
     } finally {
@@ -155,6 +197,6 @@ export function useFilterOptions() {
     isLoadingMonths,
     error,
     monthsError,
-    fetchMonthsForYear
+    fetchMonthsForYear: fetchMonths
   };
 }
