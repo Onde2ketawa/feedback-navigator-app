@@ -9,7 +9,7 @@ import { ApplyFiltersButton } from './filters/ApplyFiltersButton';
 import { FilterContainer } from './filters/FilterContainer';
 import { FilterErrorMessage } from './filters/FilterErrorMessage';
 import { LoadingFilterSkeleton } from './filters/LoadingFilterSkeleton';
-import { useFilterState } from './filters/useFilterState';
+import { useFeedbackFilters } from './filters/useFeedbackFilters';
 import { Separator } from '@/components/ui/separator';
 
 interface SortSectionProps {
@@ -40,12 +40,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     handleResetTimeFilters,
     setRatingRange,
     applyFilters
-  } = useFilterState();
-
-  // Logging for debugging
-  useEffect(() => {
-    console.log('Available years in FeedbackSortSection:', availableYears);
-  }, [availableYears]);
+  } = useFeedbackFilters();
 
   // Fetch months when year changes
   useEffect(() => {

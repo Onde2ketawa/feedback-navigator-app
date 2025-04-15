@@ -3,15 +3,22 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FeedbackSortSection } from '../../FeedbackSortSection';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
+import { useFeedbackFilters } from '../useFeedbackFilters';
 
-// Mock the useFilterOptions hook
+// Mock the hooks
 jest.mock('@/hooks/useFilterOptions', () => ({
   useFilterOptions: jest.fn()
+}));
+
+jest.mock('../useFeedbackFilters', () => ({
+  useFeedbackFilters: jest.fn()
 }));
 
 describe('FeedbackSortSection Component', () => {
   const mockOnFilterChange = jest.fn();
   const mockFetchMonthsForYear = jest.fn();
+  const mockApplyFilters = jest.fn();
+  const mockHandleYearChange = jest.fn();
   
   beforeEach(() => {
     jest.clearAllMocks();
@@ -32,6 +39,21 @@ describe('FeedbackSortSection Component', () => {
       error: null,
       monthsError: null,
       fetchMonthsForYear: mockFetchMonthsForYear
+    });
+    
+    // Mock implementation of useFeedbackFilters
+    (useFeedbackFilters as jest.Mock).mockReturnValue({
+      selectedChannel: 'all',
+      selectedYear: 'all',
+      selectedMonth: 'all',
+      ratingRange: [1, 5],
+      isApplyingFilters: false,
+      handleChannelChange: jest.fn(),
+      handleYearChange: mockHandleYearChange,
+      handleMonthChange: jest.fn(),
+      handleResetTimeFilters: jest.fn(),
+      setRatingRange: jest.fn(),
+      applyFilters: mockApplyFilters
     });
   });
   
@@ -86,27 +108,41 @@ describe('FeedbackSortSection Component', () => {
   it('applies filters when Apply Filters button is clicked', async () => {
     render(<FeedbackSortSection onFilterChange={mockOnFilterChange} />);
     
-    fireEvent.click(screen.getByText('Apply Filters'));
+    const applyButton = screen.getByText('Apply Filters');
+    fireEvent.click(applyButton);
     
-    // Wait for the mock function to be called after the timeout
-    await waitFor(() => {
-      expect(mockOnFilterChange).toHaveBeenCalledWith({
-        channel: null,
-        year: null,
-        month: null,
-        ratingMin: 1,
-        ratingMax: 5
-      });
-    });
+    expect(mockApplyFilters).toHaveBeenCalledWith(mockOnFilterChange);
   });
   
-  it('fetches months when year changes', () => {
+  it('fetches months when year changes', async () => {
+    // Mock the useEffect for selectedYear
+    const mockUseEffect = jest.spyOn(React, 'useEffect');
+    
     render(<FeedbackSortSection onFilterChange={mockOnFilterChange} />);
     
-    // Open year dropdown and select a year (this is simplified)
-    // In a real test with Radix UI, this would be more complex
-    const yearSelect = screen.getAllByRole('combobox')[1]; // Assuming year is the second select
-    fireEvent.change(yearSelect, { target: { value: '2024' } });
+    // Simulate year change by triggering the effect manually
+    const yearChangeEffect = mockUseEffect.mock.calls.find(
+      call => call[1]?.toString().includes('selectedYear')
+    )?.[0];
+    
+    // Update the selected year
+    (useFeedbackFilters as jest.Mock).mockReturnValue({
+      selectedChannel: 'all',
+      selectedYear: '2024', // Changed from 'all' to '2024'
+      selectedMonth: 'all',
+      ratingRange: [1, 5],
+      isApplyingFilters: false,
+      handleChannelChange: jest.fn(),
+      handleYearChange: mockHandleYearChange,
+      handleMonthChange: jest.fn(),
+      handleResetTimeFilters: jest.fn(),
+      setRatingRange: jest.fn(),
+      applyFilters: mockApplyFilters
+    });
+    
+    if (yearChangeEffect) {
+      yearChangeEffect();
+    }
     
     expect(mockFetchMonthsForYear).toHaveBeenCalledWith('2024');
   });
