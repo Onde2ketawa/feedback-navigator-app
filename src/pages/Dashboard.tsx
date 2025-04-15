@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
   const { data: feedbackData, isLoading, error } = useFeedbackData(filter);
 
   const handleFilterChange = (filters: FeedbackFilter) => {
-    console.log("Filters changed:", filters);
+    console.log("Applying filters:", filters);
     setFilter(filters);
   };
 

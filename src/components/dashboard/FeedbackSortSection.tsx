@@ -42,7 +42,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
       fetchMonthsForYear(selectedYear);
     } else {
       // If "all years" selected, reset available months to just "all months"
-      // This is to prevent showing months from a specific year when "all years" is selected
+      setSelectedMonth('all');
     }
   }, [selectedYear, fetchMonthsForYear]);
 
@@ -76,7 +76,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
       ratingMax: ratingRange[1]
     };
     
-    console.log("Applying filters:", filters);
+    console.log("Filters changed:", filters);
     
     // Apply filters with a small delay to show loading state
     setTimeout(() => {

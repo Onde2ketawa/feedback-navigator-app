@@ -20,20 +20,35 @@ export function useFeedbackData(filter: FeedbackFilter) {
         .from('customer_feedback')
         .select(`
           id,
-          channel:channel_id(id, name),
+          channel_id,
           rating,
           submit_date,
           feedback,
           category,
           sub_category,
           sentiment,
-          sentiment_score
+          sentiment_score,
+          channel:channel_id(id, name)
         `);
       
       // Apply channel filter if selected
       if (filter.channel) {
-        // Join with channel table and filter by name
-        query = query.eq('channel.name', filter.channel);
+        // Filter by channel name
+        const { data: channelData, error: channelError } = await supabase
+          .from('channel')
+          .select('id')
+          .eq('name', filter.channel)
+          .single();
+        
+        if (channelError) {
+          console.error("Error finding channel:", channelError);
+          throw channelError;
+        }
+        
+        if (channelData) {
+          console.log("Filtering by channel ID:", channelData.id);
+          query = query.eq('channel_id', channelData.id);
+        }
       }
       
       // Apply year filter if selected
@@ -57,9 +72,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
                    .lte('rating', filter.ratingMax);
       
       // Apply ordering with proper syntax for Supabase
-      query = query.order('channel_id', { ascending: true })
-                   .order('rating', { ascending: false })
-                   .order('submit_date', { ascending: false });
+      query = query.order('submit_date', { ascending: false });
       
       const { data, error } = await query;
       
@@ -69,6 +82,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
       }
       
       console.log("Fetched feedback data:", data);
+      console.log("SQL query executed:", query.toSQL());
       
       return data.map(item => ({
         id: item.id,
