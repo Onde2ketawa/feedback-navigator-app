@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useCategories } from '@/hooks/useCategories';
+import { useCategories } from '@/hooks/categories'; // Updated import
 import CategoryForm from '@/components/categories/CategoryForm';
 import CategoryCard from '@/components/categories/CategoryCard';
 import EmptyState from '@/components/categories/EmptyState';
