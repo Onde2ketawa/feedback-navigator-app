@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Feedback } from '@/models/feedback';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface FeedbackFilter {
   channel: string | null;
@@ -12,8 +13,10 @@ export interface FeedbackFilter {
 }
 
 export function useFeedbackData(filter: FeedbackFilter) {
+  const { session } = useAuth();
+
   return useQuery({
-    queryKey: ['feedback', filter],
+    queryKey: ['feedback', filter, session?.user.id],
     queryFn: async () => {
       console.log("Applying filters:", filter);
       
@@ -181,6 +184,8 @@ export function useFeedbackData(filter: FeedbackFilter) {
       })) as Feedback[];
     },
     // Ensure we don't retry too aggressively
-    retry: 1
+    retry: 1,
+    // Only run the query if we have a session
+    enabled: !!session
   });
 }

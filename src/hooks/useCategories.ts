@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CategoryType {
   id: string;
@@ -18,6 +19,7 @@ interface SubcategoryType {
 export const useCategories = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { session, isAdmin } = useAuth();
   
   // State for selected items
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(null);
@@ -25,7 +27,7 @@ export const useCategories = () => {
   
   // Fetch categories from Supabase
   const { data: categories, isLoading: categoriesLoading } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['categories', session?.user.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
@@ -34,12 +36,13 @@ export const useCategories = () => {
         
       if (error) throw error;
       return data as CategoryType[];
-    }
+    },
+    enabled: !!session
   });
   
   // Fetch subcategories from Supabase
   const { data: subcategories, isLoading: subcategoriesLoading } = useQuery({
-    queryKey: ['subcategories'],
+    queryKey: ['subcategories', session?.user.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('subcategories')
@@ -48,12 +51,17 @@ export const useCategories = () => {
         
       if (error) throw error;
       return data as SubcategoryType[];
-    }
+    },
+    enabled: !!session
   });
   
   // Add category mutation
   const addCategoryMutation = useMutation({
     mutationFn: async (categoryName: string) => {
+      if (!isAdmin) {
+        throw new Error("You don't have permission to add categories.");
+      }
+      
       const { data, error } = await supabase
         .from('categories')
         .insert([{ name: categoryName }])
@@ -74,7 +82,7 @@ export const useCategories = () => {
       console.error('Error adding category:', error);
       toast({
         title: "Error",
-        description: "Failed to add category. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to add category. Please try again.",
         variant: "destructive",
       });
     }
@@ -83,6 +91,10 @@ export const useCategories = () => {
   // Edit category mutation
   const editCategoryMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      if (!isAdmin) {
+        throw new Error("You don't have permission to edit categories.");
+      }
+      
       const { data, error } = await supabase
         .from('categories')
         .update({ name })
@@ -104,7 +116,7 @@ export const useCategories = () => {
       console.error('Error updating category:', error);
       toast({
         title: "Error",
-        description: "Failed to update category. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update category. Please try again.",
         variant: "destructive",
       });
     }
@@ -113,6 +125,10 @@ export const useCategories = () => {
   // Delete category mutation
   const deleteCategoryMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!isAdmin) {
+        throw new Error("You don't have permission to delete categories.");
+      }
+      
       const { error } = await supabase
         .from('categories')
         .delete()
@@ -135,7 +151,7 @@ export const useCategories = () => {
       console.error('Error deleting category:', error);
       toast({
         title: "Error",
-        description: "Failed to delete category. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to delete category. Please try again.",
         variant: "destructive",
       });
     }
@@ -144,6 +160,10 @@ export const useCategories = () => {
   // Add subcategory mutation
   const addSubcategoryMutation = useMutation({
     mutationFn: async ({ categoryId, name }: { categoryId: string; name: string }) => {
+      if (!isAdmin) {
+        throw new Error("You don't have permission to add subcategories.");
+      }
+      
       const { data, error } = await supabase
         .from('subcategories')
         .insert([{ 
@@ -167,7 +187,7 @@ export const useCategories = () => {
       console.error('Error adding subcategory:', error);
       toast({
         title: "Error",
-        description: "Failed to add subcategory. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to add subcategory. Please try again.",
         variant: "destructive",
       });
     }
@@ -176,6 +196,10 @@ export const useCategories = () => {
   // Edit subcategory mutation
   const editSubcategoryMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      if (!isAdmin) {
+        throw new Error("You don't have permission to edit subcategories.");
+      }
+      
       const { data, error } = await supabase
         .from('subcategories')
         .update({ name })
@@ -197,7 +221,7 @@ export const useCategories = () => {
       console.error('Error updating subcategory:', error);
       toast({
         title: "Error",
-        description: "Failed to update subcategory. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update subcategory. Please try again.",
         variant: "destructive",
       });
     }
@@ -206,6 +230,10 @@ export const useCategories = () => {
   // Delete subcategory mutation
   const deleteSubcategoryMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!isAdmin) {
+        throw new Error("You don't have permission to delete subcategories.");
+      }
+      
       const { error } = await supabase
         .from('subcategories')
         .delete()
@@ -227,7 +255,7 @@ export const useCategories = () => {
       console.error('Error deleting subcategory:', error);
       toast({
         title: "Error",
-        description: "Failed to delete subcategory. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to delete subcategory. Please try again.",
         variant: "destructive",
       });
     }

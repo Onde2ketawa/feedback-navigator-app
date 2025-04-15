@@ -14,6 +14,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
+import UserProfile from '@/components/auth/UserProfile';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,32 +28,38 @@ const MainSidebar: React.FC<SidebarProps> = ({
 }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { isAdmin } = useAuth();
 
   const navigationItems = [
     {
       name: 'Upload',
       href: '/upload',
-      icon: <UploadCloud className="h-5 w-5" />
+      icon: <UploadCloud className="h-5 w-5" />,
+      requireAdmin: true
     },
     {
       name: 'Review Dashboard',
       href: '/dashboard',
-      icon: <Grid className="h-5 w-5" />
+      icon: <Grid className="h-5 w-5" />,
+      requireAdmin: false
     },
     {
       name: 'Categories',
       href: '/categories',
-      icon: <Tags className="h-5 w-5" />
+      icon: <Tags className="h-5 w-5" />,
+      requireAdmin: true
     },
     {
       name: 'Rating Analytics',
       href: '/rating-analytics',
-      icon: <BarChart className="h-5 w-5" />
+      icon: <BarChart className="h-5 w-5" />,
+      requireAdmin: false
     },
     {
       name: 'Category Analytics',
       href: '/category-analytics',
-      icon: <PieChart className="h-5 w-5" />
+      icon: <PieChart className="h-5 w-5" />,
+      requireAdmin: false
     }
   ];
 
@@ -84,28 +92,50 @@ const MainSidebar: React.FC<SidebarProps> = ({
       
       <div className="flex-1 overflow-y-auto py-4 px-3">
         <nav className="space-y-1">
-          {navigationItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={cn(
-                "flex items-center rounded-md py-2 px-3 text-sm font-medium transition-colors",
-                location.pathname === item.href
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                !isOpen && "justify-center"
-              )}
-            >
-              {item.icon}
-              <span className={cn(
-                "ml-3 transition-opacity duration-300",
-                isOpen ? "opacity-100" : "opacity-0 w-0 h-0 overflow-hidden"
-              )}>
-                {item.name}
-              </span>
-            </Link>
-          ))}
+          {navigationItems.map((item) => {
+            // Skip admin-only items for non-admin users
+            if (item.requireAdmin && !isAdmin) {
+              return null;
+            }
+            
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "flex items-center rounded-md py-2 px-3 text-sm font-medium transition-colors",
+                  location.pathname === item.href
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  !isOpen && "justify-center"
+                )}
+              >
+                {item.icon}
+                <span className={cn(
+                  "ml-3 transition-opacity duration-300",
+                  isOpen ? "opacity-100" : "opacity-0 w-0 h-0 overflow-hidden"
+                )}>
+                  {item.name}
+                </span>
+              </Link>
+            );
+          })}
         </nav>
+      </div>
+      
+      {/* User profile section at bottom */}
+      <div className={cn(
+        "p-4 border-t border-sidebar-border flex items-center",
+        !isOpen && "justify-center"
+      )}>
+        <UserProfile />
+        {isOpen && (
+          <div className="ml-2 flex flex-col">
+            <span className="text-xs text-sidebar-foreground opacity-60">
+              {isAdmin ? 'Admin Access' : 'User Access'}
+            </span>
+          </div>
+        )}
       </div>
     </aside>
   );
