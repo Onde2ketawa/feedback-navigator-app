@@ -57,10 +57,10 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
             value={selectedYear}
             onValueChange={onYearChange}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-white">
               <SelectValue placeholder="Select Year" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               {availableYears.length === 0 ? (
                 <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                   No years available
@@ -87,10 +87,10 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
             onValueChange={onMonthChange}
             disabled={selectedYear === 'all'}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-white">
               <SelectValue placeholder={selectedYear === 'all' ? 'Select Year First' : 'Select Month'} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               {availableMonths.length === 0 ? (
                 <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                   No months available

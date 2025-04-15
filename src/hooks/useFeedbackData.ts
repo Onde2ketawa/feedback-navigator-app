@@ -34,7 +34,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
         `);
       
       // Apply channel filter if selected
-      if (filter.channel) {
+      if (filter.channel && filter.channel !== 'all') {
         try {
           // First, get the channel ID from the name
           const { data: channelData, error: channelError } = await supabase
@@ -60,13 +60,13 @@ export function useFeedbackData(filter: FeedbackFilter) {
       }
       
       // Apply year filter if selected
-      if (filter.year) {
+      if (filter.year && filter.year !== 'all') {
         query = query.gte('submit_date', `${filter.year}-01-01`)
                      .lt('submit_date', `${parseInt(filter.year) + 1}-01-01`);
       }
       
       // Apply month filter if selected (and year is selected)
-      if (filter.year && filter.month) {
+      if (filter.year && filter.year !== 'all' && filter.month && filter.month !== 'all') {
         const monthValue = parseInt(filter.month);
         const nextMonth = monthValue === 12 ? 1 : monthValue + 1;
         const nextMonthYear = monthValue === 12 ? parseInt(filter.year) + 1 : parseInt(filter.year);
