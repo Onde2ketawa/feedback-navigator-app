@@ -61,18 +61,15 @@ export function useFeedbackData(filter: FeedbackFilter) {
       
       // Apply year filter if selected
       if (filter.year && filter.year !== 'all') {
-        query = query.gte('submit_date', `${filter.year}-01-01`)
-                     .lt('submit_date', `${parseInt(filter.year) + 1}-01-01`);
+        // Use EXTRACT to get year part from timestamp
+        query = query.filter('submit_date', 'not.is', null)
+                     .filter(`EXTRACT(YEAR FROM submit_date)::text`, 'eq', filter.year);
       }
       
       // Apply month filter if selected (and year is selected)
       if (filter.year && filter.year !== 'all' && filter.month && filter.month !== 'all') {
-        const monthValue = parseInt(filter.month);
-        const nextMonth = monthValue === 12 ? 1 : monthValue + 1;
-        const nextMonthYear = monthValue === 12 ? parseInt(filter.year) + 1 : parseInt(filter.year);
-        
-        query = query.gte('submit_date', `${filter.year}-${monthValue.toString().padStart(2, '0')}-01`)
-                     .lt('submit_date', `${nextMonthYear}-${nextMonth.toString().padStart(2, '0')}-01`);
+        // Use EXTRACT to get month part from timestamp
+        query = query.filter(`EXTRACT(MONTH FROM submit_date)::text`, 'eq', filter.month);
       }
       
       // Apply rating range filter

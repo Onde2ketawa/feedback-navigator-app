@@ -35,6 +35,11 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
   const [ratingRange, setRatingRange] = useState<number[]>([1, 5]);
   const [isApplyingFilters, setIsApplyingFilters] = useState(false);
 
+  // Logging for debugging
+  useEffect(() => {
+    console.log('Available years in FeedbackSortSection:', availableYears);
+  }, [availableYears]);
+
   // Fetch months when year changes
   useEffect(() => {
     if (selectedYear !== 'all') {

@@ -23,36 +23,25 @@ export function FilterControls({
   const { 
     availableChannels,
     availableYears,
-    fetchMonthsForYear
+    availableMonths,
+    fetchMonthsForYear,
+    isLoading,
+    isLoadingMonths
   } = useFilterOptions();
-  
-  const [availableMonths, setAvailableMonths] = useState<MonthOption[]>([
-    { value: 'all', label: 'All Months' },
-    { value: '1', label: 'January' },
-    { value: '2', label: 'February' },
-    { value: '3', label: 'March' },
-    { value: '4', label: 'April' },
-    { value: '5', label: 'May' },
-    { value: '6', label: 'June' },
-    { value: '7', label: 'July' },
-    { value: '8', label: 'August' },
-    { value: '9', label: 'September' },
-    { value: '10', label: 'October' },
-    { value: '11', label: 'November' },
-    { value: '12', label: 'December' }
-  ]);
 
-  // Reset month when year changes
+  // Fetch months when year changes
   useEffect(() => {
     if (yearFilter !== 'all') {
+      console.log("FilterControls: Fetching months for year:", yearFilter);
       fetchMonthsForYear(yearFilter);
-    } else {
+      // Reset month when year changes
       setMonthFilter('all');
     }
   }, [yearFilter, fetchMonthsForYear, setMonthFilter]);
 
   // Handle year change
   const handleYearChange = (value: string) => {
+    console.log("FilterControls: Year changed to:", value);
     setYearFilter(value);
     if (value === 'all') {
       setMonthFilter('all'); // Reset month when "all years" selected
@@ -63,9 +52,9 @@ export function FilterControls({
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <div>
         <label className="text-sm font-medium block mb-2">Channel</label>
-        <Select value={channelFilter} onValueChange={setChannelFilter}>
+        <Select value={channelFilter} onValueChange={setChannelFilter} disabled={isLoading}>
           <SelectTrigger className="bg-white">
-            <SelectValue placeholder="Select channel" />
+            <SelectValue placeholder={isLoading ? "Loading channels..." : "Select channel"} />
           </SelectTrigger>
           <SelectContent className="bg-white z-50">
             {availableChannels.map(channel => (
@@ -79,9 +68,9 @@ export function FilterControls({
       
       <div>
         <label className="text-sm font-medium block mb-2">Year</label>
-        <Select value={yearFilter} onValueChange={handleYearChange}>
+        <Select value={yearFilter} onValueChange={handleYearChange} disabled={isLoading}>
           <SelectTrigger className="bg-white">
-            <SelectValue placeholder="Select year" />
+            <SelectValue placeholder={isLoading ? "Loading years..." : "Select year"} />
           </SelectTrigger>
           <SelectContent className="bg-white z-50">
             {availableYears.map(year => (
@@ -98,10 +87,18 @@ export function FilterControls({
         <Select 
           value={monthFilter} 
           onValueChange={setMonthFilter}
-          disabled={yearFilter === 'all'}
+          disabled={yearFilter === 'all' || isLoading || isLoadingMonths}
         >
           <SelectTrigger className="bg-white">
-            <SelectValue placeholder={yearFilter === 'all' ? 'Select Year First' : 'Select month'} />
+            <SelectValue 
+              placeholder={
+                isLoading || isLoadingMonths 
+                  ? "Loading..." 
+                  : yearFilter === 'all' 
+                    ? "Select Year First" 
+                    : "Select month"
+              } 
+            />
           </SelectTrigger>
           <SelectContent className="bg-white z-50">
             {availableMonths.map(month => (
