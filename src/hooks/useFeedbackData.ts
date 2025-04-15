@@ -120,6 +120,37 @@ export function useFeedbackData(filter: FeedbackFilter) {
       if (!data || data.length === 0) {
         console.log("No feedback data found matching the filters");
         
+        // Check if channel exists
+        if (filter.channel && filter.channel !== 'all') {
+          const { data: channelData } = await supabase
+            .from('channel')
+            .select('id')
+            .eq('name', filter.channel);
+          
+          if (!channelData || channelData.length === 0) {
+            console.log(`Channel '${filter.channel}' does not exist`);
+          }
+        }
+        
+        // Check if there's any data in the table with this channel
+        const { data: channelData } = await supabase
+          .from('channel')
+          .select('id')
+          .eq('name', filter.channel || '')
+          .single();
+        
+        if (channelData) {
+          const { data: anyData, error: dataCheckError } = await supabase
+            .from('customer_feedback')
+            .select('id')
+            .eq('channel_id', channelData.id)
+            .limit(1);
+            
+          if (!dataCheckError && (!anyData || anyData.length === 0)) {
+            console.log(`No feedback data exists for channel '${filter.channel}'`);
+          }
+        }
+        
         // For debugging: check if there's any data in the table at all
         const { data: allData, error: allError } = await supabase
           .from('customer_feedback')
