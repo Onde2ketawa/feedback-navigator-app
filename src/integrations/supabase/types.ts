@@ -183,6 +183,31 @@ export type Database = {
           average_rating: number
         }[]
       }
+      get_category_distribution: {
+        Args: {
+          channel_id_param?: string
+          year_param?: string
+          month_param?: string
+        }
+        Returns: {
+          name: string
+          value: number
+          color: string
+        }[]
+      }
+      get_subcategory_distribution: {
+        Args: {
+          category_param: string
+          channel_id_param?: string
+          year_param?: string
+          month_param?: string
+        }
+        Returns: {
+          name: string
+          value: number
+          color: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

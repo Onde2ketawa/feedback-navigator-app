@@ -1,11 +1,16 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { FilterControls } from '@/components/analytics/FilterControls';
 import { YearOverYearTrendChart } from '@/components/analytics/YearOverYearTrendChart';
 import { MonthlyRatingTrendChart } from '@/components/analytics/MonthlyRatingTrendChart';
 import { RatingDistributionChart } from '@/components/analytics/RatingDistributionChart';
 import { useRatingAnalyticsData } from '@/hooks/rating/useRatingAnalyticsData';
+import { CategoryRatingBarChart } from '@/components/analytics/category/CategoryRatingBarChart';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const RatingAnalytics: React.FC = () => {
   const {
@@ -15,16 +20,33 @@ const RatingAnalytics: React.FC = () => {
     setYearFilter,
     monthFilter,
     setMonthFilter,
+    isLoading,
     yoyTrendData,
-    ratingDistributionData
+    ratingDistributionData,
+    monthlyRatingData,
+    categoryRatingData,
+    refreshData
   } = useRatingAnalyticsData();
   
   return (
     <div className="animate-fade-in">
-      <PageHeader 
-        title="Rating Analytics" 
-        description="Analyze rating trends and distributions over time"
-      />
+      <div className="flex justify-between items-center">
+        <PageHeader 
+          title="Rating Analytics" 
+          description="Analyze rating trends and distributions over time"
+        />
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={refreshData}
+          disabled={isLoading}
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
       
       <FilterControls
         channelFilter={channelFilter}
@@ -37,17 +59,56 @@ const RatingAnalytics: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* YoY Rating Trend */}
-        <YearOverYearTrendChart 
-          data={yoyTrendData} 
-          channelFilter={channelFilter} 
-          yearFilter={yearFilter} 
-        />
+        {isLoading ? (
+          <Card className="col-span-1 lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Year-over-Year Rating Trend</CardTitle>
+              <CardDescription>Loading data...</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80 flex items-center justify-center">
+                <Skeleton className="h-full w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <YearOverYearTrendChart 
+            data={yoyTrendData} 
+            channelFilter={channelFilter} 
+            yearFilter={yearFilter} 
+          />
+        )}
         
         {/* Monthly Rating Trend */}
-        <MonthlyRatingTrendChart />
+        {isLoading ? (
+          <Skeleton className="h-[400px] w-full" />
+        ) : (
+          <MonthlyRatingTrendChart data={monthlyRatingData} />
+        )}
         
         {/* Rating Distribution */}
-        <RatingDistributionChart data={ratingDistributionData} />
+        {isLoading ? (
+          <Skeleton className="h-[400px] w-full" />
+        ) : (
+          <RatingDistributionChart data={ratingDistributionData} />
+        )}
+        
+        {/* Category Rating */}
+        {isLoading ? (
+          <Skeleton className="h-[400px] w-full" />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Category Ratings</CardTitle>
+              <CardDescription>
+                Average rating by category
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CategoryRatingBarChart categoryRatings={categoryRatingData} />
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
