@@ -20,23 +20,27 @@ export function useFeedbackData(filter: FeedbackFilter) {
     queryFn: async () => {
       console.log("Applying filters:", filter);
       
-      // First, build the base query with date constraints and category not null
+      // First, build the base query with date constraints (removed the category not null constraint)
       let query = supabase
         .from('customer_feedback')
         .select(`
+          id,
           channel_id,
           rating,
           submit_date,
+          submit_time,
           feedback,
           category,
           sub_category,
+          device,
+          app_version,
+          language,
           sentiment,
           sentiment_score,
           channel:channel_id(id, name)
         `)
         .gte('submit_date', '2024-01-01')  // Greater than or equal to January 1, 2024
-        .lte('submit_date', '2025-03-31')  // Less than or equal to March 31, 2025
-        .not('category', 'is', null);      // Category is not null
+        .lte('submit_date', '2025-03-31');  // Less than or equal to March 31, 2025
       
       // Apply channel filter if selected
       if (filter.channel && filter.channel !== 'all') {
@@ -124,61 +128,21 @@ export function useFeedbackData(filter: FeedbackFilter) {
       // Check if we have any data
       if (!data || data.length === 0) {
         console.log("No feedback data found matching the filters");
-        
-        // Check if channel exists
-        if (filter.channel && filter.channel !== 'all') {
-          const { data: channelData } = await supabase
-            .from('channel')
-            .select('id')
-            .eq('name', filter.channel);
-          
-          if (!channelData || channelData.length === 0) {
-            console.log(`Channel '${filter.channel}' does not exist`);
-          }
-        }
-        
-        // Check if there's any data in the table with this channel
-        const { data: channelData } = await supabase
-          .from('channel')
-          .select('id')
-          .eq('name', filter.channel || '')
-          .single();
-        
-        if (channelData) {
-          const { data: anyData, error: dataCheckError } = await supabase
-            .from('customer_feedback')
-            .select('id')
-            .eq('channel_id', channelData.id)
-            .limit(1);
-            
-          if (!dataCheckError && (!anyData || anyData.length === 0)) {
-            console.log(`No feedback data exists for channel '${filter.channel}'`);
-          }
-        }
-        
-        // For debugging: check if there's any data in the table at all
-        const { data: allData, error: allError } = await supabase
-          .from('customer_feedback')
-          .select('id')
-          .limit(1);
-          
-        if (!allError && allData && allData.length === 0) {
-          console.log("The customer_feedback table appears to be empty");
-        } else {
-          console.log("The table has data, but none matches the current filters");
-        }
-        
-        // Return empty array when no data matches
         return [];
       }
       
       return data.map(item => ({
+        id: item.id,
         channel: item.channel?.name || '',
         rating: item.rating,
         submitDate: item.submit_date || new Date().toISOString().split('T')[0],
+        submitTime: item.submit_time || '',
         feedback: item.feedback,
         category: item.category,
         subcategory: item.sub_category,
+        device: item.device || '',
+        appVersion: item.app_version || '',
+        language: item.language || '',
         sentiment: item.sentiment,
         sentiment_score: item.sentiment_score
       })) as Feedback[];

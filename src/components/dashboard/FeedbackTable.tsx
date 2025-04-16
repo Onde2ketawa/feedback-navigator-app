@@ -18,9 +18,15 @@ interface Feedback {
   channel: string;
   rating: number;
   submitDate: string;
+  submitTime?: string;
   feedback?: string;
   category?: string;
   subcategory?: string;
+  device?: string;
+  appVersion?: string;
+  language?: string;
+  sentiment?: string;
+  sentiment_score?: number;
 }
 
 interface FeedbackTableProps {
@@ -102,6 +108,10 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
       header: "Submit Date",
     },
     {
+      accessorKey: "submitTime",
+      header: "Submit Time",
+    },
+    {
       accessorKey: "feedback",
       header: "Feedback",
       cell: ({ row }) => {
@@ -112,6 +122,47 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
           <span className="text-muted-foreground italic">No feedback</span>
         );
       },
+    },
+    {
+      accessorKey: "device",
+      header: "Device",
+    },
+    {
+      accessorKey: "appVersion",
+      header: "App Version",
+    },
+    {
+      accessorKey: "language",
+      header: "Language",
+    },
+    {
+      accessorKey: "sentiment",
+      header: "Sentiment",
+      cell: ({ row }) => {
+        const sentiment = row.getValue("sentiment") as string;
+        let badgeClass = "px-2 py-1 rounded text-xs font-medium";
+        
+        switch (sentiment?.toLowerCase()) {
+          case 'positive':
+            badgeClass += " bg-green-100 text-green-800";
+            break;
+          case 'negative':
+            badgeClass += " bg-red-100 text-red-800";
+            break;
+          default:
+            badgeClass += " bg-gray-100 text-gray-800";
+        }
+        
+        return <span className={badgeClass}>{sentiment || 'N/A'}</span>;
+      }
+    },
+    {
+      accessorKey: "sentiment_score",
+      header: "Sentiment Score",
+      cell: ({ row }) => {
+        const score = row.original.sentiment_score;
+        return <span>{score?.toFixed(2) || 'N/A'}</span>;
+      }
     },
     {
       accessorKey: "category",
@@ -162,5 +213,9 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
     },
   ];
 
-  return <DataTable columns={columns} data={data} />;
+  return (
+    <div className="overflow-x-auto">
+      <DataTable columns={columns} data={data} />
+    </div>
+  );
 };
