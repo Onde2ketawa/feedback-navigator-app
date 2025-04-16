@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface CategorySelectorProps {
   initialCategory?: string;
@@ -27,6 +28,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   const [category, setCategory] = useState(initialCategory);
   const [subcategory, setSubcategory] = useState(initialSubcategory);
   const [availableSubcategories, setAvailableSubcategories] = useState<{ id: string; name: string }[]>([]);
+  const { toast } = useToast();
 
   // Filter subcategories when category changes
   useEffect(() => {
@@ -44,6 +46,24 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
       setSubcategory('');
     }
   }, [category, subcategories, subcategory]);
+
+  const handleSave = () => {
+    console.log('Saving category:', category, 'subcategory:', subcategory);
+    try {
+      onSave(category || '', subcategory || '');
+      toast({
+        title: "Tag selection saved",
+        description: "Your category selection has been saved.",
+      });
+    } catch (error) {
+      console.error('Error saving tags:', error);
+      toast({
+        title: "Error saving tags",
+        description: "There was a problem saving your category selection.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -78,7 +98,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
       </Select>
 
       <Button 
-        onClick={() => onSave(category, subcategory)}
+        onClick={handleSave}
         disabled={!category}
       >
         Save Tags

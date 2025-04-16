@@ -3,17 +3,21 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Feedback } from '@/models/feedback';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useCategoryDialog() {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const handleCategoryChange = async (feedbackId: string, category: string, subcategory: string) => {
     try {
       if (!feedbackId) {
         throw new Error('Feedback ID is required');
       }
+      
+      console.log('Updating feedback categories:', { feedbackId, category, subcategory });
       
       const { error } = await supabase
         .from('customer_feedback')
@@ -24,6 +28,9 @@ export function useCategoryDialog() {
         .eq('id', feedbackId);
       
       if (error) throw error;
+      
+      // Invalidate feedback data queries to trigger a refresh
+      queryClient.invalidateQueries({ queryKey: ['feedback'] });
       
       toast({
         title: "Categories Updated",

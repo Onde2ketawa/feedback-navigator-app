@@ -31,6 +31,13 @@ export const FeedbackCategoryDialog: React.FC<FeedbackCategoryDialogProps> = ({
   categories,
   subcategories,
 }) => {
+  console.log('FeedbackCategoryDialog render:', { 
+    isOpen, 
+    selectedFeedback, 
+    categoriesCount: categories.length,
+    subcategoriesCount: subcategories.length
+  });
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -46,6 +53,12 @@ export const FeedbackCategoryDialog: React.FC<FeedbackCategoryDialogProps> = ({
               initialCategory={selectedFeedback.category}
               initialSubcategory={selectedFeedback.subcategory}
               onSave={(category, subcategory) => {
+                console.log('Category selector onSave called with:', { 
+                  feedbackId: selectedFeedback.id, 
+                  category, 
+                  subcategory 
+                });
+                
                 if (selectedFeedback.id) {
                   onSave(selectedFeedback.id, category, subcategory);
                 }
