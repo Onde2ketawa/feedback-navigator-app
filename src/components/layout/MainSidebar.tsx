@@ -10,7 +10,8 @@ import {
   Tags,
   Menu,
   X,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -33,6 +34,12 @@ const MainSidebar: React.FC<SidebarProps> = ({
 
   const navigationItems = [
     {
+      name: 'Dashboard',
+      href: '/dashboard',
+      icon: <Home className="h-5 w-5" />,
+      requireAdmin: false
+    },
+    {
       name: 'Upload',
       href: '/upload',
       icon: <UploadCloud className="h-5 w-5" />,
@@ -45,16 +52,16 @@ const MainSidebar: React.FC<SidebarProps> = ({
       requireAdmin: true
     },
     {
-      name: 'Review Dashboard',
-      href: '/dashboard',
-      icon: <Grid className="h-5 w-5" />,
-      requireAdmin: false
-    },
-    {
       name: 'Categories',
       href: '/categories',
       icon: <Tags className="h-5 w-5" />,
       requireAdmin: true
+    },
+    {
+      name: 'Review Dashboard',
+      href: '/dashboard',
+      icon: <Grid className="h-5 w-5" />,
+      requireAdmin: false
     },
     {
       name: 'Rating Analytics',
@@ -102,6 +109,11 @@ const MainSidebar: React.FC<SidebarProps> = ({
           {navigationItems.map((item) => {
             // Skip admin-only items for non-admin users
             if (item.requireAdmin && !isAdmin) {
+              return null;
+            }
+            
+            // Skip the duplicate Dashboard entry (using Review Dashboard instead)
+            if (item.name === 'Dashboard') {
               return null;
             }
             
