@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { FeedbackSortSection } from '@/components/dashboard/FeedbackSortSection';
-import { FeedbackTable } from '@/components/dashboard/FeedbackTable';
+import { FeedbackTableContainer } from '@/components/dashboard/FeedbackTableContainer';
 import { Feedback } from '@/models/feedback';
 import { FeedbackFilter } from '@/hooks/useFeedbackData';
 
@@ -31,18 +30,14 @@ export function DashboardContent({
         <FeedbackSortSection onFilterChange={onFilterChange} />
       </div>
       <div className="w-full">
-        <Card className="shadow-sm">
-          <CardContent className="p-2 sm:p-4 md:p-6 overflow-x-auto">
-            <FeedbackTable
-              data={feedbackData}
-              categories={categories}
-              subcategories={subcategories}
-              selectedRows={selectedRows}
-              setSelectedRows={setSelectedRows}
-              openTagDialog={openTagDialog}
-            />
-          </CardContent>
-        </Card>
+        <FeedbackTableContainer
+          feedbackData={feedbackData}
+          categories={categories}
+          subcategories={subcategories}
+          selectedRows={selectedRows}
+          setSelectedRows={setSelectedRows}
+          openTagDialog={openTagDialog}
+        />
       </div>
     </div>
   );
