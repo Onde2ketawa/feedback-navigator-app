@@ -5,12 +5,19 @@ import { FilterControls } from '@/components/analytics/FilterControls';
 import { YearOverYearTrendChart } from '@/components/analytics/YearOverYearTrendChart';
 import { MonthlyRatingTrendChart } from '@/components/analytics/MonthlyRatingTrendChart';
 import { RatingDistributionChart } from '@/components/analytics/RatingDistributionChart';
-import { yoyTrendData, ratingDistributionData } from '@/data/ratingsMockData';
+import { useRatingAnalyticsData } from '@/hooks/rating/useRatingAnalyticsData';
 
 const RatingAnalytics: React.FC = () => {
-  const [channelFilter, setChannelFilter] = useState<string>('all');
-  const [yearFilter, setYearFilter] = useState<string>('2024');
-  const [monthFilter, setMonthFilter] = useState<string>('all');
+  const {
+    channelFilter,
+    setChannelFilter,
+    yearFilter, 
+    setYearFilter,
+    monthFilter,
+    setMonthFilter,
+    yoyTrendData,
+    ratingDistributionData
+  } = useRatingAnalyticsData();
   
   return (
     <div className="animate-fade-in">
