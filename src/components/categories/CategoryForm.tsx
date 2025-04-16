@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog,
   DialogContent,
@@ -34,13 +34,29 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   isSubmitting,
 }) => {
   const [name, setName] = useState(initialValue);
+  const [error, setError] = useState('');
+
+  // Reset form state when dialog opens/closes or initialValue changes
+  useEffect(() => {
+    setName(initialValue);
+    setError('');
+  }, [isOpen, initialValue]);
 
   const handleSubmit = () => {
+    // Validate input
+    if (!name.trim()) {
+      setError('Category name cannot be empty');
+      return;
+    }
+    
+    setError('');
     onSubmit(name);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -53,8 +69,18 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
           <Input 
             placeholder="Enter name" 
             value={name} 
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (e.target.value.trim()) setError('');
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSubmit();
+            }}
+            autoFocus
           />
+          {error && (
+            <p className="text-sm text-destructive mt-1">{error}</p>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>

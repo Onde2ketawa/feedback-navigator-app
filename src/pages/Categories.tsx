@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useCategories } from '@/hooks/categories'; // Updated import
+import { useCategories } from '@/hooks/categories'; 
 import CategoryForm from '@/components/categories/CategoryForm';
 import CategoryCard from '@/components/categories/CategoryCard';
 import EmptyState from '@/components/categories/EmptyState';
@@ -15,12 +14,6 @@ const Categories: React.FC = () => {
   const [isAddSubcategoryOpen, setIsAddSubcategoryOpen] = useState(false);
   const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
   const [isEditSubcategoryOpen, setIsEditSubcategoryOpen] = useState(false);
-  
-  // Form state
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [editCategoryName, setEditCategoryName] = useState('');
-  const [newSubcategoryName, setNewSubcategoryName] = useState('');
-  const [editSubcategoryName, setEditSubcategoryName] = useState('');
   
   const { toast } = useToast();
   const { 
@@ -41,42 +34,28 @@ const Categories: React.FC = () => {
   } = useCategories();
 
   // Handlers
-  const handleAddCategory = () => {
-    if (newCategoryName.trim() === '') {
-      toast({
-        title: "Invalid input",
-        description: "Category name cannot be empty",
-        variant: "destructive",
-      });
+  const handleAddCategory = (categoryName: string) => {
+    if (!categoryName || categoryName.trim() === '') {
       return;
     }
     
-    addCategoryMutation.mutate(newCategoryName);
+    addCategoryMutation.mutate(categoryName.trim());
     setIsAddCategoryOpen(false);
-    setNewCategoryName('');
   };
   
-  const handleEditCategory = () => {
-    if (!selectedCategory) return;
-    
-    if (editCategoryName.trim() === '') {
-      toast({
-        title: "Invalid input",
-        description: "Category name cannot be empty",
-        variant: "destructive",
-      });
+  const handleEditCategory = (categoryName: string) => {
+    if (!selectedCategory || !categoryName || categoryName.trim() === '') {
       return;
     }
     
     editCategoryMutation.mutate({ 
       id: selectedCategory.id, 
-      name: editCategoryName 
+      name: categoryName.trim() 
     });
     setIsEditCategoryOpen(false);
   };
   
   const handleDeleteCategory = (categoryId: string) => {
-    // Check if category has subcategories
     if (categoryHasSubcategories(categoryId)) {
       toast({
         title: "Cannot delete",
@@ -131,7 +110,6 @@ const Categories: React.FC = () => {
   const openEditCategoryDialog = (category: typeof selectedCategory) => {
     setSelectedCategory(category);
     if (category) {
-      setEditCategoryName(category.name);
       setIsEditCategoryOpen(true);
     }
   };
@@ -144,7 +122,6 @@ const Categories: React.FC = () => {
   const openEditSubcategoryDialog = (subcategory: typeof selectedSubcategory) => {
     setSelectedSubcategory(subcategory);
     if (subcategory) {
-      setEditSubcategoryName(subcategory.name);
       setIsEditSubcategoryOpen(true);
     }
   };
@@ -210,7 +187,7 @@ const Categories: React.FC = () => {
         onSubmit={handleEditCategory}
         title="Edit Category"
         description="Update the category name."
-        initialValue={editCategoryName}
+        initialValue={selectedCategory?.name || ''}
         submitLabel="Save Changes"
         isSubmitting={editCategoryMutation.isPending}
       />
@@ -233,7 +210,7 @@ const Categories: React.FC = () => {
         onSubmit={handleEditSubcategory}
         title="Edit Subcategory"
         description="Update the subcategory name."
-        initialValue={editSubcategoryName}
+        initialValue={selectedSubcategory?.name || ''}
         submitLabel="Save Changes"
         isSubmitting={editSubcategoryMutation.isPending}
       />
