@@ -1,21 +1,16 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { useCategories } from '@/hooks/categories'; 
-import CategoryForm from '@/components/categories/CategoryForm';
 import CategoryCard from '@/components/categories/CategoryCard';
 import EmptyState from '@/components/categories/EmptyState';
+import CategoryFormsManager from '@/components/categories/CategoryFormsManager';
+import { useDialogState } from '@/hooks/categories/useDialogState';
+import { useCategoryHandlers } from '@/hooks/categories/useCategoryHandlers';
 
 const Categories: React.FC = () => {
-  // State for dialogs
-  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
-  const [isAddSubcategoryOpen, setIsAddSubcategoryOpen] = useState(false);
-  const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
-  const [isEditSubcategoryOpen, setIsEditSubcategoryOpen] = useState(false);
-  
-  const { toast } = useToast();
   const { 
     categories,
     subcategories,
@@ -33,99 +28,23 @@ const Categories: React.FC = () => {
     categoryHasSubcategories
   } = useCategories();
 
-  // Handlers
-  const handleAddCategory = (categoryName: string) => {
-    if (!categoryName || categoryName.trim() === '') {
-      return;
-    }
-    
-    addCategoryMutation.mutate(categoryName.trim());
-    setIsAddCategoryOpen(false);
-  };
+  // Get dialog state from our hook
+  const dialogState = useDialogState();
   
-  const handleEditCategory = (categoryName: string) => {
-    if (!selectedCategory || !categoryName || categoryName.trim() === '') {
-      return;
-    }
-    
-    editCategoryMutation.mutate({ 
-      id: selectedCategory.id, 
-      name: categoryName.trim() 
-    });
-    setIsEditCategoryOpen(false);
-  };
+  // Get handlers using our custom hook
+  const handlers = useCategoryHandlers(
+    addCategoryMutation,
+    editCategoryMutation,
+    deleteCategoryMutation,
+    addSubcategoryMutation,
+    editSubcategoryMutation,
+    selectedCategory,
+    selectedSubcategory,
+    categoryHasSubcategories,
+    dialogState.newSubcategoryName,
+    dialogState.editSubcategoryName
+  );
   
-  const handleDeleteCategory = (categoryId: string) => {
-    if (categoryHasSubcategories(categoryId)) {
-      toast({
-        title: "Cannot delete",
-        description: "This category has subcategories. Delete them first.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    deleteCategoryMutation.mutate(categoryId);
-  };
-  
-  const handleAddSubcategory = () => {
-    if (!selectedCategory) return;
-    
-    if (newSubcategoryName.trim() === '') {
-      toast({
-        title: "Invalid input",
-        description: "Subcategory name cannot be empty",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    addSubcategoryMutation.mutate({
-      categoryId: selectedCategory.id,
-      name: newSubcategoryName
-    });
-    setIsAddSubcategoryOpen(false);
-    setNewSubcategoryName('');
-  };
-  
-  const handleEditSubcategory = () => {
-    if (!selectedSubcategory) return;
-    
-    if (editSubcategoryName.trim() === '') {
-      toast({
-        title: "Invalid input",
-        description: "Subcategory name cannot be empty",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    editSubcategoryMutation.mutate({
-      id: selectedSubcategory.id,
-      name: editSubcategoryName
-    });
-    setIsEditSubcategoryOpen(false);
-  };
-  
-  const openEditCategoryDialog = (category: typeof selectedCategory) => {
-    setSelectedCategory(category);
-    if (category) {
-      setIsEditCategoryOpen(true);
-    }
-  };
-  
-  const openAddSubcategoryDialog = (category: typeof selectedCategory) => {
-    setSelectedCategory(category);
-    setIsAddSubcategoryOpen(true);
-  };
-  
-  const openEditSubcategoryDialog = (subcategory: typeof selectedSubcategory) => {
-    setSelectedSubcategory(subcategory);
-    if (subcategory) {
-      setIsEditSubcategoryOpen(true);
-    }
-  };
-
   // Loading state
   if (isLoading) {
     return (
@@ -144,7 +63,7 @@ const Categories: React.FC = () => {
         title="Category Management" 
         description="Create and manage categories for feedback tagging"
       >
-        <Button onClick={() => setIsAddCategoryOpen(true)}>
+        <Button onClick={dialogState.openAddCategoryDialog}>
           <Plus className="mr-2 h-4 w-4" />
           Add Category
         </Button>
@@ -157,62 +76,40 @@ const Categories: React.FC = () => {
               key={category.id}
               category={category}
               subcategories={subcategories || []}
-              onEditCategory={openEditCategoryDialog}
-              onAddSubcategory={openAddSubcategoryDialog}
-              onDeleteCategory={handleDeleteCategory}
-              onEditSubcategory={openEditSubcategoryDialog}
+              onEditCategory={(cat) => {
+                setSelectedCategory(cat);
+                dialogState.openEditCategoryDialog(cat);
+              }}
+              onAddSubcategory={(cat) => {
+                setSelectedCategory(cat);
+                dialogState.openAddSubcategoryDialog(cat);
+              }}
+              onDeleteCategory={handlers.handleDeleteCategory}
+              onEditSubcategory={(sub) => {
+                setSelectedSubcategory(sub);
+                dialogState.openEditSubcategoryDialog(sub);
+              }}
               onDeleteSubcategory={deleteSubcategoryMutation.mutate}
             />
           ))
         ) : (
-          <EmptyState onAddCategory={() => setIsAddCategoryOpen(true)} />
+          <EmptyState onAddCategory={dialogState.openAddCategoryDialog} />
         )}
       </div>
       
-      {/* Add Category Form */}
-      <CategoryForm
-        isOpen={isAddCategoryOpen}
-        onClose={() => setIsAddCategoryOpen(false)}
-        onSubmit={handleAddCategory}
-        title="Add Category"
-        description="Create a new category for grouping feedback."
-        submitLabel="Add Category"
-        isSubmitting={addCategoryMutation.isPending}
-      />
-      
-      {/* Edit Category Form */}
-      <CategoryForm
-        isOpen={isEditCategoryOpen}
-        onClose={() => setIsEditCategoryOpen(false)}
-        onSubmit={handleEditCategory}
-        title="Edit Category"
-        description="Update the category name."
-        initialValue={selectedCategory?.name || ''}
-        submitLabel="Save Changes"
-        isSubmitting={editCategoryMutation.isPending}
-      />
-      
-      {/* Add Subcategory Form */}
-      <CategoryForm
-        isOpen={isAddSubcategoryOpen}
-        onClose={() => setIsAddSubcategoryOpen(false)}
-        onSubmit={handleAddSubcategory}
-        title="Add Subcategory"
-        description={selectedCategory ? `Add a subcategory to "${selectedCategory.name}".` : "Add a subcategory"}
-        submitLabel="Add Subcategory"
-        isSubmitting={addSubcategoryMutation.isPending}
-      />
-      
-      {/* Edit Subcategory Form */}
-      <CategoryForm
-        isOpen={isEditSubcategoryOpen}
-        onClose={() => setIsEditSubcategoryOpen(false)}
-        onSubmit={handleEditSubcategory}
-        title="Edit Subcategory"
-        description="Update the subcategory name."
-        initialValue={selectedSubcategory?.name || ''}
-        submitLabel="Save Changes"
-        isSubmitting={editSubcategoryMutation.isPending}
+      {/* Forms manager component handles all the forms */}
+      <CategoryFormsManager 
+        {...dialogState}
+        handleAddCategory={handlers.handleAddCategory}
+        handleEditCategory={handlers.handleEditCategory}
+        handleAddSubcategory={handlers.handleAddSubcategory}
+        handleEditSubcategory={handlers.handleEditSubcategory}
+        selectedCategory={selectedCategory}
+        selectedSubcategory={selectedSubcategory}
+        addCategoryMutation={addCategoryMutation}
+        editCategoryMutation={editCategoryMutation}
+        addSubcategoryMutation={addSubcategoryMutation}
+        editSubcategoryMutation={editSubcategoryMutation}
       />
     </div>
   );
