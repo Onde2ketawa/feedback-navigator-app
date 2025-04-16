@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
@@ -227,7 +226,8 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   const visibleColumns = React.useMemo(() => {
     if (isMobile) {
       return columns.map(column => {
-        if (["submitTime", "device", "appVersion", "language", "sentiment_score"].includes(column.id || column.accessorKey as string)) {
+        const columnId = column.id || (column as any).accessorKey as string;
+        if (["submitTime", "device", "appVersion", "language", "sentiment_score"].includes(columnId)) {
           return {
             ...column,
             size: 0,
