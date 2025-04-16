@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,6 +16,7 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts';
+import { FilterControls } from '@/components/analytics/FilterControls';
 
 // Mock data
 const COLORS = ['#8b5cf6', '#6366f1', '#ec4899', '#f43f5e', '#f97316', '#14b8a6', '#10b981', '#a3e635'];
@@ -28,11 +29,30 @@ const categoryData = [
   { name: 'Others', value: 5, color: COLORS[4] },
 ];
 
-const subcategoryData = [
-  { name: 'Login Problems', value: 15, color: COLORS[0] },
-  { name: 'App Crashes', value: 10, color: COLORS[1] },
-  { name: 'Slow Performance', value: 10, color: COLORS[2] },
-];
+const subcategoryData = {
+  'Technical Issues': [
+    { name: 'Login Problems', value: 15, color: COLORS[0] },
+    { name: 'App Crashes', value: 10, color: COLORS[1] },
+    { name: 'Slow Performance', value: 10, color: COLORS[2] },
+  ],
+  'Customer Service': [
+    { name: 'Response Time', value: 12, color: COLORS[0] },
+    { name: 'Solution Quality', value: 8, color: COLORS[1] },
+    { name: 'Staff Attitude', value: 5, color: COLORS[2] },
+  ],
+  'Product Features': [
+    { name: 'Missing Features', value: 8, color: COLORS[0] },
+    { name: 'UI/UX Design', value: 7, color: COLORS[1] },
+    { name: 'Accessibility', value: 5, color: COLORS[2] },
+  ],
+  'Usability': [
+    { name: 'Navigation', value: 7, color: COLORS[0] },
+    { name: 'Ease of Use', value: 8, color: COLORS[1] },
+  ],
+  'Others': [
+    { name: 'Miscellaneous', value: 5, color: COLORS[0] },
+  ],
+};
 
 const lineRatingByCategory = [
   { name: 'Technical Issues', rating: 3.2 },
@@ -56,9 +76,12 @@ const CategoryAnalytics: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('');
 
+  // Get all available categories from the data
+  const availableCategories = categoryData.map(cat => cat.name);
+
   // Filter data based on selected category
-  const filteredSubcategoryData = selectedCategory === 'Technical Issues' 
-    ? subcategoryData 
+  const filteredSubcategoryData = selectedCategory && subcategoryData[selectedCategory] 
+    ? subcategoryData[selectedCategory]
     : [];
 
   // Get category ratings based on selected channel
@@ -91,59 +114,14 @@ const CategoryAnalytics: React.FC = () => {
         description="Analyze feedback by category and subcategory"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="text-sm font-medium block mb-2">Channel</label>
-          <Select value={selectedChannel} onValueChange={setSelectedChannel}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select channel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Channels</SelectItem>
-              <SelectItem value="LINE Bank">LINE Bank</SelectItem>
-              <SelectItem value="MyHana">MyHana</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium block mb-2">Year</label>
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select year" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2023">2023</SelectItem>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2025">2025</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium block mb-2">Month</label>
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select month" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Months</SelectItem>
-              <SelectItem value="1">January</SelectItem>
-              <SelectItem value="2">February</SelectItem>
-              <SelectItem value="3">March</SelectItem>
-              <SelectItem value="4">April</SelectItem>
-              <SelectItem value="5">May</SelectItem>
-              <SelectItem value="6">June</SelectItem>
-              <SelectItem value="7">July</SelectItem>
-              <SelectItem value="8">August</SelectItem>
-              <SelectItem value="9">September</SelectItem>
-              <SelectItem value="10">October</SelectItem>
-              <SelectItem value="11">November</SelectItem>
-              <SelectItem value="12">December</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <FilterControls
+        channelFilter={selectedChannel}
+        setChannelFilter={setSelectedChannel}
+        yearFilter={selectedYear}
+        setYearFilter={setSelectedYear}
+        monthFilter={selectedMonth}
+        setMonthFilter={setSelectedMonth}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Category Distribution */}
@@ -184,11 +162,9 @@ const CategoryAnalytics: React.FC = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            {selectedCategory && (
-              <p className="text-center mt-4 text-sm text-muted-foreground">
-                Click on a category to view its subcategories
-              </p>
-            )}
+            <p className="text-center mt-4 text-sm text-muted-foreground">
+              Click on a category to view its subcategories
+            </p>
           </CardContent>
         </Card>
 
@@ -196,13 +172,28 @@ const CategoryAnalytics: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>
-              {selectedCategory ? `${selectedCategory} Subcategories` : 'Subcategory Distribution'}
+              Subcategory Distribution
             </CardTitle>
             <CardDescription>
-              {selectedCategory 
-                ? `Distribution of feedback within ${selectedCategory} category`
-                : 'Select a category to view subcategory breakdown'}
+              Distribution of feedback within selected category
             </CardDescription>
+            <div className="mt-2">
+              <Select 
+                value={selectedCategory} 
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger className="bg-white w-full">
+                  <SelectValue placeholder="Select a category to view subcategories" />
+                </SelectTrigger>
+                <SelectContent className="bg-white z-50">
+                  {availableCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="h-80">
@@ -230,7 +221,7 @@ const CategoryAnalytics: React.FC = () => {
                     </PieChart>
                   ) : (
                     <div className="h-full flex items-center justify-center">
-                      <p className="text-muted-foreground">No subcategory data available</p>
+                      <p className="text-muted-foreground">No subcategory data available for {selectedCategory}</p>
                     </div>
                   )
                 ) : (
