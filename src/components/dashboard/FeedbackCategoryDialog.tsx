@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import CategorySelector from '@/components/CategorySelector';
+import { CategoryType, SubcategoryType } from '@/hooks/categories/types';
 
 interface FeedbackCategoryDialogProps {
   isOpen: boolean;
@@ -17,8 +18,8 @@ interface FeedbackCategoryDialogProps {
     subcategory?: string;
   } | null;
   onSave: (feedbackId: string, category: string, subcategory: string) => void;
-  categories: { id: string; name: string }[];
-  subcategories: { id: string; name: string }[];
+  categories: CategoryType[];
+  subcategories: SubcategoryType[];
 }
 
 export const FeedbackCategoryDialog: React.FC<FeedbackCategoryDialogProps> = ({
