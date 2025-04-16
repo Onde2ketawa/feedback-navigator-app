@@ -52,12 +52,23 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
   addSubcategoryMutation,
   editSubcategoryMutation
 }) => {
-  // Handlers with proper state management
+  // Direct handlers that bypass state management in this component
+  // and rely on the parent component's validation
+  const handleAddCategorySubmit = (name: string) => {
+    if (!name || name.trim() === '') return;
+    handleAddCategory(name);
+  };
+  
+  const handleEditCategorySubmit = (name: string) => {
+    if (!name || name.trim() === '') return;
+    handleEditCategory(name);
+  };
+  
+  // Subcategory handlers that update state first
   const handleAddSubcategorySubmit = (name: string) => {
     if (!name || name.trim() === '') return;
-    
-    setNewSubcategoryName(name);
-    // Use Promise to ensure state is updated before handler is called
+    setNewSubcategoryName(name.trim());
+    // Use Promise.resolve() to ensure state is updated before handler is called
     Promise.resolve().then(() => {
       handleAddSubcategory();
     });
@@ -65,9 +76,8 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
   
   const handleEditSubcategorySubmit = (name: string) => {
     if (!name || name.trim() === '') return;
-    
-    setEditSubcategoryName(name);
-    // Use Promise to ensure state is updated before handler is called
+    setEditSubcategoryName(name.trim());
+    // Use Promise.resolve() to ensure state is updated before handler is called
     Promise.resolve().then(() => {
       handleEditSubcategory();
     });
@@ -79,7 +89,7 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
       <CategoryForm
         isOpen={isAddCategoryOpen}
         onClose={() => setIsAddCategoryOpen(false)}
-        onSubmit={handleAddCategory}
+        onSubmit={handleAddCategorySubmit}
         title="Add Category"
         description="Create a new category for grouping feedback."
         submitLabel="Add Category"
@@ -90,7 +100,7 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
       <CategoryForm
         isOpen={isEditCategoryOpen}
         onClose={() => setIsEditCategoryOpen(false)}
-        onSubmit={handleEditCategory}
+        onSubmit={handleEditCategorySubmit}
         title="Edit Category"
         description="Update the category name."
         initialValue={selectedCategory?.name || ''}

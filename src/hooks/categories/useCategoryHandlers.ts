@@ -19,6 +19,11 @@ export const useCategoryHandlers = (
   // Category handlers
   const handleAddCategory = (categoryName: string) => {
     if (!categoryName || categoryName.trim() === '') {
+      toast({
+        title: "Invalid input",
+        description: "Category name cannot be empty",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -27,6 +32,19 @@ export const useCategoryHandlers = (
   
   const handleEditCategory = (categoryName: string) => {
     if (!selectedCategory || !categoryName || categoryName.trim() === '') {
+      if (!selectedCategory) {
+        toast({
+          title: "Operation failed",
+          description: "No category selected for editing",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Invalid input",
+          description: "Category name cannot be empty",
+          variant: "destructive",
+        });
+      }
       return;
     }
     
@@ -49,10 +67,18 @@ export const useCategoryHandlers = (
     deleteCategoryMutation.mutate(categoryId);
   };
   
-  // Subcategory handlers
+  // Subcategory handlers with improved validation
   const handleAddSubcategory = () => {
-    if (!selectedCategory) return;
+    if (!selectedCategory) {
+      toast({
+        title: "Operation failed",
+        description: "No category selected for adding subcategory",
+        variant: "destructive",
+      });
+      return;
+    }
     
+    // Validate subcategory name
     if (!newSubcategoryName || newSubcategoryName.trim() === '') {
       toast({
         title: "Invalid input",
@@ -62,6 +88,7 @@ export const useCategoryHandlers = (
       return;
     }
     
+    // Proceed with mutation
     addSubcategoryMutation.mutate({
       categoryId: selectedCategory.id,
       name: newSubcategoryName.trim()
@@ -69,8 +96,16 @@ export const useCategoryHandlers = (
   };
   
   const handleEditSubcategory = () => {
-    if (!selectedSubcategory) return;
+    if (!selectedSubcategory) {
+      toast({
+        title: "Operation failed",
+        description: "No subcategory selected for editing",
+        variant: "destructive",
+      });
+      return;
+    }
     
+    // Validate subcategory name
     if (!editSubcategoryName || editSubcategoryName.trim() === '') {
       toast({
         title: "Invalid input",
@@ -80,6 +115,7 @@ export const useCategoryHandlers = (
       return;
     }
     
+    // Proceed with mutation
     editSubcategoryMutation.mutate({
       id: selectedSubcategory.id,
       name: editSubcategoryName.trim()
