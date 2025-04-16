@@ -52,35 +52,34 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
   addSubcategoryMutation,
   editSubcategoryMutation
 }) => {
-  // Direct handlers that bypass state management in this component
-  // and rely on the parent component's validation
+  // Category handlers with direct validation
   const handleAddCategorySubmit = (name: string) => {
-    if (!name || name.trim() === '') return;
     handleAddCategory(name);
   };
   
   const handleEditCategorySubmit = (name: string) => {
-    if (!name || name.trim() === '') return;
     handleEditCategory(name);
   };
   
-  // Subcategory handlers that update state first
+  // Subcategory handlers with state updates and improved timing
   const handleAddSubcategorySubmit = (name: string) => {
-    if (!name || name.trim() === '') return;
-    setNewSubcategoryName(name.trim());
-    // Use Promise.resolve() to ensure state is updated before handler is called
-    Promise.resolve().then(() => {
+    // Set the state first
+    setNewSubcategoryName(name);
+    
+    // Use setTimeout to ensure React has completed the state update
+    setTimeout(() => {
       handleAddSubcategory();
-    });
+    }, 0);
   };
   
   const handleEditSubcategorySubmit = (name: string) => {
-    if (!name || name.trim() === '') return;
-    setEditSubcategoryName(name.trim());
-    // Use Promise.resolve() to ensure state is updated before handler is called
-    Promise.resolve().then(() => {
+    // Set the state first
+    setEditSubcategoryName(name);
+    
+    // Use setTimeout to ensure React has completed the state update
+    setTimeout(() => {
       handleEditSubcategory();
-    });
+    }, 0);
   };
   
   return (
