@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { FeedbackCategoryDialog } from '@/components/dashboard/FeedbackCategoryDialog';
-import { mockCategories, mockSubcategories } from '@/models/feedback';
 import { useFeedbackData, FeedbackFilter } from '@/hooks/useFeedbackData';
 import { FeedbackDataWrapper } from '@/components/dashboard/FeedbackDataWrapper';
 import { DashboardContent } from '@/components/dashboard/DashboardContent';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { DashboardActions } from '@/components/dashboard/DashboardActions';
 import { useCategoryDialog } from '@/components/dashboard/useCategoryDialog';
+import { useCategoryQueries } from '@/hooks/categories/useCategoryQueries';
 
 const Dashboard: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -29,6 +29,8 @@ const Dashboard: React.FC = () => {
     handleCategoryChange, 
     openTagDialog 
   } = useCategoryDialog();
+  
+  const { categories, subcategories, isLoading: categoriesLoading } = useCategoryQueries();
   
   const handleFilterChange = (filters: FeedbackFilter) => {
     console.log("Applying filters:", filters);
@@ -62,8 +64,8 @@ const Dashboard: React.FC = () => {
           setSelectedRows={setSelectedRows}
           openTagDialog={openTagDialog}
           onFilterChange={handleFilterChange}
-          categories={mockCategories}
-          subcategories={mockSubcategories}
+          categories={categories || []}
+          subcategories={subcategories || []}
         />
       </FeedbackDataWrapper>
       
@@ -72,8 +74,8 @@ const Dashboard: React.FC = () => {
         onOpenChange={setIsDialogOpen}
         selectedFeedback={selectedFeedback}
         onSave={handleCategoryChange}
-        categories={mockCategories}
-        subcategories={mockSubcategories}
+        categories={categories || []}
+        subcategories={subcategories || []}
       />
     </div>
   );

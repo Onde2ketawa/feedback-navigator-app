@@ -14,7 +14,7 @@ interface CategorySelectorProps {
   initialSubcategory?: string;
   onSave: (category: string, subcategory: string) => void;
   categories: { id: string; name: string }[];
-  subcategories: { id: string; name: string }[];
+  subcategories: { id: string; category_id: string; name: string }[];
 }
 
 const CategorySelector: React.FC<CategorySelectorProps> = ({
@@ -31,9 +31,8 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   // Filter subcategories when category changes
   useEffect(() => {
     if (category) {
-      // In a real implementation, you would fetch subcategories based on the selected category
-      // Here we're just filtering the mock data
-      const filtered = subcategories.filter(subcat => subcat.id.startsWith(category));
+      // Filter subcategories based on the selected category_id
+      const filtered = subcategories.filter(subcat => subcat.category_id === category);
       setAvailableSubcategories(filtered);
       
       // Reset subcategory if the current one doesn't belong to the new category
