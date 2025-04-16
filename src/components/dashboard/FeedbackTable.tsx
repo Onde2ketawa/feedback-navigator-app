@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Star, Tag } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Feedback type definition
 interface Feedback {
@@ -46,6 +47,8 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   setSelectedRows,
   openTagDialog,
 }) => {
+  const isMobile = useIsMobile();
+
   // Column definitions
   const columns: ColumnDef<Feedback>[] = [
     {
@@ -96,7 +99,7 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
             {Array.from({ length: 5 }).map((_, i) => (
               <Star 
                 key={i} 
-                className={`h-4 w-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                className={`h-3 w-3 sm:h-4 sm:w-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
               />
             ))}
           </div>
@@ -110,6 +113,7 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
     {
       accessorKey: "submitTime",
       header: "Submit Time",
+      enableHiding: true,
     },
     {
       accessorKey: "feedback",
@@ -117,7 +121,9 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
       cell: ({ row }) => {
         const feedback = row.getValue("feedback") as string;
         return feedback ? (
-          <div className="max-w-[300px] truncate">{feedback}</div>
+          <div className="max-w-[100px] sm:max-w-[150px] md:max-w-[300px] truncate">
+            {feedback}
+          </div>
         ) : (
           <span className="text-muted-foreground italic">No feedback</span>
         );
@@ -126,21 +132,24 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
     {
       accessorKey: "device",
       header: "Device",
+      enableHiding: true,
     },
     {
       accessorKey: "appVersion",
       header: "App Version",
+      enableHiding: true,
     },
     {
       accessorKey: "language",
       header: "Language",
+      enableHiding: true,
     },
     {
       accessorKey: "sentiment",
       header: "Sentiment",
       cell: ({ row }) => {
         const sentiment = row.getValue("sentiment") as string;
-        let badgeClass = "px-2 py-1 rounded text-xs font-medium";
+        let badgeClass = "px-1 sm:px-2 py-1 rounded text-xs font-medium";
         
         switch (sentiment?.toLowerCase()) {
           case 'positive':
@@ -158,11 +167,12 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
     },
     {
       accessorKey: "sentiment_score",
-      header: "Sentiment Score",
+      header: "Score",
       cell: ({ row }) => {
         const score = row.original.sentiment_score;
         return <span>{score?.toFixed(2) || 'N/A'}</span>;
-      }
+      },
+      enableHiding: true,
     },
     {
       accessorKey: "category",
@@ -182,8 +192,8 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
           
         return (
           <div>
-            <div className="font-medium">{category?.name || 'Unknown'}</div>
-            {subcategory && <div className="text-sm text-muted-foreground">{subcategory.name}</div>}
+            <div className="font-medium text-xs sm:text-sm">{category?.name || 'Unknown'}</div>
+            {subcategory && <div className="text-xs text-muted-foreground">{subcategory.name}</div>}
           </div>
         );
       },
@@ -213,9 +223,28 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
     },
   ];
 
+  // Hide certain columns on mobile
+  const visibleColumns = React.useMemo(() => {
+    if (isMobile) {
+      return columns.map(column => {
+        if (["submitTime", "device", "appVersion", "language", "sentiment_score"].includes(column.id || column.accessorKey as string)) {
+          return {
+            ...column,
+            size: 0,
+            minSize: 0,
+          };
+        }
+        return column;
+      });
+    }
+    return columns;
+  }, [columns, isMobile]);
+
   return (
-    <div className="overflow-x-auto">
-      <DataTable columns={columns} data={data} />
+    <div className="overflow-x-auto -mx-4 sm:mx-0">
+      <div className="min-w-full inline-block align-middle px-4 sm:px-0">
+        <DataTable columns={visibleColumns} data={data} />
+      </div>
     </div>
   );
 };

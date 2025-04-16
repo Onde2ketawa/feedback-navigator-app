@@ -26,13 +26,13 @@ export function DashboardContent({
   subcategories
 }: DashboardContentProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-      <div className="md:col-span-1">
+    <div className="grid grid-cols-1 gap-4 lg:gap-6">
+      <div className="w-full">
         <FeedbackSortSection onFilterChange={onFilterChange} />
       </div>
-      <div className="md:col-span-3">
-        <Card>
-          <CardContent className="pt-6">
+      <div className="w-full">
+        <Card className="shadow-sm">
+          <CardContent className="p-2 sm:p-4 md:p-6 overflow-x-auto">
             <FeedbackTable
               data={feedbackData}
               categories={categories}

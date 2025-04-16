@@ -34,10 +34,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       <main
         className={cn(
           "transition-all duration-300 min-h-screen",
-          isSidebarOpen ? "ml-64" : isMobile ? "ml-0" : "ml-16"
+          isSidebarOpen ? "sm:ml-64" : isMobile ? "ml-0" : "sm:ml-16",
+          isMobile && isSidebarOpen ? "ml-0" : "" 
         )}
       >
-        <div className="container py-6 px-4 md:px-6">
+        <div className="container py-4 sm:py-6 px-2 sm:px-4 md:px-6 max-w-full overflow-hidden">
           {children}
         </div>
       </main>

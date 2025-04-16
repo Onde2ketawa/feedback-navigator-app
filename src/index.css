@@ -100,4 +100,20 @@
   .overflow-anywhere {
     overflow-wrap: anywhere;
   }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .responsive-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  
+  .responsive-padding {
+    @apply px-2 sm:px-4 md:px-6 lg:px-8;
+  }
+  
+  .responsive-text {
+    @apply text-sm sm:text-base md:text-lg;
+  }
 }

@@ -15,7 +15,7 @@ const Dashboard: React.FC = () => {
   
   const [filter, setFilter] = useState<FeedbackFilter>({
     channel: null,
-    year: '2024', // Default to 2024 instead of null
+    year: '2024', 
     month: null,
     ratingMin: 1,
     ratingMax: 5
@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
   };
   
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in space-y-4 sm:space-y-6">
       <PageHeader 
         title="Review Dashboard" 
         description="Browse and manage feedback entries"
@@ -56,17 +56,19 @@ const Dashboard: React.FC = () => {
         error={error}
         filter={filter}
       >
-        <DashboardStats />
-        
-        <DashboardContent
-          feedbackData={feedbackData || []}
-          selectedRows={selectedRows}
-          setSelectedRows={setSelectedRows}
-          openTagDialog={openTagDialog}
-          onFilterChange={handleFilterChange}
-          categories={categories || []}
-          subcategories={subcategories || []}
-        />
+        <div className="space-y-4 sm:space-y-6">
+          <DashboardStats />
+          
+          <DashboardContent
+            feedbackData={feedbackData || []}
+            selectedRows={selectedRows}
+            setSelectedRows={setSelectedRows}
+            openTagDialog={openTagDialog}
+            onFilterChange={handleFilterChange}
+            categories={categories || []}
+            subcategories={subcategories || []}
+          />
+        </div>
       </FeedbackDataWrapper>
       
       <FeedbackCategoryDialog
