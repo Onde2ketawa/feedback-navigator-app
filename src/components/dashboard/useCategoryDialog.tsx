@@ -11,6 +11,10 @@ export function useCategoryDialog() {
   
   const handleCategoryChange = async (feedbackId: string, category: string, subcategory: string) => {
     try {
+      if (!feedbackId) {
+        throw new Error('Feedback ID is required');
+      }
+      
       const { error } = await supabase
         .from('customer_feedback')
         .update({ 

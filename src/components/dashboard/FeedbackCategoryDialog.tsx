@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import CategorySelector from '@/components/CategorySelector';
 import { CategoryType, SubcategoryType } from '@/hooks/categories/types';
@@ -35,15 +36,20 @@ export const FeedbackCategoryDialog: React.FC<FeedbackCategoryDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Category Tags</DialogTitle>
+          <DialogDescription>
+            Select a category and subcategory for this feedback.
+          </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           {selectedFeedback && (
             <CategorySelector
               initialCategory={selectedFeedback.category}
               initialSubcategory={selectedFeedback.subcategory}
-              onSave={(category, subcategory) => 
-                onSave(selectedFeedback.id, category, subcategory)
-              }
+              onSave={(category, subcategory) => {
+                if (selectedFeedback.id) {
+                  onSave(selectedFeedback.id, category, subcategory);
+                }
+              }}
               categories={categories}
               subcategories={subcategories}
             />
