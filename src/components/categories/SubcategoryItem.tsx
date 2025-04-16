@@ -16,10 +16,7 @@ const SubcategoryItem: React.FC<SubcategoryItemProps> = ({
   onDeleteSubcategory,
 }) => {
   return (
-    <div 
-      key={subcategory.id} 
-      className="flex items-center justify-between py-2 px-3 bg-secondary rounded-md"
-    >
+    <div className="flex items-center justify-between py-2 px-3 bg-secondary rounded-md">
       <span>{subcategory.name}</span>
       <div className="flex space-x-1">
         <Button 

@@ -24,6 +24,7 @@ const SubcategoriesList: React.FC<SubcategoriesListProps> = ({
   onEditSubcategory,
   onDeleteSubcategory,
 }) => {
+  // Make sure we're properly filtering subcategories by category_id
   const categorySubcategories = subcategories.filter(sub => sub.category_id === categoryId);
 
   return (
@@ -36,7 +37,7 @@ const SubcategoriesList: React.FC<SubcategoriesListProps> = ({
       </CardDescription>
       
       {categorySubcategories.length > 0 ? (
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion type="single" collapsible className="w-full" defaultValue="subcategories">
           <AccordionItem value="subcategories">
             <AccordionTrigger>Subcategories</AccordionTrigger>
             <AccordionContent>

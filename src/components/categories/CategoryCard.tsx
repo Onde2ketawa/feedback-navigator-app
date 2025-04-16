@@ -51,6 +51,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
           variant="outline" 
           size="sm" 
           onClick={() => onAddSubcategory(category)}
+          className="w-full"
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Subcategory
