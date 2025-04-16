@@ -83,7 +83,8 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
         onClose={() => setIsAddSubcategoryOpen(false)}
         onSubmit={(name) => {
           setNewSubcategoryName(name);
-          handleAddSubcategory();
+          // Only call handleAddSubcategory after setting the name
+          setTimeout(() => handleAddSubcategory(), 0);
         }}
         title="Add Subcategory"
         description={selectedCategory ? `Add a subcategory to "${selectedCategory.name}".` : "Add a subcategory"}
@@ -97,7 +98,8 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
         onClose={() => setIsEditSubcategoryOpen(false)}
         onSubmit={(name) => {
           setEditSubcategoryName(name);
-          handleEditSubcategory();
+          // Only call handleEditSubcategory after setting the name
+          setTimeout(() => handleEditSubcategory(), 0);
         }}
         title="Edit Subcategory"
         description="Update the subcategory name."

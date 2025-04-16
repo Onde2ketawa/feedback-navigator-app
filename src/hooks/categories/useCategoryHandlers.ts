@@ -53,7 +53,7 @@ export const useCategoryHandlers = (
   const handleAddSubcategory = () => {
     if (!selectedCategory) return;
     
-    if (newSubcategoryName.trim() === '') {
+    if (!newSubcategoryName || newSubcategoryName.trim() === '') {
       toast({
         title: "Invalid input",
         description: "Subcategory name cannot be empty",
@@ -64,14 +64,14 @@ export const useCategoryHandlers = (
     
     addSubcategoryMutation.mutate({
       categoryId: selectedCategory.id,
-      name: newSubcategoryName
+      name: newSubcategoryName.trim()
     });
   };
   
   const handleEditSubcategory = () => {
     if (!selectedSubcategory) return;
     
-    if (editSubcategoryName.trim() === '') {
+    if (!editSubcategoryName || editSubcategoryName.trim() === '') {
       toast({
         title: "Invalid input",
         description: "Subcategory name cannot be empty",
@@ -82,7 +82,7 @@ export const useCategoryHandlers = (
     
     editSubcategoryMutation.mutate({
       id: selectedSubcategory.id,
-      name: editSubcategoryName
+      name: editSubcategoryName.trim()
     });
   };
   
