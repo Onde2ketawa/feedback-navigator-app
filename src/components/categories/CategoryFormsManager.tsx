@@ -52,6 +52,27 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
   addSubcategoryMutation,
   editSubcategoryMutation
 }) => {
+  // Handlers with proper state management
+  const handleAddSubcategorySubmit = (name: string) => {
+    if (!name || name.trim() === '') return;
+    
+    setNewSubcategoryName(name);
+    // Use Promise to ensure state is updated before handler is called
+    Promise.resolve().then(() => {
+      handleAddSubcategory();
+    });
+  };
+  
+  const handleEditSubcategorySubmit = (name: string) => {
+    if (!name || name.trim() === '') return;
+    
+    setEditSubcategoryName(name);
+    // Use Promise to ensure state is updated before handler is called
+    Promise.resolve().then(() => {
+      handleEditSubcategory();
+    });
+  };
+  
   return (
     <>
       {/* Add Category Form */}
@@ -81,11 +102,7 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
       <CategoryForm
         isOpen={isAddSubcategoryOpen}
         onClose={() => setIsAddSubcategoryOpen(false)}
-        onSubmit={(name) => {
-          setNewSubcategoryName(name);
-          // Only call handleAddSubcategory after setting the name
-          setTimeout(() => handleAddSubcategory(), 0);
-        }}
+        onSubmit={handleAddSubcategorySubmit}
         title="Add Subcategory"
         description={selectedCategory ? `Add a subcategory to "${selectedCategory.name}".` : "Add a subcategory"}
         submitLabel="Add Subcategory"
@@ -96,11 +113,7 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
       <CategoryForm
         isOpen={isEditSubcategoryOpen}
         onClose={() => setIsEditSubcategoryOpen(false)}
-        onSubmit={(name) => {
-          setEditSubcategoryName(name);
-          // Only call handleEditSubcategory after setting the name
-          setTimeout(() => handleEditSubcategory(), 0);
-        }}
+        onSubmit={handleEditSubcategorySubmit}
         title="Edit Subcategory"
         description="Update the subcategory name."
         initialValue={selectedSubcategory?.name || ''}
