@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Categories from "./pages/Categories";
 import RatingAnalytics from "./pages/RatingAnalytics";
 import CategoryAnalytics from "./pages/CategoryAnalytics";
+import UserManagement from "./pages/UserManagement";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import CsvUpload from "./pages/CsvUpload";
@@ -58,6 +59,13 @@ const App = () => (
               <ProtectedRoute requireAdmin>
                 <MainLayout>
                   <CsvUpload />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/users" element={
+              <ProtectedRoute requireAdmin>
+                <MainLayout>
+                  <UserManagement />
                 </MainLayout>
               </ProtectedRoute>
             } />

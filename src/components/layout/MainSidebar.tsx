@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -11,7 +10,8 @@ import {
   Menu,
   X,
   FileSpreadsheet,
-  Home
+  Home,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -55,6 +55,12 @@ const MainSidebar: React.FC<SidebarProps> = ({
       name: 'Categories',
       href: '/categories',
       icon: <Tags className="h-5 w-5" />,
+      requireAdmin: true
+    },
+    {
+      name: 'User Management',
+      href: '/users',
+      icon: <Users className="h-5 w-5" />,
       requireAdmin: true
     },
     {
@@ -107,12 +113,10 @@ const MainSidebar: React.FC<SidebarProps> = ({
       <div className="flex-1 overflow-y-auto py-4 px-3">
         <nav className="space-y-1">
           {navigationItems.map((item) => {
-            // Skip admin-only items for non-admin users
             if (item.requireAdmin && !isAdmin) {
               return null;
             }
             
-            // Skip the duplicate Dashboard entry (using Review Dashboard instead)
             if (item.name === 'Dashboard') {
               return null;
             }
@@ -142,7 +146,6 @@ const MainSidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
       
-      {/* User profile section at bottom */}
       <div className={cn(
         "p-4 border-t border-sidebar-border flex items-center",
         !isOpen && "justify-center"
