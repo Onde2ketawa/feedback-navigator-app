@@ -74,7 +74,7 @@ export function useRatingAnalyticsData() {
       const { data, error } = await supabase
         .from('customer_feedback')
         .select('submit_date, rating, channel_id')
-        .filter('channel_id', channelFilter === 'all' ? 'neq.null' : 'eq.' + channelFilter)
+        .eq(channelFilter === 'all' ? 'submit_date' : 'channel_id', channelFilter === 'all' ? 'not.is.null' : channelFilter)
         .filter('submit_date', 'not.is.null');
 
       if (error) throw error;
@@ -126,11 +126,19 @@ export function useRatingAnalyticsData() {
 
   const fetchRatingDistributionData = async (): Promise<RatingDistributionDataPoint[]> => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('customer_feedback')
-        .select('rating')
-        .filter('channel_id', channelFilter === 'all' ? 'neq.null' : 'eq.' + channelFilter)
-        .filter('submit_date', 'not.is.null');
+        .select('rating');
+        
+      // Apply channel filter if not 'all'
+      if (channelFilter !== 'all') {
+        query = query.eq('channel_id', channelFilter);
+      }
+      
+      // Apply filters for date if needed
+      query = query.filter('submit_date', 'not.is.null');
+      
+      const { data, error } = await query;
 
       if (error) throw error;
       
@@ -171,27 +179,44 @@ export function useRatingAnalyticsData() {
 
   const fetchMonthlyRatingData = async (): Promise<MonthlyRatingDataPoint[]> => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('customer_feedback')
-        .select('submit_date, rating')
-        .filter('channel_id', channelFilter === 'all' ? 'neq.null' : 'eq.' + channelFilter)
-        .filter('submit_date', 'not.is.null');
+        .select('submit_date, rating');
+        
+      // Apply channel filter if not 'all'
+      if (channelFilter !== 'all') {
+        query = query.eq('channel_id', channelFilter);
+      }
+      
+      // Apply filters for date
+      query = query.filter('submit_date', 'not.is.null');
+      
+      // Add year filter if not 'all'
+      if (yearFilter !== 'all') {
+        const yearStart = `${yearFilter}-01-01`;
+        const yearEnd = `${yearFilter}-12-31`;
+        query = query.gte('submit_date', yearStart).lte('submit_date', yearEnd);
+      }
+      
+      // Add month filter if not 'all'
+      if (monthFilter !== 'all' && yearFilter !== 'all') {
+        const monthNum = parseInt(monthFilter);
+        const monthStr = monthNum < 10 ? `0${monthNum}` : `${monthNum}`;
+        const monthStart = `${yearFilter}-${monthStr}-01`;
+        const lastDay = new Date(parseInt(yearFilter), monthNum, 0).getDate();
+        const monthEnd = `${yearFilter}-${monthStr}-${lastDay}`;
+        query = query.gte('submit_date', monthStart).lte('submit_date', monthEnd);
+      }
+      
+      const { data, error } = await query;
 
       if (error) throw error;
       
       if (data && data.length > 0) {
-        // Filter data for the selected year and month
-        const filteredData = data.filter(item => {
-          const date = new Date(item.submit_date);
-          const year = date.getFullYear().toString();
-          
-          return yearFilter === 'all' || year === yearFilter;
-        });
-        
         // Group by day of month and calculate average rating
         const dayRatings: Record<number, { sum: number, count: number }> = {};
         
-        filteredData.forEach(item => {
+        data.forEach(item => {
           const date = new Date(item.submit_date);
           const day = date.getDate();
           
@@ -212,7 +237,7 @@ export function useRatingAnalyticsData() {
         return result.sort((a, b) => a.day - b.day);
       }
       
-      // Return empty array if no data
+      // Return mock data if no data
       return Array.from({ length: 30 }, (_, i) => ({
         day: i + 1,
         rating: 3 + Math.random() * 1.5
@@ -228,11 +253,36 @@ export function useRatingAnalyticsData() {
 
   const fetchCategoryRatingData = async (): Promise<CategoryRatingDataPoint[]> => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('customer_feedback')
-        .select('category, rating')
-        .filter('channel_id', channelFilter === 'all' ? 'neq.null' : 'eq.' + channelFilter)
-        .filter('category', 'not.is.null');
+        .select('category, rating');
+        
+      // Apply channel filter if not 'all'
+      if (channelFilter !== 'all') {
+        query = query.eq('channel_id', channelFilter);
+      }
+      
+      // Filter non-null categories
+      query = query.filter('category', 'not.is.null');
+      
+      // Add year filter if not 'all'
+      if (yearFilter !== 'all') {
+        const yearStart = `${yearFilter}-01-01`;
+        const yearEnd = `${yearFilter}-12-31`;
+        query = query.gte('submit_date', yearStart).lte('submit_date', yearEnd);
+      }
+      
+      // Add month filter if not 'all'
+      if (monthFilter !== 'all' && yearFilter !== 'all') {
+        const monthNum = parseInt(monthFilter);
+        const monthStr = monthNum < 10 ? `0${monthNum}` : `${monthNum}`;
+        const monthStart = `${yearFilter}-${monthStr}-01`;
+        const lastDay = new Date(parseInt(yearFilter), monthNum, 0).getDate();
+        const monthEnd = `${yearFilter}-${monthStr}-${lastDay}`;
+        query = query.gte('submit_date', monthStart).lte('submit_date', monthEnd);
+      }
+      
+      const { data, error } = await query;
 
       if (error) throw error;
       
