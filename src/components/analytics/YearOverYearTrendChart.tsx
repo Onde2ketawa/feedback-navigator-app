@@ -11,13 +11,10 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { YoyTrendDataPoint } from '@/hooks/rating/useRatingAnalyticsData';
 
 interface YearOverYearTrendChartProps {
-  data: Array<{
-    name: string;
-    LINE: number;
-    MyHana: number;
-  }>;
+  data: YoyTrendDataPoint[];
   channelFilter: string;
   yearFilter: string;
 }
@@ -27,12 +24,15 @@ export function YearOverYearTrendChart({
   channelFilter,
   yearFilter
 }: YearOverYearTrendChartProps) {
+  const currentYear = new Date().getFullYear().toString();
+  const previousYear = (Number(currentYear) - 1).toString();
+  
   return (
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader>
         <CardTitle>Year-over-Year Rating Trend</CardTitle>
         <CardDescription>
-          Average rating trends by month for {yearFilter}
+          Average rating trends by month for {currentYear} vs {previousYear}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -59,21 +59,19 @@ export function YearOverYearTrendChart({
               <Legend />
               <Line
                 type="monotone"
-                dataKey="LINE"
+                dataKey={currentYear}
                 stroke="#8b5cf6"
                 strokeWidth={2}
                 activeDot={{ r: 8 }}
-                name="LINE Bank"
-                hide={channelFilter !== 'all' && channelFilter !== 'LINE'}
+                name={`${currentYear}`}
               />
               <Line
                 type="monotone"
-                dataKey="MyHana"
+                dataKey={previousYear}
                 stroke="#6366f1"
                 strokeWidth={2}
                 activeDot={{ r: 8 }}
-                name="MyHana"
-                hide={channelFilter !== 'all' && channelFilter !== 'MyHana'}
+                name={`${previousYear}`}
               />
             </LineChart>
           </ResponsiveContainer>

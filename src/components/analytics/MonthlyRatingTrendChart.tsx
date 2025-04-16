@@ -10,14 +10,13 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { MonthlyRatingDataPoint } from '@/hooks/rating/useRatingAnalyticsData';
 
-export function MonthlyRatingTrendChart() {
-  // Generate daily data for demonstration
-  const dailyData = Array.from({ length: 30 }, (_, i) => ({
-    day: i + 1,
-    rating: (3.5 + Math.random()).toFixed(1),
-  }));
+interface MonthlyRatingTrendChartProps {
+  data: MonthlyRatingDataPoint[];
+}
 
+export function MonthlyRatingTrendChart({ data }: MonthlyRatingTrendChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -30,7 +29,7 @@ export function MonthlyRatingTrendChart() {
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={dailyData}
+              data={data}
               margin={{
                 top: 5,
                 right: 30,
