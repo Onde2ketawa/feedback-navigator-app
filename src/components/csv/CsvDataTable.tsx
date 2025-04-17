@@ -28,7 +28,6 @@ export const CsvDataTable: React.FC<CsvDataTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12 text-center">Baris</TableHead>
             {columns.map((column) => (
               <TableHead key={column}>
                 {column}
@@ -46,14 +45,6 @@ export const CsvDataTable: React.FC<CsvDataTableProps> = ({
                 key={index}
                 className={isInvalidRow(index) ? "bg-red-50" : ""}
               >
-                <TableCell className="text-center font-medium">
-                  {startIndex + index + 2} {/* +2 untuk menunjukkan bahwa baris 1 adalah header */}
-                  {isInvalidRow(index) && (
-                    <span className="ml-1 text-red-500">
-                      <AlertTriangle className="h-4 w-4 inline" />
-                    </span>
-                  )}
-                </TableCell>
                 {columns.map((column) => (
                   <TableCell 
                     key={`${index}-${column}`}
@@ -75,7 +66,7 @@ export const CsvDataTable: React.FC<CsvDataTableProps> = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length + 1} className="h-24 text-center">
+              <TableCell colSpan={columns.length} className="h-24 text-center">
                 Tidak ada data tersedia
               </TableCell>
             </TableRow>
