@@ -11,8 +11,10 @@ import { useCategories } from '@/hooks/categories';
 import { CsvPreview } from '@/components/csv/CsvPreview';
 import { parseCsvFile } from '@/utils/csv-utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { ChannelSelector } from '@/components/csv/ChannelSelector';
 
 const CsvUpload: React.FC = () => {
+  const [selectedChannel, setSelectedChannel] = useState<string>('');
   const [files, setFiles] = useState<File[]>([]);
   const [csvData, setCsvData] = useState<any[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
@@ -32,6 +34,15 @@ const CsvUpload: React.FC = () => {
   };
   
   const handlePreview = async () => {
+    if (!selectedChannel) {
+      toast({
+        title: "No channel selected",
+        description: "Please select a channel before previewing",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (files.length === 0) {
       toast({
         title: "No file selected",
@@ -75,6 +86,15 @@ const CsvUpload: React.FC = () => {
   };
   
   const handleUpload = async () => {
+    if (!selectedChannel) {
+      toast({
+        title: "No channel selected",
+        description: "Please select a channel before uploading",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (files.length === 0 || csvData.length === 0) {
       toast({
         title: "No data to upload",
@@ -93,7 +113,7 @@ const CsvUpload: React.FC = () => {
       
       toast({
         title: "Upload successful",
-        description: `Uploaded ${csvData.length} records from CSV file`,
+        description: `Uploaded ${csvData.length} records from CSV file to the selected channel`,
       });
       
       // Reset the form after successful upload
@@ -122,10 +142,16 @@ const CsvUpload: React.FC = () => {
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-6">
+            {/* Channel selector added here */}
+            <ChannelSelector 
+              value={selectedChannel}
+              onChange={setSelectedChannel}
+            />
+            
             <FileUpload
               onFilesAccepted={handleFilesAccepted}
               maxFiles={1}
-              disabled={isProcessing}
+              disabled={isProcessing || !selectedChannel}
             />
             
             {error && (
@@ -139,7 +165,7 @@ const CsvUpload: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={handlePreview}
-                disabled={files.length === 0 || isProcessing}
+                disabled={files.length === 0 || isProcessing || !selectedChannel}
               >
                 <FileCheck className="mr-2 h-4 w-4" />
                 Preview CSV
@@ -147,7 +173,7 @@ const CsvUpload: React.FC = () => {
               
               <Button
                 onClick={handleUpload}
-                disabled={csvData.length === 0 || isProcessing}
+                disabled={csvData.length === 0 || isProcessing || !selectedChannel}
                 className="flex items-center"
               >
                 <Upload className="mr-2 h-4 w-4" />
