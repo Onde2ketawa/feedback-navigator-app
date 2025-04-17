@@ -9,10 +9,11 @@ export const CsvRequirements: React.FC = () => {
         <li><strong>Rating</strong> (wajib): Nilai numerik (misalnya 1-5)</li>
         <li><strong>Submit Date</strong> (wajib): Tanggal dalam format YYYY-MM-DD</li>
         <li><strong>Feedback</strong> (opsional): Teks feedback tambahan</li>
+        <li><strong>Kolom lainnya</strong> (opsional): Semua kolom lain boleh kosong</li>
       </ul>
       <p className="text-sm text-yellow-700 mt-2">
-        Kolom yang ditandai dengan * adalah wajib diisi di setiap baris. 
-        Baris dengan nilai yang tidak valid akan ditandai dan tidak akan diproses.
+        Hanya kolom yang ditandai dengan (wajib) harus diisi di setiap baris. 
+        Baris dengan nilai yang tidak valid pada kolom wajib akan ditandai dan tidak akan diproses.
       </p>
     </div>
   );

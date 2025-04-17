@@ -12,7 +12,7 @@ interface ValidationResult {
 }
 
 export const useCsvValidation = () => {
-  // Validate CSV data: rating and submitDate fields are required
+  // Validate CSV data: only rating and submitDate fields are required
   const validateCsvData = (data: any[]): ValidationResult => {
     const invalidRows: number[] = [];
     const dateFormatErrors: number[] = [];
@@ -54,6 +54,8 @@ export const useCsvValidation = () => {
           hasError = true;
         }
       }
+      
+      // No validation for other fields - they can be empty
     });
     
     return {

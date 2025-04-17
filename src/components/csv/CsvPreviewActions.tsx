@@ -42,7 +42,7 @@ export const CsvPreviewActions: React.FC<CsvPreviewActionsProps> = ({
             </ul>
             <p>
               Hanya {validRowCount} dari {totalRowCount} baris yang valid. 
-              Mohon perbaiki error sebelum mengkonfirmasi.
+              Mohon perbaiki error sebelum mengkonfirmasi. Ingat, hanya kolom 'rating' dan 'submit_date' yang wajib diisi.
             </p>
           </AlertDescription>
         </Alert>
@@ -54,7 +54,7 @@ export const CsvPreviewActions: React.FC<CsvPreviewActionsProps> = ({
             </div>
             <div className="ml-3">
               <p className="text-sm text-green-700">
-                File CSV valid. {validRowCount} baris siap diproses. Kolom 'rating' dan 'submit_date' terisi lengkap.
+                File CSV valid. {validRowCount} baris siap diproses. Kolom 'rating' dan 'submit_date' terisi lengkap. Kolom lainnya boleh kosong.
               </p>
             </div>
           </div>
