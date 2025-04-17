@@ -6,8 +6,8 @@ const Index: React.FC = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Redirect to the upload page
-    navigate('/upload');
+    // Redirect to the dashboard page
+    navigate('/dashboard');
   }, [navigate]);
   
   return (

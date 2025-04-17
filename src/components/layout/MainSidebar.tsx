@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
-  UploadCloud, 
   Grid, 
   BarChart, 
   PieChart,
@@ -38,12 +37,6 @@ const MainSidebar: React.FC<SidebarProps> = ({
       href: '/dashboard',
       icon: <Home className="h-5 w-5" />,
       requireAdmin: false
-    },
-    {
-      name: 'Upload',
-      href: '/upload',
-      icon: <UploadCloud className="h-5 w-5" />,
-      requireAdmin: true
     },
     {
       name: 'CSV Upload',

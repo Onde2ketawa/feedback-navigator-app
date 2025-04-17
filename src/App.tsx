@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import MainLayout from "./components/layout/MainLayout";
-import Upload from "./pages/Upload";
 import Dashboard from "./pages/Dashboard";
 import Categories from "./pages/Categories";
 import RatingAnalytics from "./pages/RatingAnalytics";
@@ -34,13 +33,6 @@ const App = () => (
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
             {/* Protected routes */}
-            <Route path="/upload" element={
-              <ProtectedRoute requireAdmin>
-                <MainLayout>
-                  <Upload />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <MainLayout>
