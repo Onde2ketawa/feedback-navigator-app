@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -10,9 +10,10 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Search, X, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, X, Eye, AlertTriangle } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CsvPreviewActions } from './CsvPreviewActions';
+import { useCsvValidation } from '@/hooks/useCsvValidation';
 
 interface CsvPreviewProps {
   data: any[];
@@ -33,7 +34,20 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [validationResults, setValidationResults] = useState<{ invalidRows: number[], valid: boolean }>({ 
+    invalidRows: [], 
+    valid: true 
+  });
+  const { validateCsvData } = useCsvValidation();
   const itemsPerPage = 10;
+  
+  // Validate data when it changes
+  useEffect(() => {
+    if (data.length > 0) {
+      const results = validateCsvData(data);
+      setValidationResults(results);
+    }
+  }, [data]);
   
   // Filter data based on search term
   const filteredData = search 
@@ -66,6 +80,11 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
     setSearch('');
     setCurrentPage(1);
   };
+
+  // Check if a row has validation errors
+  const isInvalidRow = (rowIndex: number) => {
+    return validationResults.invalidRows.includes(startIndex + rowIndex);
+  };
   
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -74,6 +93,22 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
           <SheetTitle>CSV Preview</SheetTitle>
         </SheetHeader>
         <div className="mt-6">
+          {/* Validation warning */}
+          {!validationResults.valid && (
+            <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-4">
+              <div className="flex">
+                <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
+                <div>
+                  <p className="font-medium text-amber-700">Validation Warning</p>
+                  <p className="text-sm text-amber-700">
+                    Found {validationResults.invalidRows.length} rows with missing required fields.
+                    Rows with issues are highlighted below.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Search box */}
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -107,9 +142,13 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12 text-center">#</TableHead>
                   {columns.map((column) => (
                     <TableHead key={column}>
                       {column}
+                      {(column === 'rating' || column === 'submitDate') && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -117,17 +156,37 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
               <TableBody>
                 {paginatedData.length > 0 ? (
                   paginatedData.map((row, index) => (
-                    <TableRow key={index}>
+                    <TableRow 
+                      key={index}
+                      className={isInvalidRow(index) ? "bg-red-50" : ""}
+                    >
+                      <TableCell className="text-center font-medium">
+                        {startIndex + index + 1}
+                        {isInvalidRow(index) && (
+                          <span className="ml-1 text-red-500">
+                            <AlertTriangle className="h-4 w-4 inline" />
+                          </span>
+                        )}
+                      </TableCell>
                       {columns.map((column) => (
-                        <TableCell key={`${index}-${column}`}>
-                          {row[column]?.toString() || ''}
+                        <TableCell 
+                          key={`${index}-${column}`}
+                          className={
+                            (column === 'rating' || column === 'submitDate') && 
+                            (!row[column] || row[column] === '') ? 
+                            "text-red-500" : ""
+                          }
+                        >
+                          {row[column]?.toString() || (
+                            <span className="text-red-500 italic">missing</span>
+                          )}
                         </TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                    <TableCell colSpan={columns.length + 1} className="h-24 text-center">
                       No data available
                     </TableCell>
                   </TableRow>
@@ -165,7 +224,12 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
         </div>
         
         {/* Actions */}
-        <CsvPreviewActions onConfirm={onConfirm} isProcessing={isProcessing} />
+        <CsvPreviewActions 
+          onConfirm={onConfirm} 
+          isProcessing={isProcessing} 
+          hasValidationErrors={!validationResults.valid}
+          errorCount={validationResults.invalidRows.length}
+        />
       </SheetContent>
     </Sheet>
   );
