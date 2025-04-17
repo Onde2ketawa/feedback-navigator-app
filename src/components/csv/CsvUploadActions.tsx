@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { FileCheck, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { CsvTemplateDownload } from './CsvTemplateDownload';
+import { CsvPreviewButton } from './CsvPreviewButton';
 
 interface CsvUploadActionsProps {
   onPreview: () => void;
@@ -23,13 +24,11 @@ export const CsvUploadActions: React.FC<CsvUploadActionsProps> = ({
     <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
       <CsvTemplateDownload />
       
-      <Button
+      <CsvPreviewButton 
         onClick={onPreview}
-        disabled={disablePreview || isProcessing}
-      >
-        <FileCheck className="mr-2 h-4 w-4" />
-        Preview CSV
-      </Button>
+        disabled={disablePreview}
+        isProcessing={isProcessing}
+      />
       
       <Button
         onClick={onUpload}

@@ -1,38 +1,41 @@
 
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { parseCsvFile } from '@/utils/csv-utils';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet } from '@/components/ui/sheet';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 
-// Import our newly created components and hooks
+// Import our components and hooks
 import { CsvPreview } from '@/components/csv/CsvPreview';
 import { ChannelSelector } from '@/components/csv/ChannelSelector';
 import { CsvRequirements } from '@/components/csv/CsvRequirements';
 import { CsvFileUploader } from '@/components/csv/CsvFileUploader';
 import { CsvUploadActions } from '@/components/csv/CsvUploadActions';
 import { useCsvValidation } from '@/hooks/useCsvValidation';
+import { useCsvPreview } from '@/hooks/useCsvPreview';
 
 const CsvUpload: React.FC = () => {
   const [selectedChannel, setSelectedChannel] = useState<string>('');
   const [files, setFiles] = useState<File[]>([]);
-  const [csvData, setCsvData] = useState<any[]>([]);
-  const [columns, setColumns] = useState<string[]>([]);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { validateCsvData } = useCsvValidation();
+  const { 
+    csvData, 
+    columns, 
+    isPreviewOpen, 
+    setIsPreviewOpen,
+    handlePreview: processCsvPreview,
+    resetPreview
+  } = useCsvPreview();
   
   const handleFilesAccepted = (acceptedFiles: File[]) => {
     setFiles(acceptedFiles);
     setError(null);
-    
-    setCsvData([]);
-    setColumns([]);
+    resetPreview();
   };
   
   const handlePreview = async () => {
@@ -54,36 +57,7 @@ const CsvUpload: React.FC = () => {
       return;
     }
     
-    setIsProcessing(true);
-    setError(null);
-    
-    try {
-      const file = files[0];
-      const { data, headers, error } = await parseCsvFile(file);
-      
-      if (error) {
-        setError(error);
-        toast({
-          title: "Error parsing CSV",
-          description: error,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      setCsvData(data);
-      setColumns(headers);
-      setIsPreviewOpen(true);
-    } catch (err: any) {
-      setError(err.message || "Failed to parse CSV file");
-      toast({
-        title: "Error",
-        description: "Failed to parse the CSV file",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+    await processCsvPreview(files[0], selectedChannel);
   };
   
   const handleUpload = async () => {
@@ -128,8 +102,7 @@ const CsvUpload: React.FC = () => {
       });
       
       setFiles([]);
-      setCsvData([]);
-      setColumns([]);
+      resetPreview();
       setIsPreviewOpen(false);
     } catch (err: any) {
       toast({
@@ -176,22 +149,14 @@ const CsvUpload: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Sheet open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>CSV Preview</SheetTitle>
-          </SheetHeader>
-          <div className="mt-6">
-            <CsvPreview data={csvData} columns={columns} />
-          </div>
-          <div className="mt-6 flex justify-end">
-            <Button onClick={handleUpload} disabled={isProcessing}>
-              <Upload className="mr-2 h-4 w-4" />
-              {isProcessing ? 'Processing...' : 'Confirm Upload'}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <CsvPreview 
+        data={csvData}
+        columns={columns}
+        isOpen={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}
+        isProcessing={isProcessing}
+        onConfirm={handleUpload}
+      />
     </div>
   );
 };
