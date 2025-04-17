@@ -79,13 +79,19 @@ const CsvUpload: React.FC = () => {
       return;
     }
     
-    const { valid, invalidRows } = validateCsvData(csvData);
+    const validationResult = validateCsvData(csvData);
     
-    if (!valid) {
-      setError(`Missing required fields in ${invalidRows.length} rows. Rating and Submit Date are required fields.`);
+    if (!validationResult.valid) {
+      const missingFields = [];
+      if (validationResult.missingFields.rating) missingFields.push("Rating");
+      if (validationResult.missingFields.submitDate) missingFields.push("Submit Date");
+      
+      const errorMessage = `Missing required fields (${missingFields.join(", ")}) in ${validationResult.invalidRows.length} rows.`;
+      setError(errorMessage);
+      
       toast({
         title: "Validation Error",
-        description: `Missing required fields in rows: ${invalidRows.slice(0, 5).map(i => i + 1).join(', ')}${invalidRows.length > 5 ? '...' : ''}. Rating and Submit Date are required.`,
+        description: `Missing required fields in rows: ${validationResult.invalidRows.slice(0, 5).map(i => i + 1).join(', ')}${validationResult.invalidRows.length > 5 ? '...' : ''}. ${missingFields.join(" and ")} are required.`,
         variant: "destructive",
       });
       return;
