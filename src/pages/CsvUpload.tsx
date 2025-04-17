@@ -1,13 +1,20 @@
+
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { CSV_UPLOAD_TEMPLATE } from '@/utils/csv-utils';
 import { useToast } from '@/hooks/use-toast';
-import { FileDownload } from 'lucide-react';
-import { useCategories } from '@/hooks/categories';
-import { CsvPreview } from '@/components/csv/CsvPreview';
 import { parseCsvFile } from '@/utils/csv-utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Upload } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
+import { Card, CardContent } from '@/components/ui/card';
+
+// Import our newly created components and hooks
+import { CsvPreview } from '@/components/csv/CsvPreview';
 import { ChannelSelector } from '@/components/csv/ChannelSelector';
+import { CsvRequirements } from '@/components/csv/CsvRequirements';
+import { CsvFileUploader } from '@/components/csv/CsvFileUploader';
+import { CsvUploadActions } from '@/components/csv/CsvUploadActions';
+import { useCsvValidation } from '@/hooks/useCsvValidation';
 
 const CsvUpload: React.FC = () => {
   const [selectedChannel, setSelectedChannel] = useState<string>('');
@@ -18,7 +25,7 @@ const CsvUpload: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const { categories } = useCategories();
+  const { validateCsvData } = useCsvValidation();
   
   const handleFilesAccepted = (acceptedFiles: File[]) => {
     setFiles(acceptedFiles);
@@ -79,21 +86,6 @@ const CsvUpload: React.FC = () => {
     }
   };
   
-  const validateCsvData = (data: any[]): { valid: boolean; invalidRows: number[] } => {
-    const invalidRows: number[] = [];
-    
-    data.forEach((row, index) => {
-      if (!row.rating || row.rating === '' || !row.submitDate || row.submitDate === '') {
-        invalidRows.push(index);
-      }
-    });
-    
-    return {
-      valid: invalidRows.length === 0,
-      invalidRows
-    };
-  };
-  
   const handleUpload = async () => {
     if (!selectedChannel) {
       toast({
@@ -150,18 +142,6 @@ const CsvUpload: React.FC = () => {
     }
   };
 
-  const handleDownloadTemplate = () => {
-    const blob = new Blob([CSV_UPLOAD_TEMPLATE], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'feedback_upload_template.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="animate-fade-in">
       <PageHeader 
@@ -177,55 +157,21 @@ const CsvUpload: React.FC = () => {
               onChange={setSelectedChannel}
             />
             
-            <FileUpload
+            <CsvFileUploader
               onFilesAccepted={handleFilesAccepted}
-              maxFiles={1}
+              error={error}
               disabled={isProcessing || !selectedChannel}
             />
             
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4" role="alert">
-              <p className="font-bold">CSV Upload Requirements:</p>
-              <ul className="list-disc list-inside text-sm text-yellow-700">
-                <li><strong>Rating</strong> (required): Numeric rating value</li>
-                <li><strong>Submit Date</strong> (required): Date of feedback submission</li>
-                <li><strong>Feedback</strong> (optional): Additional feedback text</li>
-              </ul>
-            </div>
+            <CsvRequirements />
 
-            <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={handleDownloadTemplate}
-                className="flex items-center"
-              >
-                <FileDownload className="mr-2 h-4 w-4" />
-                Download CSV Template
-              </Button>
-              
-              <Button
-                onClick={handlePreview}
-                disabled={files.length === 0 || isProcessing || !selectedChannel}
-              >
-                <FileCheck className="mr-2 h-4 w-4" />
-                Preview CSV
-              </Button>
-              
-              <Button
-                onClick={handleUpload}
-                disabled={csvData.length === 0 || isProcessing || !selectedChannel}
-                className="flex items-center"
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {isProcessing ? 'Processing...' : 'Upload Data'}
-              </Button>
-            </div>
+            <CsvUploadActions
+              onPreview={handlePreview}
+              onUpload={handleUpload}
+              disablePreview={files.length === 0 || !selectedChannel}
+              disableUpload={csvData.length === 0 || !selectedChannel}
+              isProcessing={isProcessing}
+            />
           </div>
         </CardContent>
       </Card>
