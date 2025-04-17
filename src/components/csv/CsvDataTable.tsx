@@ -28,7 +28,7 @@ export const CsvDataTable: React.FC<CsvDataTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12 text-center">#</TableHead>
+            <TableHead className="w-12 text-center">Baris</TableHead>
             {columns.map((column) => (
               <TableHead key={column}>
                 {column}
@@ -47,7 +47,7 @@ export const CsvDataTable: React.FC<CsvDataTableProps> = ({
                 className={isInvalidRow(index) ? "bg-red-50" : ""}
               >
                 <TableCell className="text-center font-medium">
-                  {startIndex + index + 1}
+                  {startIndex + index + 2} {/* +2 untuk menunjukkan bahwa baris 1 adalah header */}
                   {isInvalidRow(index) && (
                     <span className="ml-1 text-red-500">
                       <AlertTriangle className="h-4 w-4 inline" />
@@ -62,12 +62,12 @@ export const CsvDataTable: React.FC<CsvDataTableProps> = ({
                        (!row[column] || row[column] === '' || isNaN(Number(row[column])))) || 
                       (column === 'submitDate' && 
                        (!row[column] || row[column] === '' || 
-                        (!/^\d{4}-\d{2}-\d{2}$/.test(row[column]) && !isNaN(Date.parse(row[column]))))) ? 
+                        !/^\d{4}-\d{2}-\d{2}$/.test(row[column]))) ? 
                       "text-red-500" : ""
                     }
                   >
                     {row[column]?.toString() || (
-                      <span className="text-red-500 italic">kosong</span>
+                      <span className="text-gray-400 italic">kosong</span>
                     )}
                   </TableCell>
                 ))}

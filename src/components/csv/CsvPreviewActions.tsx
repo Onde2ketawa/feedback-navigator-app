@@ -54,7 +54,7 @@ export const CsvPreviewActions: React.FC<CsvPreviewActionsProps> = ({
             </div>
             <div className="ml-3">
               <p className="text-sm text-green-700">
-                File CSV valid. {validRowCount} baris siap diproses. Kolom 'rating' dan 'submit_date' terisi lengkap. Kolom lainnya boleh kosong.
+                File CSV valid. {validRowCount} baris siap diproses. Kolom 'rating' (numerik) dan 'submit_date' (format YYYY-MM-DD) terisi lengkap. Kolom lainnya boleh kosong.
               </p>
             </div>
           </div>

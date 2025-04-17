@@ -22,14 +22,15 @@ export const useCsvValidation = () => {
     let missingSubmitDate = false;
     
     data.forEach((row, index) => {
-      const rowNum = index + 1;
+      // Menampilkan baris dimulai dari 2 (karena baris 1 adalah header)
+      const rowNum = index + 2;
       let hasError = false;
       
       // Check for required fields: rating must have values and be numeric
       const isMissingRating = !row.rating || row.rating === '';
       if (isMissingRating) {
         invalidRows.push(index);
-        errorMessages.push(`Baris ${rowNum}: Kolom 'rating' kosong.`);
+        errorMessages.push(`Baris ${rowNum}: Kolom 'rating' wajib diisi.`);
         missingRating = true;
         hasError = true;
       } else if (isNaN(Number(row.rating))) {
@@ -42,13 +43,13 @@ export const useCsvValidation = () => {
       const isMissingSubmitDate = !row.submitDate || row.submitDate === '';
       if (isMissingSubmitDate) {
         if (!hasError) invalidRows.push(index);
-        errorMessages.push(`Baris ${rowNum}: Kolom 'submit_date' kosong.`);
+        errorMessages.push(`Baris ${rowNum}: Kolom 'submit_date' wajib diisi.`);
         missingSubmitDate = true;
         hasError = true;
       } else {
         // Validate date format (YYYY-MM-DD)
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(row.submitDate) && !isNaN(Date.parse(row.submitDate))) {
+        if (!dateRegex.test(row.submitDate)) {
           dateFormatErrors.push(index);
           errorMessages.push(`Baris ${rowNum}: Format 'submit_date' tidak valid (harus YYYY-MM-DD).`);
           hasError = true;

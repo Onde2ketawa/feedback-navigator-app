@@ -12,6 +12,7 @@ export const CsvRequirements: React.FC = () => {
         <li><strong>Kolom lainnya</strong> (opsional): Semua kolom lain boleh kosong</li>
       </ul>
       <p className="text-sm text-yellow-700 mt-2">
+        <strong>Catatan:</strong> Baris pertama adalah header dan tidak diperiksa. Validasi dimulai dari baris ke-2.
         Hanya kolom yang ditandai dengan (wajib) harus diisi di setiap baris. 
         Baris dengan nilai yang tidak valid pada kolom wajib akan ditandai dan tidak akan diproses.
       </p>
