@@ -7,9 +7,11 @@ import { CategoryPieChart } from '@/components/analytics/category/CategoryPieCha
 import { SubcategoryPieChart } from '@/components/analytics/category/SubcategoryPieChart';
 import { CategoryRatingBarChart } from '@/components/analytics/category/CategoryRatingBarChart';
 import { useCategoryAnalyticsData } from '@/hooks/category/useCategoryAnalyticsData';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const CategoryAnalytics: React.FC = () => {
   const {
+    isLoading,
     categoryData,
     subcategoryData,
     availableCategories,
@@ -50,14 +52,26 @@ const CategoryAnalytics: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <CategoryPieChart 
-              data={categoryData} 
-              selectedCategory={selectedCategory}
-              onCategorySelect={setSelectedCategory}
-            />
-            <p className="text-center mt-4 text-sm text-muted-foreground">
-              Click on a category to view its subcategories
-            </p>
+            {isLoading ? (
+              <div className="h-80 flex items-center justify-center">
+                <Skeleton className="h-4/5 w-4/5 rounded-full" />
+              </div>
+            ) : categoryData.length > 0 ? (
+              <>
+                <CategoryPieChart 
+                  data={categoryData} 
+                  selectedCategory={selectedCategory}
+                  onCategorySelect={setSelectedCategory}
+                />
+                <p className="text-center mt-4 text-sm text-muted-foreground">
+                  Click on a category to view its subcategories
+                </p>
+              </>
+            ) : (
+              <div className="h-80 flex items-center justify-center">
+                <p className="text-muted-foreground">No category data available</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -72,12 +86,18 @@ const CategoryAnalytics: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <SubcategoryPieChart
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              availableCategories={availableCategories}
-              subcategoryData={subcategoryData}
-            />
+            {isLoading ? (
+              <div className="h-80 flex items-center justify-center">
+                <Skeleton className="h-4/5 w-4/5 rounded-full" />
+              </div>
+            ) : (
+              <SubcategoryPieChart
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                availableCategories={availableCategories}
+                subcategoryData={subcategoryData}
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -90,7 +110,17 @@ const CategoryAnalytics: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <CategoryRatingBarChart categoryRatings={categoryRatings} />
+            {isLoading ? (
+              <div className="h-80 flex items-center justify-center">
+                <Skeleton className="h-4/5 w-full" />
+              </div>
+            ) : categoryRatings.length > 0 ? (
+              <CategoryRatingBarChart categoryRatings={categoryRatings} />
+            ) : (
+              <div className="h-80 flex items-center justify-center">
+                <p className="text-muted-foreground">No rating data available</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
