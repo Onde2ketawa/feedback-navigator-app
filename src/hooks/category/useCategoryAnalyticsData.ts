@@ -41,64 +41,16 @@ export function useCategoryAnalyticsData() {
   // Fetch category distribution data from Supabase
   const fetchCategoryDistribution = async () => {
     try {
-      let query = supabase
-        .from('customer_feedback')
-        .select('category, count(*)')
-        .not('category', 'is', null)
-        .groupBy('category');
-      
-      // Apply filters
-      if (selectedChannel !== 'all') {
-        query = query.eq('channel_id', selectedChannel);
-      }
-      
-      if (selectedYear !== 'all') {
-        const yearStart = `${selectedYear}-01-01`;
-        const yearEnd = `${selectedYear}-12-31`;
-        query = query.gte('submit_date', yearStart).lte('submit_date', yearEnd);
-      }
-      
-      if (selectedMonth !== 'all' && selectedYear !== 'all') {
-        const monthNum = parseInt(selectedMonth);
-        const monthStr = monthNum < 10 ? `0${monthNum}` : `${monthNum}`;
-        const monthStart = `${selectedYear}-${monthStr}-01`;
-        const lastDay = new Date(parseInt(selectedYear), monthNum, 0).getDate();
-        const monthEnd = `${selectedYear}-${monthStr}-${lastDay}`;
-        query = query.gte('submit_date', monthStart).lte('submit_date', monthEnd);
-      }
-      
-      const { data, error } = await query;
+      // Use the Supabase function to get category distribution
+      const { data, error } = await supabase.rpc('get_category_distribution', {
+        channel_id_param: selectedChannel,
+        year_param: selectedYear,
+        month_param: selectedMonth
+      });
       
       if (error) throw error;
       
-      // Process data
-      const categories = data.map((item, index) => ({
-        name: item.category || 'Uncategorized',
-        value: parseInt(item.count),
-        color: COLORS[index % COLORS.length]
-      }));
-      
-      // Also get count of records with null category
-      const { count: uncategorizedCount, error: uncategorizedError } = await supabase
-        .from('customer_feedback')
-        .select('*', { count: 'exact', head: true })
-        .is('category', null);
-      
-      if (uncategorizedError) throw uncategorizedError;
-      
-      // Add uncategorized if there are any
-      if (uncategorizedCount && uncategorizedCount > 0) {
-        categories.push({
-          name: 'Uncategorized',
-          value: uncategorizedCount,
-          color: COLORS[categories.length % COLORS.length]
-        });
-      }
-      
-      // Sort by count, descending
-      categories.sort((a, b) => b.value - a.value);
-      
-      return categories;
+      return data || [];
     } catch (error) {
       console.error('Error fetching category distribution:', error);
       toast.error('Failed to load category distribution data');
@@ -111,48 +63,17 @@ export function useCategoryAnalyticsData() {
     if (!category) return [];
     
     try {
-      let query = supabase
-        .from('customer_feedback')
-        .select('sub_category, count(*)')
-        .eq('category', category)
-        .not('sub_category', 'is', null)
-        .groupBy('sub_category');
-      
-      // Apply filters
-      if (selectedChannel !== 'all') {
-        query = query.eq('channel_id', selectedChannel);
-      }
-      
-      if (selectedYear !== 'all') {
-        const yearStart = `${selectedYear}-01-01`;
-        const yearEnd = `${selectedYear}-12-31`;
-        query = query.gte('submit_date', yearStart).lte('submit_date', yearEnd);
-      }
-      
-      if (selectedMonth !== 'all' && selectedYear !== 'all') {
-        const monthNum = parseInt(selectedMonth);
-        const monthStr = monthNum < 10 ? `0${monthNum}` : `${monthNum}`;
-        const monthStart = `${selectedYear}-${monthStr}-01`;
-        const lastDay = new Date(parseInt(selectedYear), monthNum, 0).getDate();
-        const monthEnd = `${selectedYear}-${monthStr}-${lastDay}`;
-        query = query.gte('submit_date', monthStart).lte('submit_date', monthEnd);
-      }
-      
-      const { data, error } = await query;
+      // Use the Supabase function to get subcategory distribution
+      const { data, error } = await supabase.rpc('get_subcategory_distribution', {
+        category_param: category,
+        channel_id_param: selectedChannel,
+        year_param: selectedYear,
+        month_param: selectedMonth
+      });
       
       if (error) throw error;
       
-      // Process data
-      const subcategories = data.map((item, index) => ({
-        name: item.sub_category || 'Uncategorized',
-        value: parseInt(item.count),
-        color: COLORS[index % COLORS.length]
-      }));
-      
-      // Sort by count, descending
-      subcategories.sort((a, b) => b.value - a.value);
-      
-      return subcategories;
+      return data || [];
     } catch (error) {
       console.error(`Error fetching subcategory distribution for ${category}:`, error);
       toast.error('Failed to load subcategory distribution data');
@@ -163,6 +84,7 @@ export function useCategoryAnalyticsData() {
   // Fetch category ratings
   const fetchCategoryRatings = async () => {
     try {
+      // Fetch all feedback data with category and rating
       let query = supabase
         .from('customer_feedback')
         .select('category, rating')
@@ -195,7 +117,7 @@ export function useCategoryAnalyticsData() {
       // Group by category and calculate average rating
       const categoryRatingsMap: { [key: string]: { sum: number; count: number } } = {};
       
-      data.forEach(item => {
+      data?.forEach(item => {
         const category = item.category || 'Uncategorized';
         
         if (!categoryRatingsMap[category]) {
