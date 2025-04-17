@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Search, X, Eye, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, X, AlertTriangle } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CsvPreviewActions } from './CsvPreviewActions';
 import { useCsvValidation } from '@/hooks/useCsvValidation';
@@ -34,9 +34,12 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [validationResults, setValidationResults] = useState<{ invalidRows: number[], valid: boolean }>({ 
+  const [validationResults, setValidationResults] = useState<any>({ 
     invalidRows: [], 
-    valid: true 
+    valid: true,
+    errorMessages: [],
+    dateFormatErrors: [],
+    nonNumericRatingErrors: []
   });
   const { validateCsvData } = useCsvValidation();
   const itemsPerPage = 10;
@@ -83,8 +86,16 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
 
   // Check if a row has validation errors
   const isInvalidRow = (rowIndex: number) => {
-    return validationResults.invalidRows.includes(startIndex + rowIndex);
+    return (
+      validationResults.invalidRows.includes(startIndex + rowIndex) ||
+      validationResults.dateFormatErrors.includes(startIndex + rowIndex) ||
+      validationResults.nonNumericRatingErrors.includes(startIndex + rowIndex)
+    );
   };
+
+  // Calculate valid row count
+  const validRowCount = data.length - 
+    [...new Set([...validationResults.invalidRows, ...validationResults.dateFormatErrors, ...validationResults.nonNumericRatingErrors])].length;
   
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -99,10 +110,10 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
               <div className="flex">
                 <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
                 <div>
-                  <p className="font-medium text-amber-700">Validation Warning</p>
+                  <p className="font-medium text-amber-700">Peringatan Validasi</p>
                   <p className="text-sm text-amber-700">
-                    Found {validationResults.invalidRows.length} rows with missing required fields.
-                    Rows with issues are highlighted below.
+                    Ditemukan {validationResults.errorMessages.length} kesalahan di data CSV.
+                    Baris yang bermasalah ditandai di bawah ini. Perbaiki semua error sebelum melanjutkan.
                   </p>
                 </div>
               </div>
@@ -113,7 +124,7 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search..."
+              placeholder="Cari..."
               value={search}
               onChange={handleSearch}
               className="pl-8 pr-8"
@@ -126,15 +137,15 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
                 onClick={clearSearch}
               >
                 <X className="h-4 w-4" />
-                <span className="sr-only">Clear search</span>
+                <span className="sr-only">Hapus pencarian</span>
               </Button>
             )}
           </div>
           
           {/* Data summary */}
           <div className="text-sm text-muted-foreground mt-4">
-            Showing {paginatedData.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} rows
-            {search && ` (filtered from ${data.length} total rows)`}
+            Menampilkan {paginatedData.length > 0 ? startIndex + 1 : 0} sampai {Math.min(startIndex + itemsPerPage, filteredData.length)} dari {filteredData.length} baris
+            {search && ` (difilter dari ${data.length} total baris)`}
           </div>
           
           {/* Table */}
@@ -172,13 +183,16 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
                         <TableCell 
                           key={`${index}-${column}`}
                           className={
-                            (column === 'rating' || column === 'submitDate') && 
-                            (!row[column] || row[column] === '') ? 
+                            (column === 'rating' && 
+                             (!row[column] || row[column] === '' || isNaN(Number(row[column])))) || 
+                            (column === 'submitDate' && 
+                             (!row[column] || row[column] === '' || 
+                              (!/^\d{4}-\d{2}-\d{2}$/.test(row[column]) && !isNaN(Date.parse(row[column]))))) ? 
                             "text-red-500" : ""
                           }
                         >
                           {row[column]?.toString() || (
-                            <span className="text-red-500 italic">missing</span>
+                            <span className="text-red-500 italic">kosong</span>
                           )}
                         </TableCell>
                       ))}
@@ -187,7 +201,7 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length + 1} className="h-24 text-center">
-                      No data available
+                      Tidak ada data tersedia
                     </TableCell>
                   </TableRow>
                 )}
@@ -205,10 +219,10 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">Previous page</span>
+                <span className="sr-only">Halaman sebelumnya</span>
               </Button>
               <div className="text-sm">
-                Page {currentPage} of {totalPages}
+                Halaman {currentPage} dari {totalPages}
               </div>
               <Button
                 variant="outline"
@@ -217,7 +231,7 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
                 disabled={currentPage === totalPages}
               >
                 <ChevronRight className="h-4 w-4" />
-                <span className="sr-only">Next page</span>
+                <span className="sr-only">Halaman berikutnya</span>
               </Button>
             </div>
           )}
@@ -228,7 +242,10 @@ export const CsvPreview: React.FC<CsvPreviewProps> = ({
           onConfirm={onConfirm} 
           isProcessing={isProcessing} 
           hasValidationErrors={!validationResults.valid}
-          errorCount={validationResults.invalidRows.length}
+          errorCount={validationResults.errorMessages.length}
+          errorMessages={validationResults.errorMessages}
+          validRowCount={validRowCount}
+          totalRowCount={data.length}
         />
       </SheetContent>
     </Sheet>

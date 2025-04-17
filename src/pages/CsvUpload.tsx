@@ -41,8 +41,8 @@ const CsvUpload: React.FC = () => {
   const handlePreview = async () => {
     if (!selectedChannel) {
       toast({
-        title: "No channel selected",
-        description: "Please select a channel before previewing",
+        title: "Tidak ada channel yang dipilih",
+        description: "Silakan pilih channel sebelum melakukan preview",
         variant: "destructive",
       });
       return;
@@ -50,8 +50,8 @@ const CsvUpload: React.FC = () => {
     
     if (files.length === 0) {
       toast({
-        title: "No file selected",
-        description: "Please select a CSV file to preview",
+        title: "Tidak ada file yang dipilih",
+        description: "Silakan pilih file CSV untuk preview",
         variant: "destructive",
       });
       return;
@@ -63,8 +63,8 @@ const CsvUpload: React.FC = () => {
   const handleUpload = async () => {
     if (!selectedChannel) {
       toast({
-        title: "No channel selected",
-        description: "Please select a channel before uploading",
+        title: "Tidak ada channel yang dipilih",
+        description: "Silakan pilih channel sebelum mengupload",
         variant: "destructive",
       });
       return;
@@ -72,8 +72,8 @@ const CsvUpload: React.FC = () => {
     
     if (files.length === 0 || csvData.length === 0) {
       toast({
-        title: "No data to upload",
-        description: "Please preview and confirm the CSV data first",
+        title: "Tidak ada data untuk diupload",
+        description: "Silakan preview dan konfirmasi data CSV terlebih dahulu",
         variant: "destructive",
       });
       return;
@@ -82,16 +82,19 @@ const CsvUpload: React.FC = () => {
     const validationResult = validateCsvData(csvData);
     
     if (!validationResult.valid) {
-      const missingFields = [];
-      if (validationResult.missingFields.rating) missingFields.push("Rating");
-      if (validationResult.missingFields.submitDate) missingFields.push("Submit Date");
+      const firstFiveErrors = validationResult.errorMessages.slice(0, 5);
+      const remainingCount = validationResult.errorMessages.length - 5;
       
-      const errorMessage = `Missing required fields (${missingFields.join(", ")}) in ${validationResult.invalidRows.length} rows.`;
+      let errorMessage = `${firstFiveErrors.join('\n')}`;
+      if (remainingCount > 0) {
+        errorMessage += `\n...dan ${remainingCount} error lainnya.`;
+      }
+      
       setError(errorMessage);
       
       toast({
-        title: "Validation Error",
-        description: `Missing required fields in rows: ${validationResult.invalidRows.slice(0, 5).map(i => i + 1).join(', ')}${validationResult.invalidRows.length > 5 ? '...' : ''}. ${missingFields.join(" and ")} are required.`,
+        title: "Error Validasi",
+        description: `${validationResult.errorMessages.length} kesalahan ditemukan. Perbaiki kesalahan sebelum mengupload.`,
         variant: "destructive",
       });
       return;
@@ -102,9 +105,13 @@ const CsvUpload: React.FC = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // Count of valid rows
+      const validRowCount = csvData.length - 
+        [...new Set([...validationResult.invalidRows, ...validationResult.dateFormatErrors, ...validationResult.nonNumericRatingErrors])].length;
+      
       toast({
-        title: "Upload successful",
-        description: `Uploaded ${csvData.length} records from CSV file to the selected channel`,
+        title: "Upload berhasil",
+        description: `Berhasil mengupload ${validRowCount} baris dari file CSV ke channel yang dipilih`,
       });
       
       setFiles([]);
@@ -112,8 +119,8 @@ const CsvUpload: React.FC = () => {
       setIsPreviewOpen(false);
     } catch (err: any) {
       toast({
-        title: "Upload failed",
-        description: err.message || "An error occurred during upload",
+        title: "Upload gagal",
+        description: err.message || "Terjadi kesalahan saat upload",
         variant: "destructive",
       });
     } finally {
@@ -125,7 +132,7 @@ const CsvUpload: React.FC = () => {
     <div className="animate-fade-in">
       <PageHeader 
         title="CSV Upload" 
-        description="Upload and process CSV files for batch data entry"
+        description="Upload dan proses file CSV untuk entri data batch"
       />
       
       <Card>
