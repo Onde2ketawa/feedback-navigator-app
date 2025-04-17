@@ -7,6 +7,19 @@ interface CsvParseResult {
   error: string | null;
 }
 
+// Updated documentation for CSV upload headers
+export const CSV_UPLOAD_HEADERS = {
+  RATING: 'rating',
+  SUBMIT_DATE: 'submitDate',
+  FEEDBACK: 'feedback'
+};
+
+export const CSV_UPLOAD_TEMPLATE = [
+  CSV_UPLOAD_HEADERS.RATING,
+  CSV_UPLOAD_HEADERS.SUBMIT_DATE,
+  CSV_UPLOAD_HEADERS.FEEDBACK
+].join(',') + '\n';
+
 export const parseCsvFile = (file: File): Promise<CsvParseResult> => {
   return new Promise((resolve) => {
     Papa.parse(file, {

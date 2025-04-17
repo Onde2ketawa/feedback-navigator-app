@@ -1,12 +1,8 @@
-
 import React, { useState } from 'react';
-import { FileUpload } from '@/components/ui/file-upload';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/ui/page-header';
-import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CSV_UPLOAD_TEMPLATE } from '@/utils/csv-utils';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, FileCheck, Upload } from 'lucide-react';
+import { FileDownload } from 'lucide-react';
 import { useCategories } from '@/hooks/categories';
 import { CsvPreview } from '@/components/csv/CsvPreview';
 import { parseCsvFile } from '@/utils/csv-utils';
@@ -28,7 +24,6 @@ const CsvUpload: React.FC = () => {
     setFiles(acceptedFiles);
     setError(null);
     
-    // Reset preview data when new files are selected
     setCsvData([]);
     setColumns([]);
   };
@@ -56,7 +51,6 @@ const CsvUpload: React.FC = () => {
     setError(null);
     
     try {
-      // Parse the first file
       const file = files[0];
       const { data, headers, error } = await parseCsvFile(file);
       
@@ -85,12 +79,10 @@ const CsvUpload: React.FC = () => {
     }
   };
   
-  // Validate CSV data: rating and submitDate fields are required
   const validateCsvData = (data: any[]): { valid: boolean; invalidRows: number[] } => {
     const invalidRows: number[] = [];
     
     data.forEach((row, index) => {
-      // Check for required fields: rating and submitDate must have values
       if (!row.rating || row.rating === '' || !row.submitDate || row.submitDate === '') {
         invalidRows.push(index);
       }
@@ -121,7 +113,6 @@ const CsvUpload: React.FC = () => {
       return;
     }
     
-    // Validate the data before proceeding
     const { valid, invalidRows } = validateCsvData(csvData);
     
     if (!valid) {
@@ -137,8 +128,6 @@ const CsvUpload: React.FC = () => {
     setIsProcessing(true);
     
     try {
-      // Here you would call your API to upload the CSV data
-      // For now, we'll just simulate a successful upload
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       toast({
@@ -146,7 +135,6 @@ const CsvUpload: React.FC = () => {
         description: `Uploaded ${csvData.length} records from CSV file to the selected channel`,
       });
       
-      // Reset the form after successful upload
       setFiles([]);
       setCsvData([]);
       setColumns([]);
@@ -162,6 +150,18 @@ const CsvUpload: React.FC = () => {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    const blob = new Blob([CSV_UPLOAD_TEMPLATE], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'feedback_upload_template.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="animate-fade-in">
       <PageHeader 
@@ -172,7 +172,6 @@ const CsvUpload: React.FC = () => {
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-6">
-            {/* Channel selector added here */}
             <ChannelSelector 
               value={selectedChannel}
               onChange={setSelectedChannel}
@@ -191,9 +190,26 @@ const CsvUpload: React.FC = () => {
               </Alert>
             )}
             
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4" role="alert">
+              <p className="font-bold">CSV Upload Requirements:</p>
+              <ul className="list-disc list-inside text-sm text-yellow-700">
+                <li><strong>Rating</strong> (required): Numeric rating value</li>
+                <li><strong>Submit Date</strong> (required): Date of feedback submission</li>
+                <li><strong>Feedback</strong> (optional): Additional feedback text</li>
+              </ul>
+            </div>
+
             <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
               <Button
                 variant="outline"
+                onClick={handleDownloadTemplate}
+                className="flex items-center"
+              >
+                <FileDownload className="mr-2 h-4 w-4" />
+                Download CSV Template
+              </Button>
+              
+              <Button
                 onClick={handlePreview}
                 disabled={files.length === 0 || isProcessing || !selectedChannel}
               >
