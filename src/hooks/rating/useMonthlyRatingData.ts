@@ -12,9 +12,17 @@ export const useMonthlyRatingData = (
 
   const fetchMonthlyRatingData = async (): Promise<MonthlyRatingDataPoint[]> => {
     try {
+      // Skip if no month is selected when a year is selected (except 'all')
+      if (yearFilter !== 'all' && monthFilter === 'all') {
+        console.log('Monthly chart: Year selected but no month. Using empty dataset.');
+        return [];
+      }
+      
+      // Select all feedback data with date information
       let query = supabase
         .from('customer_feedback')
-        .select('submit_date, rating');
+        .select('submit_date, rating')
+        .not('submit_date', 'is', null);
         
       // Apply filters based on selected options
       if (channelFilter !== 'all') {
@@ -36,26 +44,27 @@ export const useMonthlyRatingData = (
         const lastDay = new Date(parseInt(yearFilter), monthNum, 0).getDate();
         const monthEnd = `${yearFilter}-${monthStr}-${lastDay}`;
         query = query.gte('submit_date', monthStart).lte('submit_date', monthEnd);
+      } else if (yearFilter === 'all' || monthFilter === 'all') {
+        // For the monthly chart, we need both year and month selected
+        console.log('Monthly chart: Need both year and month. Returning empty dataset.');
+        return [];
       }
       
+      // Execute the query
       const { data, error } = await query;
       
       if (error) throw error;
+      
       if (data && data.length > 0) {
+        console.log(`Found ${data.length} ratings for monthly chart`);
         return processMonthlyRatingData(data);
       }
       
-      // Return mock data if no data
-      return Array.from({ length: 30 }, (_, i) => ({
-        day: i + 1,
-        rating: 3 + Math.random() * 1.5
-      }));
+      console.log('No rating data found for monthly chart, using empty dataset');
+      return [];
     } catch (error) {
       console.error('Error fetching monthly rating data:', error);
-      return Array.from({ length: 30 }, (_, i) => ({
-        day: i + 1,
-        rating: 3 + Math.random() * 1.5
-      }));
+      return [];
     }
   };
   
@@ -83,6 +92,7 @@ export const useMonthlyRatingData = (
       rating: data.count > 0 ? Number((data.sum / data.count).toFixed(1)) : 0
     }));
     
+    // Sort by day and return
     return result.sort((a, b) => a.day - b.day);
   };
 

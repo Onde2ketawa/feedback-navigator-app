@@ -8,9 +8,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { MonthlyRatingDataPoint } from '@/hooks/rating/useRatingAnalyticsData';
+import { MonthlyRatingDataPoint } from '@/hooks/rating/types';
 
 interface MonthlyRatingTrendChartProps {
   data: MonthlyRatingDataPoint[];
@@ -49,10 +50,15 @@ export function MonthlyRatingTrendChart({ data }: MonthlyRatingTrendChartProps) 
                 ticks={[1, 2, 3, 4, 5]}
                 tickFormatter={(value) => `${value}`}
               />
-              <Tooltip />
+              <Tooltip 
+                formatter={(value) => [`${value}`, 'Avg Rating']}
+                labelFormatter={(label) => `Day ${label}`}
+              />
+              <Legend />
               <Line
                 type="monotone"
                 dataKey="rating"
+                name="Average Rating"
                 stroke="#8b5cf6"
                 strokeWidth={2}
                 dot={{ r: 2 }}
