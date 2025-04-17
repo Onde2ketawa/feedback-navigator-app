@@ -56,6 +56,21 @@ export const TestDataButton: React.FC<TestDataButtonProps> = ({ filter, onDataAd
       // Create sample data for the selected year
       const year = parseInt(filter.year || '2025');
       
+      // Get the first profile available to use as user_id
+      // This ensures we have a valid user_id for the foreign key constraint
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1);
+      
+      if (profilesError) throw profilesError;
+      
+      if (!profiles || profiles.length === 0) {
+        throw new Error('No user profiles found. Please create a user account first.');
+      }
+      
+      const userId = profiles[0].id;
+      
       // Create a few records for the selected year
       const testData = [
         {
@@ -65,7 +80,7 @@ export const TestDataButton: React.FC<TestDataButtonProps> = ({ filter, onDataAd
           feedback: `Test feedback for ${year} January`,
           sentiment: 'positive',
           sentiment_score: 0.8,
-          user_id: '00000000-0000-0000-0000-000000000000'
+          user_id: userId // Use the real user id from profiles
         },
         {
           channel_id: channelId,
@@ -74,7 +89,7 @@ export const TestDataButton: React.FC<TestDataButtonProps> = ({ filter, onDataAd
           feedback: `Test feedback for ${year} February`,
           sentiment: 'neutral',
           sentiment_score: 0.5,
-          user_id: '00000000-0000-0000-0000-000000000000'
+          user_id: userId // Use the real user id from profiles
         },
         {
           channel_id: channelId,
@@ -83,7 +98,7 @@ export const TestDataButton: React.FC<TestDataButtonProps> = ({ filter, onDataAd
           feedback: `Test feedback for ${year} ${filter.month ? 'selected month' : 'March'}`,
           sentiment: 'positive',
           sentiment_score: 0.9,
-          user_id: '00000000-0000-0000-0000-000000000000'
+          user_id: userId // Use the real user id from profiles
         }
       ];
       
