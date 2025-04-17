@@ -85,6 +85,23 @@ const CsvUpload: React.FC = () => {
     }
   };
   
+  // Validate CSV data: rating and submitDate fields are required
+  const validateCsvData = (data: any[]): { valid: boolean; invalidRows: number[] } => {
+    const invalidRows: number[] = [];
+    
+    data.forEach((row, index) => {
+      // Check for required fields: rating and submitDate must have values
+      if (!row.rating || row.rating === '' || !row.submitDate || row.submitDate === '') {
+        invalidRows.push(index);
+      }
+    });
+    
+    return {
+      valid: invalidRows.length === 0,
+      invalidRows
+    };
+  };
+  
   const handleUpload = async () => {
     if (!selectedChannel) {
       toast({
@@ -99,6 +116,19 @@ const CsvUpload: React.FC = () => {
       toast({
         title: "No data to upload",
         description: "Please preview and confirm the CSV data first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate the data before proceeding
+    const { valid, invalidRows } = validateCsvData(csvData);
+    
+    if (!valid) {
+      setError(`Missing required fields in ${invalidRows.length} rows. Rating and Submit Date are required fields.`);
+      toast({
+        title: "Validation Error",
+        description: `Missing required fields in rows: ${invalidRows.slice(0, 5).map(i => i + 1).join(', ')}${invalidRows.length > 5 ? '...' : ''}. Rating and Submit Date are required.`,
         variant: "destructive",
       });
       return;
