@@ -19,7 +19,7 @@ export const ValidationWarningBanner: React.FC<ValidationWarningBannerProps> = (
             Ditemukan {errorCount} kesalahan di data CSV.
             Baris yang bermasalah ditandai di bawah ini dan dihitung mulai dari baris 2 (setelah header).
             Perbaiki semua error sebelum melanjutkan.
-            Ingat, hanya kolom 'rating' dan 'submit_date' yang wajib diisi, kolom lainnya boleh kosong.
+            Ingat, hanya kolom 'rating' dan 'submitDate' yang wajib diisi, kolom lainnya boleh kosong.
           </p>
         </div>
       </div>

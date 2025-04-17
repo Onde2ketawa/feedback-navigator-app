@@ -24,35 +24,37 @@ export const useCsvValidation = () => {
     data.forEach((row, index) => {
       // Menampilkan baris dimulai dari 2 (karena baris 1 adalah header)
       const rowNum = index + 2;
-      let hasError = false;
+      let rowHasError = false;
       
       // Check for required fields: rating must have values and be numeric
-      const isMissingRating = !row.rating || row.rating === '';
-      if (isMissingRating) {
+      if (!row.rating || row.rating === '') {
         invalidRows.push(index);
         errorMessages.push(`Baris ${rowNum}: Kolom 'rating' wajib diisi.`);
         missingRating = true;
-        hasError = true;
+        rowHasError = true;
       } else if (isNaN(Number(row.rating))) {
         nonNumericRatingErrors.push(index);
         errorMessages.push(`Baris ${rowNum}: Kolom 'rating' harus numerik.`);
-        hasError = true;
+        if (!rowHasError) {
+          invalidRows.push(index);
+          rowHasError = true;
+        }
       }
       
       // Check for required fields: submitDate must have values and be a valid date
-      const isMissingSubmitDate = !row.submitDate || row.submitDate === '';
-      if (isMissingSubmitDate) {
-        if (!hasError) invalidRows.push(index);
+      if (!row.submitDate || row.submitDate === '') {
+        if (!rowHasError) invalidRows.push(index);
         errorMessages.push(`Baris ${rowNum}: Kolom 'submit_date' wajib diisi.`);
         missingSubmitDate = true;
-        hasError = true;
+        rowHasError = true;
       } else {
         // Validate date format (YYYY-MM-DD)
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
         if (!dateRegex.test(row.submitDate)) {
           dateFormatErrors.push(index);
           errorMessages.push(`Baris ${rowNum}: Format 'submit_date' tidak valid (harus YYYY-MM-DD).`);
-          hasError = true;
+          if (!rowHasError) invalidRows.push(index);
+          rowHasError = true;
         }
       }
       
