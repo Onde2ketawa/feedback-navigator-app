@@ -6,17 +6,10 @@ import { useToast } from '@/hooks/use-toast';
 export const useFeedbackFilters = () => {
   const { toast } = useToast();
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
-  const [selectedYear, setSelectedYear] = useState<string>('2024'); // Default to 2024 instead of 'all'
+  const [selectedYear, setSelectedYear] = useState<string>('all'); // Default to 'all' instead of '2024'
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [ratingRange, setRatingRange] = useState<number[]>([1, 5]);
   const [isApplyingFilters, setIsApplyingFilters] = useState(false);
-
-  // Effect to update year when channel changes to ensure we have options
-  useEffect(() => {
-    if (selectedYear === 'all') {
-      setSelectedYear('2024'); // Default to 2024 when no year is selected
-    }
-  }, [selectedChannel, selectedYear]);
 
   const handleChannelChange = (value: string) => {
     console.log("Channel changed to:", value);
@@ -37,11 +30,11 @@ export const useFeedbackFilters = () => {
 
   // Reset time filters
   const handleResetTimeFilters = () => {
-    setSelectedYear('2024'); // Reset to 2024 instead of 'all'
+    setSelectedYear('all'); // Reset to 'all' instead of '2024'
     setSelectedMonth('all');
     toast({
       title: "Date filters reset",
-      description: "Year has been reset to '2024' and month to 'All'",
+      description: "Year and month filters have been reset to 'All'",
     });
   };
 
