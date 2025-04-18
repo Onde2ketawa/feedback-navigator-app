@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 export const useFeedbackFilters = () => {
   const { toast } = useToast();
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
-  const [selectedYear, setSelectedYear] = useState<string>('all'); // Default to 'all' instead of '2024'
+  const [selectedYear, setSelectedYear] = useState<string>('all'); // Default to 'all' to show all years
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [ratingRange, setRatingRange] = useState<number[]>([1, 5]);
   const [isApplyingFilters, setIsApplyingFilters] = useState(false);

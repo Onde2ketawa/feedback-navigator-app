@@ -22,7 +22,7 @@ describe('useFeedbackFilters Hook', () => {
     const { result } = renderHook(() => useFeedbackFilters());
     
     expect(result.current.selectedChannel).toBe('all');
-    expect(result.current.selectedYear).toBe('2024'); // Changed from 'all' to '2024'
+    expect(result.current.selectedYear).toBe('all'); // Now correctly set to 'all' instead of '2024'
     expect(result.current.selectedMonth).toBe('all');
     expect(result.current.ratingRange).toEqual([1, 5]);
     expect(result.current.isApplyingFilters).toBe(false);
@@ -72,7 +72,7 @@ describe('useFeedbackFilters Hook', () => {
       result.current.handleResetTimeFilters();
     });
     
-    expect(result.current.selectedYear).toBe('2024'); // Changed from 'all' to '2024'
+    expect(result.current.selectedYear).toBe('all'); // Now correctly reset to 'all'
     expect(result.current.selectedMonth).toBe('all');
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
       title: "Date filters reset"

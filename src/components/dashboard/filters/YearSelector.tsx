@@ -25,6 +25,8 @@ export const YearSelector: React.FC<YearSelectorProps> = ({
   onYearChange,
   isLoading = false
 }) => {
+  const displayYears = availableYears.length > 0 ? availableYears : ['all'];
+  
   return (
     <div>
       <label className="flex items-center gap-1.5 text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
@@ -47,12 +49,12 @@ export const YearSelector: React.FC<YearSelectorProps> = ({
             <SelectValue placeholder="Select Year" />
           </SelectTrigger>
           <SelectContent className="bg-white dark:bg-gray-800 z-50 shadow-md">
-            {availableYears.length <= 1 ? (
+            {displayYears.length <= 1 ? (
               <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                 No years available
               </div>
             ) : (
-              availableYears.map(year => (
+              displayYears.map(year => (
                 <SelectItem 
                   key={year} 
                   value={year}

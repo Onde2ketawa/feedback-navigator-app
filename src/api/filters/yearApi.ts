@@ -18,15 +18,23 @@ export const fetchYears = async (): Promise<string[]> => {
 
     if (data && data.length > 0) {
       // Extract years from submit_date and filter out null values
+      console.log('Raw submit_dates:', data.map(item => item.submit_date));
+      
       const years = data
         .filter(item => item.submit_date) 
-        .map(item => new Date(item.submit_date).getFullYear().toString());
+        .map(item => {
+          const year = new Date(item.submit_date).getFullYear();
+          console.log(`Converting ${item.submit_date} to year: ${year}`);
+          return year.toString();
+        });
+      
+      console.log('Extracted years:', years);
       
       // Get unique years and sort them in descending order
       const uniqueYears = Array.from(new Set(years))
         .sort((a, b) => parseInt(b) - parseInt(a)); // Latest year first
       
-      console.log('Years extracted from query:', uniqueYears);
+      console.log('Unique sorted years:', uniqueYears);
       
       // Return all years with 'all' option at the beginning
       if (uniqueYears.length > 0) {
