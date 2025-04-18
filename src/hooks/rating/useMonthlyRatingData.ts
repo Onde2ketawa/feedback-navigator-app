@@ -18,15 +18,28 @@ export const useMonthlyRatingData = (
         return [];
       }
       
-      // Select all feedback data with date information
       let query = supabase
         .from('customer_feedback')
-        .select('submit_date, rating')
+        .select('submit_date, rating, channel_id')
         .not('submit_date', 'is', null);
         
-      // Apply filters based on selected options
+      // Apply channel filter if not 'all'
       if (channelFilter !== 'all') {
-        query = query.eq('channel_id', channelFilter);
+        // Try to get the channel ID if it's a name instead of an ID
+        try {
+          const { data: channelData } = await supabase
+            .from('channel')
+            .select('id')
+            .eq('name', channelFilter)
+            .single();
+          
+          if (channelData) {
+            query = query.eq('channel_id', channelData.id);
+          }
+        } catch (err) {
+          // If it's already an ID, use it directly
+          query = query.eq('channel_id', channelFilter);
+        }
       }
       
       // Add year filter if not 'all'
@@ -53,15 +66,20 @@ export const useMonthlyRatingData = (
       // Execute the query
       const { data, error } = await query;
       
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        console.log(`Found ${data.length} ratings for monthly chart`);
-        return processMonthlyRatingData(data);
+      if (error) {
+        console.error('Error fetching monthly rating data:', error);
+        throw error;
       }
       
-      console.log('No rating data found for monthly chart, using empty dataset');
-      return [];
+      if (!data || data.length === 0) {
+        console.log('No rating data found for monthly chart, using empty dataset');
+        return [];
+      }
+
+      console.log(`Found ${data.length} ratings for monthly chart with values:`, 
+        data.map(item => item.rating));
+      
+      return processMonthlyRatingData(data);
     } catch (error) {
       console.error('Error fetching monthly rating data:', error);
       return [];
@@ -75,6 +93,13 @@ export const useMonthlyRatingData = (
     data.forEach(item => {
       if (!item.submit_date) return;
       
+      // Make sure we have a valid rating (should be 1-5)
+      const rating = parseInt(item.rating);
+      if (isNaN(rating) || rating < 1 || rating > 5) {
+        console.warn(`Invalid rating value: ${item.rating}, skipping`);
+        return;
+      }
+      
       const date = new Date(item.submit_date);
       const day = date.getDate();
       
@@ -82,15 +107,21 @@ export const useMonthlyRatingData = (
         dayRatings[day] = { sum: 0, count: 0 };
       }
       
-      dayRatings[day].sum += item.rating;
+      dayRatings[day].sum += rating;
       dayRatings[day].count++;
     });
+
+    // Debug
+    console.log("Processed day ratings:", dayRatings);
     
     // Convert to array of data points
     const result: MonthlyRatingDataPoint[] = Object.entries(dayRatings).map(([day, data]) => ({
       day: parseInt(day),
       rating: data.count > 0 ? Number((data.sum / data.count).toFixed(1)) : 0
     }));
+    
+    // Debug
+    console.log("Final monthly rating data:", result);
     
     // Sort by day and return
     return result.sort((a, b) => a.day - b.day);
