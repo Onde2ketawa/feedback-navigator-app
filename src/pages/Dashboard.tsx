@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { FeedbackCategoryDialog } from '@/components/dashboard/FeedbackCategoryDialog';
@@ -15,7 +14,7 @@ const Dashboard: React.FC = () => {
   
   const [filter, setFilter] = useState<FeedbackFilter>({
     channel: null,
-    year: '2024', 
+    year: null,  // Changed from '2024' to null to default to 'all'
     month: null,
     ratingMin: 1,
     ratingMax: 5

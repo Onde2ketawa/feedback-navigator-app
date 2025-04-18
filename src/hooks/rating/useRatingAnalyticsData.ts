@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useYoyTrendData } from './useYoyTrendData';
@@ -6,17 +5,15 @@ import { useRatingDistributionData } from './useRatingDistributionData';
 import { useMonthlyRatingData } from './useMonthlyRatingData';
 import { useCategoryRatingData } from './useCategoryRatingData';
 
-// Re-export types
 export * from './types';
 
 export function useRatingAnalyticsData() {
   const [channelFilter, setChannelFilter] = useState<string>('all');
-  const [yearFilter, setYearFilter] = useState<string>('2024');
+  const [yearFilter, setYearFilter] = useState<string>('all');
   const [monthFilter, setMonthFilter] = useState<string>('all');
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
   
-  // Use the extracted hooks
   const { yoyTrendData, setYoyTrendData, fetchYoyTrendData } = 
     useYoyTrendData(channelFilter, yearFilter);
   
@@ -29,7 +26,6 @@ export function useRatingAnalyticsData() {
   const { categoryRatingData, setCategoryRatingData, fetchCategoryRatingData } = 
     useCategoryRatingData(channelFilter, yearFilter, monthFilter);
 
-  // Fetch data when filters change
   useEffect(() => {
     fetchRatingAnalyticsData();
   }, [channelFilter, yearFilter, monthFilter]);
@@ -37,7 +33,6 @@ export function useRatingAnalyticsData() {
   const fetchRatingAnalyticsData = async () => {
     setIsLoading(true);
     try {
-      // Fetch data in parallel for better performance
       const [yoyData, distributionData, monthlyData, categoryData] = await Promise.all([
         fetchYoyTrendData(),
         fetchRatingDistributionData(),
@@ -45,7 +40,6 @@ export function useRatingAnalyticsData() {
         fetchCategoryRatingData()
       ]);
 
-      // Only update state if the component is still mounted
       setYoyTrendData(yoyData);
       setRatingDistributionData(distributionData);
       setMonthlyRatingData(monthlyData);

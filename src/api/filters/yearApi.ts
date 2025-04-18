@@ -28,22 +28,22 @@ export const fetchYears = async (): Promise<string[]> => {
       
       console.log('Years extracted from query:', uniqueYears);
       
-      // Ensure we always have some default years if no data is found
-      // Include more years in the defaults for better coverage
-      if (uniqueYears.length === 0) {
-        console.log('No years found in data, providing default years');
-        return ['all', '2025', '2024', '2023', '2022', '2021', '2020'];
+      // Return all years with 'all' option at the beginning
+      if (uniqueYears.length > 0) {
+        return ['all', ...uniqueYears];
       }
       
-      return ['all', ...uniqueYears];
+      // If no years found in data, provide comprehensive default years
+      console.log('No years found in data, providing default years');
+      return ['all', '2025', '2024', '2023', '2022', '2021', '2020'];
     }
     
     console.log('No year data found in query, providing default years');
-    // Provide more default years when no data is found
+    // Provide comprehensive default years
     return ['all', '2025', '2024', '2023', '2022', '2021', '2020'];
   } catch (err) {
     console.error('Error in fetchYears:', err);
-    // Return more default years even if there's an error
+    // Return comprehensive default years even if there's an error
     return ['all', '2025', '2024', '2023', '2022', '2021', '2020'];
   }
 };
