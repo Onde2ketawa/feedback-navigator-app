@@ -1,9 +1,8 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowDown, ArrowUp, Filter } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { FeedbackFilter } from '@/hooks/useFeedbackData';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 
@@ -22,6 +21,15 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     error,
     monthsError
   } = useFilterOptions();
+
+  // Remove duplicates and ensure uniqueness
+  const uniqueChannels = Array.from(new Set(availableChannels.map(c => c.value)))
+    .map(value => availableChannels.find(c => c.value === value)!);
+  
+  const uniqueYears = Array.from(new Set(availableYears));
+  
+  const uniqueMonths = Array.from(new Set(availableMonths.map(m => m.value)))
+    .map(value => availableMonths.find(m => m.value === value)!);
 
   const handleFilterSubmit = (filters: FeedbackFilter) => {
     onFilterChange({
@@ -57,7 +65,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Channels</SelectItem>
-                {availableChannels.map((channel) => (
+                {uniqueChannels.map((channel) => (
                   <SelectItem key={channel.value} value={channel.value}>
                     {channel.label}
                   </SelectItem>
@@ -87,7 +95,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Years</SelectItem>
-                {availableYears.map((year) => (
+                {uniqueYears.map((year) => (
                   <SelectItem key={year} value={year}>{year}</SelectItem>
                 ))}
               </SelectContent>
@@ -114,7 +122,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Months</SelectItem>
-                {availableMonths.map((month) => (
+                {uniqueMonths.map((month) => (
                   <SelectItem key={month.value} value={month.value}>
                     {month.label}
                   </SelectItem>
@@ -160,3 +168,4 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     </Card>
   );
 };
+
