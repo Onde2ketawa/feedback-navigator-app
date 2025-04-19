@@ -94,7 +94,7 @@ export const useMonthlyRatingData = (
       if (!item.submit_date) return;
       
       // Make sure we have a valid rating (should be 1-5)
-      const rating = parseInt(item.rating);
+      const rating = typeof item.rating === 'number' ? item.rating : parseInt(item.rating);
       if (isNaN(rating) || rating < 1 || rating > 5) {
         console.warn(`Invalid rating value: ${item.rating}, skipping`);
         return;

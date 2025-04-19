@@ -19,9 +19,17 @@ interface MonthlyRatingTrendChartProps {
 }
 
 export function MonthlyRatingTrendChart({ data }: MonthlyRatingTrendChartProps) {
+  // Validate the data to ensure we have valid ratings
+  const validData = data.map(item => ({
+    day: item.day,
+    rating: typeof item.rating === 'number' && !isNaN(item.rating) 
+      ? Math.min(Math.max(item.rating, 0), 5) 
+      : 0
+  }));
+
   // Calculate average rating if we have data
-  const avgRating = data.length > 0
-    ? data.reduce((sum, item) => sum + item.rating, 0) / data.length
+  const avgRating = validData.length > 0
+    ? validData.reduce((sum, item) => sum + item.rating, 0) / validData.length
     : 0;
 
   return (
@@ -35,14 +43,14 @@ export function MonthlyRatingTrendChart({ data }: MonthlyRatingTrendChartProps) 
       </CardHeader>
       <CardContent>
         <div className="h-80">
-          {data.length === 0 ? (
+          {validData.length === 0 ? (
             <div className="h-full flex items-center justify-center text-muted-foreground">
               No data available for the selected filters. Try selecting a specific month and year.
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={data}
+                data={validData}
                 margin={{
                   top: 5,
                   right: 30,
@@ -59,7 +67,7 @@ export function MonthlyRatingTrendChart({ data }: MonthlyRatingTrendChartProps) 
                 <YAxis
                   stroke="#64748b"
                   domain={[0, 5]}
-                  ticks={[1, 2, 3, 4, 5]}
+                  ticks={[0, 1, 2, 3, 4, 5]}
                   tickFormatter={(value) => `${value}`}
                 />
                 <Tooltip 

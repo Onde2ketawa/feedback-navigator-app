@@ -16,13 +16,30 @@ export const useRatingDistributionData = (channelFilter: string) => {
         
       // Apply channel filter if not 'all'
       if (channelFilter !== 'all') {
-        query = query.eq('channel_id', channelFilter);
+        // Try to get the channel ID if it's a name instead of an ID
+        try {
+          const { data: channelData } = await supabase
+            .from('channel')
+            .select('id')
+            .eq('name', channelFilter)
+            .single();
+          
+          if (channelData) {
+            query = query.eq('channel_id', channelData.id);
+          }
+        } catch (err) {
+          // If it's already an ID, use it directly
+          query = query.eq('channel_id', channelFilter);
+        }
       }
       
       const { data, error } = await query;
       
       if (error) throw error;
-      if (data) return processRatingDistributionData(data);
+      if (data) {
+        console.log("Rating distribution raw data sample:", data.slice(0, 10));
+        return processRatingDistributionData(data);
+      }
       
       return defaultRatingDistributionData;
     } catch (error) {
@@ -37,14 +54,24 @@ export const useRatingDistributionData = (channelFilter: string) => {
     
     // Count ratings
     data.forEach(item => {
-      if (!distribution[item.rating]) {
-        distribution[item.rating] = 0;
+      // Parse rating properly
+      const rating = typeof item.rating === 'number' ? item.rating : parseInt(item.rating);
+      
+      if (isNaN(rating) || rating < 1 || rating > 5) {
+        console.warn(`Invalid rating value: ${item.rating}, skipping`);
+        return;
       }
-      distribution[item.rating]++;
+      
+      if (!distribution[rating]) {
+        distribution[rating] = 0;
+      }
+      distribution[rating]++;
     });
     
+    console.log("Processed rating distribution:", distribution);
+    
     // Colors for different ratings
-    const colors = ['#f43f5e', '#f97316', '#a3e635', '#14b8a6', '#6366f1'];
+    const colors = ['#f43f5e', '#f97316', '#facc15', '#a3e635', '#10b981'];
     
     // Transform to expected format
     const result: RatingDistributionDataPoint[] = [];
@@ -55,6 +82,8 @@ export const useRatingDistributionData = (channelFilter: string) => {
         color: colors[i-1]
       });
     }
+    
+    console.log("Final rating distribution data:", result);
     
     return result;
   };

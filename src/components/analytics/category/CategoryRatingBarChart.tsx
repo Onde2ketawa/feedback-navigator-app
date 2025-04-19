@@ -23,11 +23,19 @@ interface CategoryRatingBarChartProps {
 export const CategoryRatingBarChart: React.FC<CategoryRatingBarChartProps> = ({
   categoryRatings
 }) => {
+  // Ensure we have valid ratings data
+  const validData = categoryRatings.map(item => ({
+    name: item.name,
+    rating: typeof item.rating === 'number' && !isNaN(item.rating) 
+      ? Math.min(Math.max(item.rating, 0), 5) 
+      : 0
+  }));
+
   return (
     <div className="h-80">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={categoryRatings}
+          data={validData}
           margin={{
             top: 5,
             right: 30,
@@ -40,10 +48,10 @@ export const CategoryRatingBarChart: React.FC<CategoryRatingBarChartProps> = ({
           <YAxis
             stroke="#64748b"
             domain={[0, 5]}
-            ticks={[1, 2, 3, 4, 5]}
+            ticks={[0, 1, 2, 3, 4, 5]}
             tickFormatter={(value) => `${value}`}
           />
-          <Tooltip />
+          <Tooltip formatter={(value) => [`${value}`, 'Average Rating']} />
           <Legend />
           <Bar dataKey="rating" fill="#8b5cf6" name="Average Rating" />
         </BarChart>

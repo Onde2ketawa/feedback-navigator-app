@@ -18,7 +18,21 @@ export const useCategoryRatingData = (
         
       // Apply filters based on selected options
       if (channelFilter !== 'all') {
-        query = query.eq('channel_id', channelFilter);
+        // Try to get the channel ID if it's a name instead of an ID
+        try {
+          const { data: channelData } = await supabase
+            .from('channel')
+            .select('id')
+            .eq('name', channelFilter)
+            .single();
+          
+          if (channelData) {
+            query = query.eq('channel_id', channelData.id);
+          }
+        } catch (err) {
+          // If it's already an ID, use it directly
+          query = query.eq('channel_id', channelFilter);
+        }
       }
       
       // Filter non-null categories
@@ -46,6 +60,7 @@ export const useCategoryRatingData = (
       if (error) throw error;
       
       if (data && data.length > 0) {
+        console.log("Category ratings raw data sample:", data.slice(0, 5));
         return processCategoryRatingData(data);
       }
       
@@ -63,14 +78,22 @@ export const useCategoryRatingData = (
     
     data.forEach(item => {
       const category = item.category || 'Uncategorized';
+      const rating = typeof item.rating === 'number' ? item.rating : parseInt(item.rating);
+      
+      if (isNaN(rating)) {
+        console.warn(`Invalid rating value for category ${category}:`, item.rating);
+        return; // Skip this invalid item
+      }
       
       if (!categoryRatings[category]) {
         categoryRatings[category] = { sum: 0, count: 0 };
       }
       
-      categoryRatings[category].sum += item.rating;
+      categoryRatings[category].sum += rating;
       categoryRatings[category].count++;
     });
+    
+    console.log("Processed category ratings:", categoryRatings);
     
     // Convert to array of data points
     const result: CategoryRatingDataPoint[] = Object.entries(categoryRatings)
@@ -79,6 +102,8 @@ export const useCategoryRatingData = (
         rating: data.count > 0 ? Number((data.sum / data.count).toFixed(1)) : 0
       }))
       .sort((a, b) => b.rating - a.rating);
+    
+    console.log("Final category rating data:", result);
     
     return result;
   };
