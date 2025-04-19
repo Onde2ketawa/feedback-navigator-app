@@ -55,17 +55,29 @@ export const useRatingDistributionData = (channelFilter: string) => {
     // Count ratings
     data.forEach(item => {
       // Parse rating properly
-      const rating = typeof item.rating === 'number' ? item.rating : parseInt(item.rating);
+      let rating: number;
+      
+      if (typeof item.rating === 'number') {
+        rating = item.rating;
+      } else if (typeof item.rating === 'string') {
+        rating = parseFloat(item.rating);
+      } else {
+        console.warn(`Invalid rating type:`, typeof item.rating);
+        return; // Skip invalid ratings
+      }
       
       if (isNaN(rating) || rating < 1 || rating > 5) {
         console.warn(`Invalid rating value: ${item.rating}, skipping`);
         return;
       }
       
-      if (!distribution[rating]) {
-        distribution[rating] = 0;
+      // Round to nearest integer to ensure we have clean categories
+      const ratingInt = Math.round(rating);
+      
+      if (!distribution[ratingInt]) {
+        distribution[ratingInt] = 0;
       }
-      distribution[rating]++;
+      distribution[ratingInt]++;
     });
     
     console.log("Processed rating distribution:", distribution);

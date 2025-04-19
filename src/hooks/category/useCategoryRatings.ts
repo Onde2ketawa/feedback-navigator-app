@@ -43,17 +43,36 @@ export function useCategoryRatings() {
       
       if (error) throw error;
       
+      console.log('Raw category ratings data:', data?.slice(0, 5));
+      
       // Group by category and calculate average rating
       const categoryRatingsMap: { [key: string]: { sum: number; count: number } } = {};
       
       data?.forEach(item => {
         const category = item.category || 'Uncategorized';
         
+        // Parse rating properly to ensure it's a valid number
+        let rating: number;
+        
+        if (typeof item.rating === 'number') {
+          rating = item.rating;
+        } else if (typeof item.rating === 'string') {
+          rating = parseFloat(item.rating);
+        } else {
+          console.warn(`Invalid rating type for ${category}:`, typeof item.rating);
+          return; // Skip invalid ratings
+        }
+        
+        if (isNaN(rating) || rating < 1 || rating > 5) {
+          console.warn(`Invalid rating value for ${category}:`, item.rating);
+          return; // Skip invalid ratings
+        }
+        
         if (!categoryRatingsMap[category]) {
           categoryRatingsMap[category] = { sum: 0, count: 0 };
         }
         
-        categoryRatingsMap[category].sum += item.rating;
+        categoryRatingsMap[category].sum += rating;
         categoryRatingsMap[category].count++;
       });
       
@@ -65,6 +84,8 @@ export function useCategoryRatings() {
       
       // Sort by rating, descending
       result.sort((a, b) => b.rating - a.rating);
+      
+      console.log('Processed category ratings:', result);
       
       setCategoryRatings(result);
       return result;
