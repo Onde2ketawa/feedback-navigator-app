@@ -18,6 +18,11 @@ export const RatingFilter: React.FC<RatingFilterProps> = ({
   isLoading = false,
   error = null
 }) => {
+  // Ensure rating range is valid
+  const validRatingRange = ratingRange && ratingRange.length === 2 
+    ? ratingRange 
+    : [1, 5];
+
   if (error) {
     return (
       <Alert variant="destructive" className="mb-4">
@@ -32,7 +37,7 @@ export const RatingFilter: React.FC<RatingFilterProps> = ({
   return (
     <div>
       <label className="block text-sm font-medium mb-2">
-        Rating: {isLoading ? '...' : `${ratingRange[0]} - ${ratingRange[1]}`}
+        Rating: {isLoading ? '...' : `${validRatingRange[0]} - ${validRatingRange[1]}`}
       </label>
       {isLoading ? (
         <Skeleton className="h-4 w-full" />
@@ -41,7 +46,7 @@ export const RatingFilter: React.FC<RatingFilterProps> = ({
           min={1}
           max={5}
           step={1}
-          value={ratingRange}
+          value={validRatingRange}
           onValueChange={onRatingChange}
         />
       )}

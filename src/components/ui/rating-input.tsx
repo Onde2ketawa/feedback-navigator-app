@@ -16,6 +16,11 @@ export function RatingInput({
   disabled = false,
   count = 5,
 }: RatingInputProps) {
+  // Ensure value is a number between 1-count
+  const validValue = typeof value === 'number' && !isNaN(value) 
+    ? Math.min(Math.max(Math.round(value), 1), count) 
+    : 1;
+
   const stars = Array.from({ length: count }, (_, i) => i + 1);
   
   return (
@@ -34,7 +39,7 @@ export function RatingInput({
           <Star
             className={cn(
               "h-6 w-6 transition-colors",
-              star <= value ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
+              star <= validValue ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
             )}
           />
           <span className="sr-only">Rate {star} stars</span>

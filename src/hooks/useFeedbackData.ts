@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Feedback } from '@/models/feedback';
@@ -100,9 +99,12 @@ export function useFeedbackData(filter: FeedbackFilter) {
                      .lte('submit_date', endDateStr);
       }
       
-      // Apply rating range filter
-      query = query.gte('rating', filter.ratingMin)
-                   .lte('rating', filter.ratingMax);
+      // Apply rating range filter - ensure ratings are properly parsed as numbers
+      const ratingMin = typeof filter.ratingMin === 'number' ? filter.ratingMin : 1;
+      const ratingMax = typeof filter.ratingMax === 'number' ? filter.ratingMax : 5;
+      
+      query = query.gte('rating', ratingMin)
+                   .lte('rating', ratingMax);
       
       // Apply ordering with proper syntax for Supabase
       query = query.order('submit_date', { ascending: false });
@@ -124,6 +126,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
       }
       
       console.log("Fetched feedback data:", data ? data.length : 0, "items");
+      console.log("Sample ratings:", data?.slice(0, 5).map(item => item.rating));
       
       // Check if we have any data
       if (!data || data.length === 0) {
@@ -134,7 +137,7 @@ export function useFeedbackData(filter: FeedbackFilter) {
       return data.map(item => ({
         id: item.id,
         channel: item.channel?.name || '',
-        rating: item.rating,
+        rating: typeof item.rating === 'number' ? item.rating : parseInt(item.rating) || 1,
         submitDate: item.submit_date || new Date().toISOString().split('T')[0],
         submitTime: item.submit_time || '',
         feedback: item.feedback,

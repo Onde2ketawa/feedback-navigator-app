@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
@@ -64,8 +63,8 @@ export function createFeedbackColumns({
       accessorKey: "rating",
       header: "Rating",
       cell: ({ row }) => {
-        const rating = row.getValue("rating") as number;
-        return <RatingStars rating={rating} />;
+        const rating = Number(row.getValue("rating"));
+        return <RatingStars rating={isNaN(rating) ? 1 : rating} />;
       },
     },
     {
