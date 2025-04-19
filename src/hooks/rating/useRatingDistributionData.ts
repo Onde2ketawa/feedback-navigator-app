@@ -49,8 +49,14 @@ export const useRatingDistributionData = (channelFilter: string) => {
   };
   
   const processRatingDistributionData = (data: any[]): RatingDistributionDataPoint[] => {
-    // Process the data to get rating distribution
-    const distribution: Record<number, number> = {};
+    // Initialize distribution with all possible ratings (1-5)
+    const distribution: Record<number, number> = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0
+    };
     
     // Count ratings
     data.forEach(item => {
@@ -74,9 +80,7 @@ export const useRatingDistributionData = (channelFilter: string) => {
       // Round to nearest integer to ensure we have clean categories
       const ratingInt = Math.round(rating);
       
-      if (!distribution[ratingInt]) {
-        distribution[ratingInt] = 0;
-      }
+      // Increment the count for this rating
       distribution[ratingInt]++;
     });
     
@@ -85,7 +89,7 @@ export const useRatingDistributionData = (channelFilter: string) => {
     // Colors for different ratings
     const colors = ['#f43f5e', '#f97316', '#facc15', '#a3e635', '#10b981'];
     
-    // Transform to expected format
+    // Transform to expected format - ensure all ratings 1-5 are included
     const result: RatingDistributionDataPoint[] = [];
     for (let i = 1; i <= 5; i++) {
       result.push({
