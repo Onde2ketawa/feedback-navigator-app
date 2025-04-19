@@ -25,6 +25,7 @@ export const YearSelector: React.FC<YearSelectorProps> = ({
   onYearChange,
   isLoading = false
 }) => {
+  // Ensure we always have at least the 'all' option even if no years are provided
   const displayYears = availableYears.length > 0 ? availableYears : ['all'];
   
   return (

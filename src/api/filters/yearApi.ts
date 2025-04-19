@@ -23,10 +23,21 @@ export const fetchYears = async (): Promise<string[]> => {
       const years = data
         .filter(item => item.submit_date) 
         .map(item => {
-          const year = new Date(item.submit_date).getFullYear();
-          console.log(`Converting ${item.submit_date} to year: ${year}`);
-          return year.toString();
-        });
+          try {
+            const dateObj = new Date(item.submit_date);
+            if (isNaN(dateObj.getTime())) {
+              console.warn(`Invalid date: ${item.submit_date}`);
+              return null;
+            }
+            const year = dateObj.getFullYear();
+            console.log(`Converting ${item.submit_date} to year: ${year}`);
+            return year.toString();
+          } catch (err) {
+            console.warn(`Error parsing date: ${item.submit_date}`, err);
+            return null;
+          }
+        })
+        .filter(year => year !== null) as string[];
       
       console.log('Extracted years:', years);
       
