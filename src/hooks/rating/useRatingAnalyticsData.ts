@@ -15,8 +15,9 @@ export function useRatingAnalyticsData() {
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
   
+  // Update to match the updated useYoyTrendData hook signature (removed yearFilter parameter)
   const { yoyTrendData, setYoyTrendData, fetchYoyTrendData } = 
-    useYoyTrendData(channelFilter, yearFilter);
+    useYoyTrendData(channelFilter);
   
   const { ratingDistributionData, setRatingDistributionData, fetchRatingDistributionData } = 
     useRatingDistributionData(channelFilter);
