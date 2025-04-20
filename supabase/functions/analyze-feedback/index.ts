@@ -24,11 +24,11 @@ serve(async (req) => {
 
     // Fetch records to process (not-yet-analyzed or null sentiment)
     const feedbackRes = await fetch(
-      \`\${supabaseUrl}/rest/v1/customer_feedback?select=id,feedback&or=(sentiment.is.null,sentiment.eq.unknown)&feedback=not.is.null&limit=\${batchSize}\`,
+      `${supabaseUrl}/rest/v1/customer_feedback?select=id,feedback&or=(sentiment.is.null,sentiment.eq.unknown)&feedback=not.is.null&limit=${batchSize}`,
       {
         headers: {
           apikey: supabaseKey,
-          Authorization: \`Bearer \${supabaseKey}\`,
+          Authorization: `Bearer ${supabaseKey}`,
         },
       }
     );
@@ -58,7 +58,7 @@ serve(async (req) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: \`Bearer \${openAIApiKey}\`,
+            Authorization: `Bearer ${openAIApiKey}`,
           },
           body: JSON.stringify(body),
         });
@@ -85,12 +85,12 @@ serve(async (req) => {
 
         // Update the feedback record with new sentiment & score
         await fetch(
-          \`\${supabaseUrl}/rest/v1/customer_feedback?id=eq.\${record.id}\`,
+          `${supabaseUrl}/rest/v1/customer_feedback?id=eq.${record.id}`,
           {
             method: "PATCH",
             headers: {
               apikey: supabaseKey,
-              Authorization: \`Bearer \${supabaseKey}\`,
+              Authorization: `Bearer ${supabaseKey}`,
               "Content-Type": "application/json",
               Prefer: "return=minimal",
             },
