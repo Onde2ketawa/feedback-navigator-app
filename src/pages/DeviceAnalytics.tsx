@@ -50,8 +50,8 @@ export default function DeviceAnalytics() {
 
       {!isLoading && !error && data && (
         <div className="grid grid-cols-1 gap-6">
-          <Card className="p-6">
-            <h2 className="text-lg font-medium mb-4">Feedback Distribution by Device</h2>
+          <Card className="p-6 lg:p-8">
+            <h2 className="text-xl font-semibold mb-6">Feedback Distribution by Device</h2>
             <DeviceDistributionChart data={data.deviceDistribution} />
           </Card>
 
