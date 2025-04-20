@@ -7,12 +7,21 @@ const MONTH_NAMES = [
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 ];
 
-export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOption[]> => {
-  if (selectedYear === 'all') {
-    return MONTH_NAMES.map((name, index) => ({
+// Helper function to create the default month options
+const getDefaultMonths = (): MonthOption[] => {
+  return [
+    { value: 'all', label: 'All Months' },
+    ...MONTH_NAMES.map((name, index) => ({
       value: (index + 1).toString(),
       label: name
-    }));
+    }))
+  ];
+};
+
+export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOption[]> => {
+  // Always return all months when 'all' is selected
+  if (selectedYear === 'all') {
+    return getDefaultMonths();
   }
 
   try {
@@ -20,22 +29,16 @@ export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOpt
       .from('customer_feedback')
       .select('submit_date')
       .not('submit_date', 'is', null)
-      .ilike('submit_date', `${selectedYear}-%`);
+      .filter('submit_date', 'ilike', `${selectedYear}-%`);
 
     if (error) {
-      throw error;
+      console.error('Error fetching months:', error);
+      return getDefaultMonths();
     }
 
     // Even if no data is found, we'll return all months
-    // This ensures the dropdown always shows months Jan-Dec
     if (!data || data.length === 0) {
-      return [
-        { value: 'all', label: 'All Months' },
-        ...MONTH_NAMES.map((name, index) => ({
-          value: (index + 1).toString(),
-          label: name
-        }))
-      ];
+      return getDefaultMonths();
     }
 
     const months = data
@@ -53,19 +56,17 @@ export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOpt
         label: MONTH_NAMES[monthIndex]
       }));
 
+    // Always include "All Months" option at the beginning
     return [
       { value: 'all', label: 'All Months' },
-      ...uniqueMonths
-    ];
-  } catch (err) {
-    console.error('Error in fetchMonthsForYear:', err);
-    // Return default months on error
-    return [
-      { value: 'all', label: 'All Months' },
-      ...MONTH_NAMES.map((name, index) => ({
+      ...uniqueMonths.length > 0 ? uniqueMonths : MONTH_NAMES.map((name, index) => ({
         value: (index + 1).toString(),
         label: name
       }))
     ];
+  } catch (err) {
+    console.error('Error in fetchMonthsForYear:', err);
+    // Return default months on error
+    return getDefaultMonths();
   }
 };

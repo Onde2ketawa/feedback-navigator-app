@@ -29,8 +29,29 @@ export function FilterControls({
     isLoadingMonths
   } = useFilterOptions();
 
+  // Default months to ensure the dropdown is never empty
+  const defaultMonths: MonthOption[] = [
+    { value: 'all', label: 'All Months' },
+    { value: '1', label: 'Jan' },
+    { value: '2', label: 'Feb' },
+    { value: '3', label: 'Mar' },
+    { value: '4', label: 'Apr' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'Jun' },
+    { value: '7', label: 'Jul' },
+    { value: '8', label: 'Aug' },
+    { value: '9', label: 'Sep' },
+    { value: '10', label: 'Oct' },
+    { value: '11', label: 'Nov' },
+    { value: '12', label: 'Dec' }
+  ];
+
+  // Use local state for months to ensure we always have a fallback
+  const [displayMonths, setDisplayMonths] = useState<MonthOption[]>(defaultMonths);
+
   // Debug to see what months are available
-  console.log("FilterControls: Available months:", availableMonths);
+  console.log("FilterControls: Available months from hook:", availableMonths);
+  console.log("FilterControls: Display months used in render:", displayMonths);
 
   // Fetch months when year changes
   useEffect(() => {
@@ -44,6 +65,16 @@ export function FilterControls({
       fetchMonthsForYear('all');
     }
   }, [yearFilter, fetchMonthsForYear, setMonthFilter]);
+
+  // Update display months whenever availableMonths changes
+  useEffect(() => {
+    if (availableMonths.length > 1) {
+      setDisplayMonths(availableMonths);
+    } else {
+      // Fallback to default months if the API returns only "All Months" or empty
+      setDisplayMonths(defaultMonths);
+    }
+  }, [availableMonths]);
 
   // Handle year change
   const handleYearChange = (value: string) => {
@@ -96,16 +127,10 @@ export function FilterControls({
           disabled={isLoading || isLoadingMonths}
         >
           <SelectTrigger className="bg-white">
-            <SelectValue 
-              placeholder={
-                isLoading || isLoadingMonths 
-                  ? "Loading..." 
-                  : "Select month"
-              } 
-            />
+            <SelectValue placeholder="Select month" />
           </SelectTrigger>
           <SelectContent className="bg-white z-50">
-            {availableMonths.map(month => (
+            {displayMonths.map(month => (
               <SelectItem key={month.value} value={month.value}>
                 {month.label}
               </SelectItem>
