@@ -10,7 +10,8 @@ import {
   X,
   FileSpreadsheet,
   Home,
-  Users
+  Users,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -72,6 +73,12 @@ const MainSidebar: React.FC<SidebarProps> = ({
       name: 'Category Analytics',
       href: '/category-analytics',
       icon: <PieChart className="h-5 w-5" />,
+      requireAdmin: false
+    },
+    {
+      name: 'Sentiment Analytics',
+      href: '/sentiment-analytics',
+      icon: <TrendingUp className="h-5 w-5" />,
       requireAdmin: false
     }
   ];

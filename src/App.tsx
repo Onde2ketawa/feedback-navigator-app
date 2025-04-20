@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Categories from "./pages/Categories";
 import RatingAnalytics from "./pages/RatingAnalytics";
 import CategoryAnalytics from "./pages/CategoryAnalytics";
+import SentimentAnalytics from "./pages/SentimentAnalytics";
 import UserManagement from "./pages/UserManagement";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -72,6 +73,13 @@ const App = () => (
               <ProtectedRoute>
                 <MainLayout>
                   <CategoryAnalytics />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/sentiment-analytics" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <SentimentAnalytics />
                 </MainLayout>
               </ProtectedRoute>
             } />
