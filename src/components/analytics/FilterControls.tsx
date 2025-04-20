@@ -29,6 +29,9 @@ export function FilterControls({
     isLoadingMonths
   } = useFilterOptions();
 
+  // Debug to see what months are available
+  console.log("FilterControls: Available months:", availableMonths);
+
   // Fetch months when year changes
   useEffect(() => {
     if (yearFilter !== 'all') {

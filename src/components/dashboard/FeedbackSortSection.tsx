@@ -19,6 +19,9 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     isLoadingMonths
   } = useFilterOptions();
 
+  // Add debug logging to see what's coming from the hook
+  console.log("FeedbackSortSection available months:", availableMonths);
+
   const {
     selectedChannel,
     selectedYear,
@@ -85,12 +88,12 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
           <div className="space-y-2 w-full md:w-64">
             <label className="text-sm font-medium">Month</label>
             <Select
-              disabled={isLoading || isLoadingMonths}
+              disabled={isLoading || isLoadingMonths || selectedYear === 'all'}
               value={selectedMonth}
               onValueChange={handleMonthChange}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select month" />
+                <SelectValue placeholder={selectedYear === 'all' ? "Select year first" : "Select month"} />
               </SelectTrigger>
               <SelectContent>
                 {availableMonths.map((month) => (
