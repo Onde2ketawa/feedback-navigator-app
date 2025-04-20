@@ -22,12 +22,14 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     monthsError
   } = useFilterOptions();
 
-  // Remove duplicates and ensure uniqueness
+  // Remove duplicates and ensure uniqueness for channels
   const uniqueChannels = Array.from(new Set(availableChannels.map(c => c.value)))
     .map(value => availableChannels.find(c => c.value === value)!);
-  
+
+  // Remove duplicates and ensure uniqueness for years
   const uniqueYears = Array.from(new Set(availableYears));
-  
+
+  // Remove duplicates and ensure uniqueness for months
   const uniqueMonths = Array.from(new Set(availableMonths.map(m => m.value)))
     .map(value => availableMonths.find(m => m.value === value)!);
 
@@ -168,4 +170,3 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     </Card>
   );
 };
-
