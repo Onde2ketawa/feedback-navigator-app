@@ -29,8 +29,9 @@ export function YearOverYearTrendChart({
   
   // Filter out months with no data
   const filteredData = data;
-  const hasCurrentYearData = data.some(point => point[currentYear] > 0);
-  const hasPreviousYearData = data.some(point => point[previousYear] > 0);
+  // Ensure numeric comparison by converting to numbers
+  const hasCurrentYearData = data.some(point => Number(point[currentYear]) > 0);
+  const hasPreviousYearData = data.some(point => Number(point[previousYear]) > 0);
 
   // Get channel name for display
   const channelName = channelFilter === 'all' ? 'All Channels' : channelFilter;
