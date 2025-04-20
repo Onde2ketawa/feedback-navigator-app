@@ -1,71 +1,43 @@
 
 import React from 'react';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ChannelOption } from '@/hooks/useFilterOptions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useFilterOptions } from '@/hooks/useFilterOptions';
 
 interface ChannelFilterProps {
-  availableChannels: ChannelOption[];
-  selectedChannel: string;
-  onChannelChange: (value: string) => void;
-  isLoading?: boolean;
-  error?: Error | null;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
 export const ChannelFilter: React.FC<ChannelFilterProps> = ({ 
-  availableChannels, 
-  selectedChannel, 
-  onChannelChange,
-  isLoading = false,
-  error = null
+  value, 
+  onChange,
+  disabled = false 
 }) => {
-  if (error) {
-    return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertCircle className="h-4 w-4 mr-2" />
-        <AlertDescription>
-          Unable to load channels: {error.message}
-        </AlertDescription>
-      </Alert>
-    );
-  }
+  const { availableChannels, isLoading } = useFilterOptions();
 
   return (
-    <div>
-      <label className="block text-sm font-medium mb-2">Channel</label>
-      {isLoading ? (
-        <Skeleton className="h-10 w-full" />
-      ) : (
-        <Select 
-          value={selectedChannel} 
-          onValueChange={onChannelChange}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select Channel" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableChannels.length === 0 ? (
-              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                No channels available
-              </div>
-            ) : (
-              availableChannels.map(channel => (
-                <SelectItem key={channel.value} value={channel.value}>
-                  {channel.label}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-      )}
+    <div className="space-y-2">
+      <label className="text-sm font-medium block">Channel</label>
+      <Select
+        value={value}
+        onValueChange={onChange}
+        disabled={disabled || isLoading}
+      >
+        <SelectTrigger className="w-full bg-white">
+          <SelectValue placeholder="Select channel" />
+        </SelectTrigger>
+        <SelectContent>
+          {availableChannels.map(channel => (
+            <SelectItem 
+              key={channel.value} 
+              value={channel.value}
+            >
+              {channel.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
-};
+}

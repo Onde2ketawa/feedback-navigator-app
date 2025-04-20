@@ -38,27 +38,10 @@ export function useFeedbackData(filter: FeedbackFilter) {
           channel:channel_id(id, name)
         `);
       
-      // Apply channel filter if selected
+      // Apply channel filter directly with UUID
       if (filter.channel && filter.channel !== 'all') {
-        try {
-          // Get channel ID based on name
-          const { data: channelData, error: channelError } = await supabase
-            .from('channel')
-            .select('id')
-            .eq('name', filter.channel)
-            .single();
-          
-          if (channelError) {
-            console.error("Error finding channel:", channelError);
-            throw channelError;
-          }
-          
-          if (channelData) {
-            query = query.eq('channel_id', channelData.id);
-          }
-        } catch (err) {
-          console.error("Error in channel filter:", err);
-        }
+        console.log("Applying channel filter:", filter.channel);
+        query = query.eq('channel_id', filter.channel);
       }
       
       // Apply year filter
@@ -90,16 +73,12 @@ export function useFeedbackData(filter: FeedbackFilter) {
       const { data, error } = await query;
       
       if (error) {
-        console.error("Error fetching feedback data:", error);
+        console.error("Error fetching feedback:", error);
         throw error;
       }
       
-      if (!data || data.length === 0) {
-        console.log("No feedback data found matching the filters");
-        return [];
-      }
-      
-      return data.map(item => ({
+      console.log("Filtered data count:", data?.length);
+      return data?.map(item => ({
         id: item.id,
         channel: item.channel?.name || '',
         rating: typeof item.rating === 'number' ? item.rating : parseInt(item.rating) || 1,
