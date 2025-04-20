@@ -1,94 +1,106 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import MainLayout from "./components/layout/MainLayout";
-import Dashboard from "./pages/Dashboard";
-import Categories from "./pages/Categories";
-import RatingAnalytics from "./pages/RatingAnalytics";
-import CategoryAnalytics from "./pages/CategoryAnalytics";
-import SentimentAnalytics from "./pages/SentimentAnalytics";
-import UserManagement from "./pages/UserManagement";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
-import CsvUpload from "./pages/CsvUpload";
+// Layouts
+import MainLayout from './components/layout/MainLayout';
 
-const queryClient = new QueryClient();
+// Pages
+import Dashboard from './pages/Dashboard';
+import RatingAnalytics from './pages/RatingAnalytics';
+import SentimentAnalytics from './pages/SentimentAnalytics';
+import CategoryAnalytics from './pages/CategoryAnalytics';
+import TimeAnalytics from './pages/TimeAnalytics';
+import Upload from './pages/Upload';
+import CsvUpload from './pages/CsvUpload';
+import Categories from './pages/Categories';
+import Auth from './pages/Auth';
+import UserManagement from './pages/UserManagement';
+import Index from './pages/Index';
+import NotFound from './pages/NotFound';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public route for authentication */}
-            <Route path="/auth" element={<Auth />} />
+// Auth Context & Protection
+import { AuthContextProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
-            {/* Redirect root to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+// Other Components
+import { Toaster } from './components/ui/toaster';
 
-            {/* Protected routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Dashboard />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/categories" element={
-              <ProtectedRoute requireAdmin>
-                <MainLayout>
-                  <Categories />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/csv-upload" element={
-              <ProtectedRoute requireAdmin>
-                <MainLayout>
-                  <CsvUpload />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/users" element={
-              <ProtectedRoute requireAdmin>
-                <MainLayout>
-                  <UserManagement />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/rating-analytics" element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <RatingAnalytics />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/category-analytics" element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <CategoryAnalytics />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/sentiment-analytics" element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <SentimentAnalytics />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <AuthContextProvider>
+      <Router>
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/rating-analytics" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <RatingAnalytics />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/sentiment-analytics" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <SentimentAnalytics />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/category-analytics" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <CategoryAnalytics />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/time-analytics" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <TimeAnalytics />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/upload" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Upload />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/csv-upload" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <CsvUpload />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/categories" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Categories />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/user-management" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <UserManagement />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+      <Toaster />
+    </AuthContextProvider>
+  );
+}
 
 export default App;

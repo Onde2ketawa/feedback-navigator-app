@@ -1,166 +1,98 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { 
-  Grid, 
-  BarChart, 
-  PieChart,
-  Tags,
-  Menu,
-  X,
-  FileSpreadsheet,
-  Home,
+import { buttonVariants } from '@/components/ui/button';
+import {
+  LayoutDashboard,
+  Star,
+  MessageSquareText,
+  Layers,
+  Upload,
   Users,
-  TrendingUp
+  Clock,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useAuth } from '@/contexts/AuthContext';
-import UserProfile from '@/components/auth/UserProfile';
 
-interface SidebarProps {
-  isOpen: boolean;
-  toggleSidebar: () => void;
+interface SidebarNavProps {
+  items: {
+    href: string;
+    title: string;
+    icon: React.ReactNode;
+  }[];
 }
 
-const MainSidebar: React.FC<SidebarProps> = ({
-  isOpen,
-  toggleSidebar
-}) => {
+export function MainSidebar() {
   const location = useLocation();
-  const isMobile = useIsMobile();
-  const { isAdmin } = useAuth();
-
-  const navigationItems = [
+  
+  // Define sidebar navigation items
+  const sidebarNavItems = [
     {
-      name: 'Dashboard',
-      href: '/dashboard',
-      icon: <Home className="h-5 w-5" />,
-      requireAdmin: false
+      href: "/dashboard",
+      title: "Dashboard",
+      icon: <LayoutDashboard className="mr-2 h-4 w-4" />,
     },
     {
-      name: 'CSV Upload',
-      href: '/csv-upload',
-      icon: <FileSpreadsheet className="h-5 w-5" />,
-      requireAdmin: true
+      href: "/rating-analytics",
+      title: "Rating Analytics",
+      icon: <Star className="mr-2 h-4 w-4" />,
     },
     {
-      name: 'Categories',
-      href: '/categories',
-      icon: <Tags className="h-5 w-5" />,
-      requireAdmin: true
+      href: "/sentiment-analytics",
+      title: "Sentiment Analytics",
+      icon: <MessageSquareText className="mr-2 h-4 w-4" />,
     },
     {
-      name: 'User Management',
-      href: '/users',
-      icon: <Users className="h-5 w-5" />,
-      requireAdmin: true
+      href: "/category-analytics",
+      title: "Category Analytics",
+      icon: <Layers className="mr-2 h-4 w-4" />,
     },
     {
-      name: 'Review Dashboard',
-      href: '/dashboard',
-      icon: <Grid className="h-5 w-5" />,
-      requireAdmin: false
+      href: "/time-analytics",
+      title: "Time Analytics",
+      icon: <Clock className="mr-2 h-4 w-4" />,
     },
     {
-      name: 'Rating Analytics',
-      href: '/rating-analytics',
-      icon: <BarChart className="h-5 w-5" />,
-      requireAdmin: false
+      href: "/upload",
+      title: "Upload",
+      icon: <Upload className="mr-2 h-4 w-4" />,
     },
     {
-      name: 'Category Analytics',
-      href: '/category-analytics',
-      icon: <PieChart className="h-5 w-5" />,
-      requireAdmin: false
+      href: "/categories",
+      title: "Categories",
+      icon: <Layers className="mr-2 h-4 w-4" />,
     },
     {
-      name: 'Sentiment Analytics',
-      href: '/sentiment-analytics',
-      icon: <TrendingUp className="h-5 w-5" />,
-      requireAdmin: false
-    }
+      href: "/user-management",
+      title: "User Management",
+      icon: <Users className="mr-2 h-4 w-4" />,
+    },
   ];
+  
+  return <SidebarNav items={sidebarNavItems} />;
+}
 
+function SidebarNav({ items }: SidebarNavProps) {
+  const location = useLocation();
+  const pathname = location.pathname;
+  
   return (
-    <aside 
-      className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-sidebar transition-all duration-300",
-        isOpen ? "w-64" : isMobile ? "w-0" : "w-16",
-        "flex flex-col border-r border-sidebar-border"
-      )}
-    >
-      <div className="flex h-16 items-center justify-between px-4">
-        <h2 className={cn(
-          "font-semibold text-sidebar-foreground transition-opacity duration-300",
-          isOpen ? "opacity-100" : "opacity-0"
-        )}>
-          Sentiment Analysis
-        </h2>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={toggleSidebar} 
-          className="text-sidebar-foreground"
+    <nav className="grid items-start gap-2">
+      {items.map((item, index) => (
+        <Link
+          key={index}
+          to={item.href}
+          className={cn(
+            buttonVariants({ variant: "ghost" }),
+            pathname === item.href
+              ? "bg-muted hover:bg-muted text-primary"
+              : "hover:bg-transparent hover:underline",
+            "justify-start"
+          )}
         >
-          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
-      </div>
-      
-      <Separator className="bg-sidebar-border" />
-      
-      <div className="flex-1 overflow-y-auto py-4 px-3">
-        <nav className="space-y-1">
-          {navigationItems.map((item) => {
-            if (item.requireAdmin && !isAdmin) {
-              return null;
-            }
-            
-            if (item.name === 'Dashboard') {
-              return null;
-            }
-            
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  "flex items-center rounded-md py-2 px-3 text-sm font-medium transition-colors",
-                  location.pathname === item.href
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  !isOpen && "justify-center"
-                )}
-              >
-                {item.icon}
-                <span className={cn(
-                  "ml-3 transition-opacity duration-300",
-                  isOpen ? "opacity-100" : "opacity-0 w-0 h-0 overflow-hidden"
-                )}>
-                  {item.name}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-      
-      <div className={cn(
-        "p-4 border-t border-sidebar-border flex items-center",
-        !isOpen && "justify-center"
-      )}>
-        <UserProfile />
-        {isOpen && (
-          <div className="ml-2 flex flex-col">
-            <span className="text-xs text-sidebar-foreground opacity-60">
-              {isAdmin ? 'Admin Access' : 'User Access'}
-            </span>
-          </div>
-        )}
-      </div>
-    </aside>
+          {item.icon}
+          {item.title}
+        </Link>
+      ))}
+    </nav>
   );
-};
-
-export default MainSidebar;
+}
