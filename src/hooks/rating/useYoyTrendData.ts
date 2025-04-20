@@ -4,12 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { YoyTrendDataPoint } from './types';
 import { yoyTrendData as defaultYoyTrendData } from '@/data/ratingsMockData';
 
-export const useYoyTrendData = (channelFilter: string, yearFilter: string) => {
+export const useYoyTrendData = (channelFilter: string) => {
   const [yoyTrendData, setYoyTrendData] = useState<YoyTrendDataPoint[]>(defaultYoyTrendData);
   
   const fetchYoyTrendData = async (): Promise<YoyTrendDataPoint[]> => {
     try {
-      console.log('Fetching YOY trend data with filters:', { channelFilter, yearFilter });
+      console.log('Fetching YOY trend data with filters:', { channelFilter });
       
       let query = supabase
         .from('customer_feedback')
@@ -55,8 +55,8 @@ export const useYoyTrendData = (channelFilter: string, yearFilter: string) => {
     const currentYear = new Date().getFullYear();
     const previousYear = currentYear - 1;
     
-    // Initialize result with all months
-    const result = months.map(month => ({
+    // Initialize monthly data structure with all months
+    const monthlyData = months.map(month => ({
       name: month,
       [currentYear.toString()]: 0,
       [`${currentYear}_count`]: 0,
@@ -76,19 +76,19 @@ export const useYoyTrendData = (channelFilter: string, yearFilter: string) => {
       if (year === currentYear || year === previousYear) {
         const yearKey = year.toString();
         const countKey = `${yearKey}_count`;
-        const monthData = result[monthIndex];
+        const monthData = monthlyData[monthIndex];
         
         // Add rating to the sum and increment count
-        const currentRating = monthData[yearKey] as number || 0;
-        const currentCount = (monthData[countKey] as number || 0) + 1;
+        const currentRating = monthData[yearKey] as number;
+        const currentCount = (monthData[countKey] as number) + 1;
         
         monthData[yearKey] = currentRating + Number(item.rating || 0);
         monthData[countKey] = currentCount;
       }
     });
 
-    // Calculate averages
-    result.forEach(monthData => {
+    // Calculate averages for all months
+    monthlyData.forEach(monthData => {
       const currentYearKey = currentYear.toString();
       const previousYearKey = previousYear.toString();
       const currentYearCount = monthData[`${currentYearKey}_count`] as number;
@@ -107,8 +107,8 @@ export const useYoyTrendData = (channelFilter: string, yearFilter: string) => {
       delete monthData[`${previousYearKey}_count`];
     });
 
-    console.log('Processed YOY trend data:', result);
-    return result;
+    console.log('Processed YOY trend data:', monthlyData);
+    return monthlyData;
   };
 
   return {

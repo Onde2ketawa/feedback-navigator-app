@@ -1,8 +1,7 @@
-
 // Define interfaces for the data structures
 export interface YoyTrendDataPoint {
   name: string;
-  [key: string]: number | string;
+  [key: string]: number | string; // Allow dynamic year keys
 }
 
 export interface RatingDistributionDataPoint {
