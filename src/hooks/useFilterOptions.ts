@@ -45,7 +45,7 @@ export function useFilterOptions() {
   const [monthsError, setMonthsError] = useState<Error | null>(null);
 
   // Function to fetch months for a specific year
-  const fetchMonthsForYear = useCallback(async (selectedYear: string) => {
+  const fetchMonthsForYearCallback = useCallback(async (selectedYear: string) => {
     if (selectedYear === 'all') {
       // If 'all years' is selected, just use the predefined months
       return;
@@ -54,6 +54,7 @@ export function useFilterOptions() {
     setIsLoadingMonths(true);
     try {
       const months = await fetchMonthsForYear(selectedYear);
+      
       // Ensure we maintain the correct order - add "All Months" at the beginning
       // and then sort the rest numerically by their month value
       const sortedMonths = [
@@ -62,6 +63,7 @@ export function useFilterOptions() {
           return parseInt(a.value) - parseInt(b.value);
         })
       ];
+      
       setAvailableMonths(sortedMonths);
       setMonthsError(null);
     } catch (err) {
@@ -81,6 +83,6 @@ export function useFilterOptions() {
     isLoadingMonths,
     error,
     monthsError,
-    fetchMonthsForYear
+    fetchMonthsForYear: fetchMonthsForYearCallback
   };
 }
