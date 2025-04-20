@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -19,7 +20,7 @@ import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 
 // Auth Context & Protection
-import { AuthContextProvider } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Other Components
@@ -27,7 +28,7 @@ import { Toaster } from './components/ui/toaster';
 
 function App() {
   return (
-    <AuthContextProvider>
+    <AuthProvider>
       <Router>
         <Routes>
           <Route path="/auth" element={<Auth />} />
@@ -99,7 +100,7 @@ function App() {
         </Routes>
       </Router>
       <Toaster />
-    </AuthContextProvider>
+    </AuthProvider>
   );
 }
 

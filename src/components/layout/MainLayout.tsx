@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import MainSidebar from './MainSidebar';
+import { MainSidebar } from './MainSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
