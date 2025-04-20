@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { MonthOption } from '@/hooks/useFilterOptions';
 
@@ -25,6 +26,18 @@ export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOpt
       throw error;
     }
 
+    // Even if no data is found, we'll return all months
+    // This ensures the dropdown always shows months Jan-Dec
+    if (!data || data.length === 0) {
+      return [
+        { value: 'all', label: 'All Months' },
+        ...MONTH_NAMES.map((name, index) => ({
+          value: (index + 1).toString(),
+          label: name
+        }))
+      ];
+    }
+
     const months = data
       .filter(item => item.submit_date)
       .map(item => {
@@ -46,6 +59,13 @@ export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOpt
     ];
   } catch (err) {
     console.error('Error in fetchMonthsForYear:', err);
-    return [{ value: 'all', label: 'All Months' }];
+    // Return default months on error
+    return [
+      { value: 'all', label: 'All Months' },
+      ...MONTH_NAMES.map((name, index) => ({
+        value: (index + 1).toString(),
+        label: name
+      }))
+    ];
   }
 };

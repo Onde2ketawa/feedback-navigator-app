@@ -39,6 +39,9 @@ export function FilterControls({
       fetchMonthsForYear(yearFilter);
       // Reset month when year changes
       setMonthFilter('all');
+    } else {
+      // When "all years" is selected, we should still see all months
+      fetchMonthsForYear('all');
     }
   }, [yearFilter, fetchMonthsForYear, setMonthFilter]);
 
@@ -90,16 +93,14 @@ export function FilterControls({
         <Select 
           value={monthFilter} 
           onValueChange={setMonthFilter}
-          disabled={yearFilter === 'all' || isLoading || isLoadingMonths}
+          disabled={isLoading || isLoadingMonths}
         >
           <SelectTrigger className="bg-white">
             <SelectValue 
               placeholder={
                 isLoading || isLoadingMonths 
                   ? "Loading..." 
-                  : yearFilter === 'all' 
-                    ? "Select Year First" 
-                    : "Select month"
+                  : "Select month"
               } 
             />
           </SelectTrigger>
