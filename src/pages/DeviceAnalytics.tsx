@@ -14,9 +14,7 @@ export default function DeviceAnalytics() {
   const [monthFilter, setMonthFilter] = useState('all');
 
   const {
-    deviceDistribution,
-    deviceCategoryData,
-    deviceRatingData,
+    data,
     isLoading,
     error
   } = useDeviceAnalyticsData(channelFilter, yearFilter, monthFilter);
@@ -50,21 +48,21 @@ export default function DeviceAnalytics() {
         </div>
       )}
 
-      {!isLoading && !error && (
+      {!isLoading && !error && data && (
         <div className="grid grid-cols-1 gap-6">
           <Card className="p-6">
             <h2 className="text-lg font-medium mb-4">Feedback Distribution by Device</h2>
-            <DeviceDistributionChart data={deviceDistribution} />
+            <DeviceDistributionChart data={data.deviceDistribution} />
           </Card>
 
           <Card className="p-6">
             <h2 className="text-lg font-medium mb-4">Device Usage by Category</h2>
-            <DeviceCategoryComparison data={deviceCategoryData} />
+            <DeviceCategoryComparison data={data.deviceCategoryData} />
           </Card>
 
           <Card className="p-6">
             <h2 className="text-lg font-medium mb-4">Average Rating by Device</h2>
-            <DeviceRatingComparison data={deviceRatingData} />
+            <DeviceRatingComparison data={data.deviceRatingData} />
           </Card>
         </div>
       )}
