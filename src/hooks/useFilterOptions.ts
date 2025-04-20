@@ -14,11 +14,9 @@ export interface MonthOption {
 }
 
 export function useFilterOptions() {
-  // State definitions with predefined values
+  // State for channels with proper IDs
   const [availableChannels, setAvailableChannels] = useState<ChannelOption[]>([
-    { value: 'all', label: 'All Channels' },
-    { value: 'LINE Bank', label: 'LINE Bank' },
-    { value: 'MyHana', label: 'MyHana' }
+    { value: 'all', label: 'All Channels' }
   ]);
   
   const [availableYears] = useState<string[]>(['all', '2024', '2025']);
@@ -39,10 +37,44 @@ export function useFilterOptions() {
     { value: '12', label: 'December' }
   ]);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMonths, setIsLoadingMonths] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [monthsError, setMonthsError] = useState<Error | null>(null);
+
+  // Fetch channels from the database
+  useEffect(() => {
+    const fetchChannels = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('channel')
+          .select('id, name')
+          .order('name');
+        
+        if (error) throw error;
+        
+        if (data) {
+          const channelOptions = [
+            { value: 'all', label: 'All Channels' },
+            ...data.map(channel => ({
+              value: channel.id,  // Use the actual UUID as the value
+              label: channel.name
+            }))
+          ];
+          setAvailableChannels(channelOptions);
+        }
+        
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching channels:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch channels'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChannels();
+  }, []);
 
   // Function to fetch months for a specific year
   const fetchMonthsForYearCallback = useCallback(async (selectedYear: string) => {

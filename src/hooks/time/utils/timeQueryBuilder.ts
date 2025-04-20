@@ -17,10 +17,17 @@ export const buildTimeAnalyticsQuery = (
       channel:channel_id(id, name)
     `);
 
+  // Fix the channel filter - only apply if it's a valid UUID and not "all"
   if (channelFilter && channelFilter !== 'all') {
-    query = query.eq('channel_id', channelFilter);
+    // Check if the channelFilter is a UUID (simple validation)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(channelFilter)) {
+      query = query.eq('channel_id', channelFilter);
+    }
+    // If not a UUID, we skip the filter to prevent the error
   }
 
+  // Year filter logic
   if (yearFilter && yearFilter !== 'all') {
     const startOfYear = `${yearFilter}-01-01`;
     const endOfYear = `${parseInt(yearFilter) + 1}-01-01`;
@@ -28,6 +35,7 @@ export const buildTimeAnalyticsQuery = (
                 .lt('submit_date', endOfYear);
   }
 
+  // Month filter logic (if year is also selected)
   if (yearFilter && yearFilter !== 'all' && monthFilter && monthFilter !== 'all') {
     const month = parseInt(monthFilter);
     const year = parseInt(yearFilter);
