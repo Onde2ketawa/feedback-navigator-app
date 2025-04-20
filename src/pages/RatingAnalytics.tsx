@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AverageRatingCard } from '@/components/analytics/rating/AverageRatingCard';
+import { useAverageRating } from '@/hooks/rating/useAverageRating';
 
 const RatingAnalytics: React.FC = () => {
   const {
@@ -27,6 +29,15 @@ const RatingAnalytics: React.FC = () => {
     categoryRatingData,
     refreshData
   } = useRatingAnalyticsData();
+
+  const { 
+    averageRating, 
+    fetchAverageRating 
+  } = useAverageRating(channelFilter, yearFilter, monthFilter);
+
+  React.useEffect(() => {
+    fetchAverageRating();
+  }, [channelFilter, yearFilter, monthFilter]);
   
   return (
     <div className="animate-fade-in">
@@ -40,7 +51,10 @@ const RatingAnalytics: React.FC = () => {
           variant="outline" 
           size="sm" 
           className="flex items-center gap-1"
-          onClick={refreshData}
+          onClick={() => {
+            refreshData();
+            fetchAverageRating();
+          }}
           disabled={isLoading}
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -57,6 +71,10 @@ const RatingAnalytics: React.FC = () => {
         setMonthFilter={setMonthFilter}
       />
       
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <AverageRatingCard rating={averageRating} />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* YoY Rating Trend */}
         {isLoading ? (
