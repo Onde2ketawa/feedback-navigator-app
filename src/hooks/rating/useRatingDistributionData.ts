@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RatingDistributionDataPoint } from './types';
@@ -18,22 +17,8 @@ export const useRatingDistributionData = (channelFilter: string) => {
         
       // Apply channel filter if not 'all'
       if (channelFilter !== 'all') {
-        try {
-          const { data: channelData } = await supabase
-            .from('channel')
-            .select('id')
-            .eq('name', channelFilter)
-            .maybeSingle();
-          
-          if (channelData) {
-            console.log("Found channel ID:", channelData.id);
-            query = query.eq('channel_id', channelData.id);
-          }
-        } catch (err) {
-          // If it's already an ID, use it directly
-          console.log("Using channel ID directly:", channelFilter);
-          query = query.eq('channel_id', channelFilter);
-        }
+        // Direct filter on channel_id (assuming channelFilter is already the ID)
+        query = query.eq('channel_id', channelFilter);
       }
       
       const { data, error } = await query;

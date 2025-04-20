@@ -17,6 +17,7 @@ export const useYoyTrendData = (channelFilter: string) => {
       
       // Add channel filter if not 'all'
       if (channelFilter !== 'all') {
+        // Direct filter on channel_id (assuming channelFilter is already the ID)
         query = query.eq('channel_id', channelFilter);
       }
       
@@ -101,10 +102,6 @@ export const useYoyTrendData = (channelFilter: string) => {
       if (previousYearCount > 0) {
         monthData[previousYearKey] = Number((monthData[previousYearKey] as number / previousYearCount).toFixed(1));
       }
-      
-      // Remove count properties as they're not needed for the chart
-      delete monthData[`${currentYearKey}_count`];
-      delete monthData[`${previousYearKey}_count`];
     });
 
     console.log('Processed YOY trend data:', monthlyData);
