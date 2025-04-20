@@ -28,12 +28,14 @@ export function useRatingAnalyticsData() {
     useCategoryRatingData(channelFilter, yearFilter, monthFilter);
 
   useEffect(() => {
+    console.log("useRatingAnalyticsData effect with filters:", { channelFilter, yearFilter, monthFilter });
     fetchRatingAnalyticsData();
   }, [channelFilter, yearFilter, monthFilter]);
 
   const fetchRatingAnalyticsData = async () => {
     setIsLoading(true);
     try {
+      console.log("Fetching all rating analytics data...");
       const [yoyData, distributionData, monthlyData, categoryData] = await Promise.all([
         fetchYoyTrendData(),
         fetchRatingDistributionData(),

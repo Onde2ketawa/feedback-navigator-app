@@ -10,25 +10,28 @@ export const useRatingDistributionData = (channelFilter: string) => {
   
   const fetchRatingDistributionData = async (): Promise<RatingDistributionDataPoint[]> => {
     try {
+      console.log("Fetching rating distribution data with channel filter:", channelFilter);
+      
       let query = supabase
         .from('customer_feedback')
-        .select('rating');
+        .select('rating, submit_date');
         
       // Apply channel filter if not 'all'
       if (channelFilter !== 'all') {
-        // Try to get the channel ID if it's a name instead of an ID
         try {
           const { data: channelData } = await supabase
             .from('channel')
             .select('id')
             .eq('name', channelFilter)
-            .single();
+            .maybeSingle();
           
           if (channelData) {
+            console.log("Found channel ID:", channelData.id);
             query = query.eq('channel_id', channelData.id);
           }
         } catch (err) {
           // If it's already an ID, use it directly
+          console.log("Using channel ID directly:", channelFilter);
           query = query.eq('channel_id', channelFilter);
         }
       }
@@ -37,6 +40,7 @@ export const useRatingDistributionData = (channelFilter: string) => {
       
       if (error) throw error;
       if (data) {
+        console.log("Rating distribution raw data count:", data.length);
         console.log("Rating distribution raw data sample:", data.slice(0, 10));
         return processRatingDistributionData(data);
       }
