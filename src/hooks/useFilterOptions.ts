@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchMonthsForYear } from '@/api/filters/monthApi';
 
 export interface ChannelOption {
   value: string;
@@ -22,7 +23,7 @@ export function useFilterOptions() {
   
   const [availableYears] = useState<string[]>(['all', '2024', '2025']);
   
-  const [availableMonths] = useState<MonthOption[]>([
+  const [availableMonths, setAvailableMonths] = useState<MonthOption[]>([
     { value: 'all', label: 'All Months' },
     { value: '1', label: 'January' },
     { value: '2', label: 'February' },
@@ -43,10 +44,33 @@ export function useFilterOptions() {
   const [error, setError] = useState<Error | null>(null);
   const [monthsError, setMonthsError] = useState<Error | null>(null);
 
-  // Function to fetch months for a specific year (if needed)
+  // Function to fetch months for a specific year
   const fetchMonthsForYear = useCallback(async (selectedYear: string) => {
-    // Since we're using predefined months, we don't need to fetch them
-    return;
+    if (selectedYear === 'all') {
+      // If 'all years' is selected, just use the predefined months
+      return;
+    }
+
+    setIsLoadingMonths(true);
+    try {
+      const months = await fetchMonthsForYear(selectedYear);
+      // Ensure we maintain the correct order - add "All Months" at the beginning
+      // and then sort the rest numerically by their month value
+      const sortedMonths = [
+        { value: 'all', label: 'All Months' },
+        ...months.filter(m => m.value !== 'all').sort((a, b) => {
+          return parseInt(a.value) - parseInt(b.value);
+        })
+      ];
+      setAvailableMonths(sortedMonths);
+      setMonthsError(null);
+    } catch (err) {
+      console.error('Error fetching months:', err);
+      setMonthsError(err instanceof Error ? err : new Error('Failed to fetch months'));
+      // Fall back to default months
+    } finally {
+      setIsLoadingMonths(false);
+    }
   }, []);
 
   return {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -6,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface TimeDistributionData {
   label: string;
   count: number;
+  sortOrder?: number;
 }
 
 export interface CategoryTimeData {
@@ -13,6 +13,7 @@ export interface CategoryTimeData {
   values: {
     timeLabel: string;
     count: number;
+    sortOrder?: number;
   }[];
 }
 
@@ -21,8 +22,25 @@ export interface DeviceTimeData {
   values: {
     timeLabel: string;
     count: number;
+    sortOrder?: number;
   }[];
 }
+
+// Month ordering helper
+const getMonthSortOrder = (monthName: string): number => {
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+  
+  // Find the month in the array and return its index (0-11)
+  for (let i = 0; i < months.length; i++) {
+    if (monthName.includes(months[i])) {
+      return i;
+    }
+  }
+  return 12; // Default for unknown months
+};
 
 export function useTimeAnalyticsData(
   channelFilter: string,
@@ -159,35 +177,39 @@ export function useTimeAnalyticsData(
           }
         });
         
-        // Convert monthly data to array format for charts
+        // Convert monthly data to array format for charts with proper sorting
         const monthlyResult = Object.entries(monthlyData).map(([month, count]) => {
           const [year, monthNum] = month.split('-');
           const date = new Date(parseInt(year), parseInt(monthNum) - 1);
           const monthName = date.toLocaleString('default', { month: 'long' });
+          const shortMonthName = date.toLocaleString('default', { month: 'short' });
           return {
             label: `${monthName} ${year}`,
-            count
+            count,
+            sortOrder: (parseInt(year) * 100) + parseInt(monthNum) // Year + month for sorting
           };
-        }).sort((a, b) => a.label.localeCompare(b.label));
+        }).sort((a, b) => a.sortOrder! - b.sortOrder!);
         
         // Convert daily data to array format for charts
         const dailyResult = Object.entries(dailyData).map(([day, count]) => {
           return {
             label: `Day ${day}`,
-            count
+            count,
+            sortOrder: parseInt(day)
           };
-        }).sort((a, b) => parseInt(a.label.split(' ')[1]) - parseInt(b.label.split(' ')[1]));
+        }).sort((a, b) => a.sortOrder! - b.sortOrder!);
         
         // Convert hourly data to array format for charts
         const hourlyResult = Array.from({ length: 24 }, (_, i) => {
           const hour = i.toString().padStart(2, '0');
           return {
             label: `${hour}:00`,
-            count: hourlyData[hour] || 0
+            count: hourlyData[hour] || 0,
+            sortOrder: i
           };
         });
         
-        // Process category by time data
+        // Process category by time data with proper month sorting
         const categoryResult = Object.entries(categoryByMonthData).map(([category, monthData]) => {
           return {
             category,
@@ -195,15 +217,17 @@ export function useTimeAnalyticsData(
               const [year, monthNum] = month.split('-');
               const date = new Date(parseInt(year), parseInt(monthNum) - 1);
               const monthName = date.toLocaleString('default', { month: 'short' });
+              const timeLabel = `${monthName} ${year}`;
               return {
-                timeLabel: `${monthName} ${year}`,
-                count
+                timeLabel,
+                count,
+                sortOrder: (parseInt(year) * 100) + parseInt(monthNum) // Year + month for sorting
               };
-            }).sort((a, b) => a.timeLabel.localeCompare(b.timeLabel))
+            }).sort((a, b) => a.sortOrder! - b.sortOrder!)
           };
         });
         
-        // Process device by time data
+        // Process device by time data with proper month sorting
         const deviceResult = Object.entries(deviceByMonthData).map(([device, monthData]) => {
           return {
             device,
@@ -211,11 +235,13 @@ export function useTimeAnalyticsData(
               const [year, monthNum] = month.split('-');
               const date = new Date(parseInt(year), parseInt(monthNum) - 1);
               const monthName = date.toLocaleString('default', { month: 'short' });
+              const timeLabel = `${monthName} ${year}`;
               return {
-                timeLabel: `${monthName} ${year}`,
-                count
+                timeLabel,
+                count,
+                sortOrder: (parseInt(year) * 100) + parseInt(monthNum) // Year + month for sorting
               };
-            }).sort((a, b) => a.timeLabel.localeCompare(b.timeLabel))
+            }).sort((a, b) => a.sortOrder! - b.sortOrder!)
           };
         });
         
