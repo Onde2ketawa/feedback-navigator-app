@@ -31,29 +31,54 @@ export function useSentimentRecalculate() {
       let processed = 0;
       let errors = 0;
       const batchSize = 10;
+      let retries = 0;
+      const maxRetries = 3;
 
-      while (processed + errors < count) {
-        const res = await fetch("/functions/v1/analyze-feedback", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ batchSize, delay: 0.2 }),
-        });
+      while (processed + errors < count && retries < maxRetries) {
+        try {
+          const res = await fetch("/api/functions/v1/analyze-feedback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ batchSize, delay: 0.2 }),
+          });
 
-        const data = await res.json();
+          if (!res.ok) {
+            throw new Error(`Server responded with status: ${res.status}`);
+          }
 
-        if (data.error) throw new Error(data.error);
+          const data = await res.json();
 
-        processed += data.processed ?? 0;
-        errors += data.errors ?? 0;
+          if (data.error) throw new Error(data.error);
 
-        setStats({ processed, errors });
-        setProgress(Math.round(((processed + errors) / count) * 100));
+          processed += data.processed ?? 0;
+          errors += data.errors ?? 0;
 
-        // Short circuit if fewer than batchSize returned
-        if (data.done) break;
+          setStats({ processed, errors });
+          setProgress(Math.round(((processed + errors) / count) * 100));
+
+          // Reset retry counter on successful call
+          retries = 0;
+
+          // Short circuit if fewer than batchSize returned
+          if (data.done) break;
+        } catch (err: any) {
+          console.error("Error during sentiment analysis:", err);
+          retries++;
+          
+          // If still have retries left, wait and try again
+          if (retries < maxRetries) {
+            toast.warning(`Analysis attempt failed, retrying (${retries}/${maxRetries})...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+          } else {
+            throw err; // Rethrow after max retries
+          }
+        }
       }
 
-      toast.success("Sentiment recalculation complete!");
+      toast.success(`Sentiment recalculation complete: ${processed} processed, ${errors} errors`);
+      
+      // Force a reload to update the dashboard
+      window.location.reload();
     } catch (err: any) {
       toast.error(`Recalculation error: ${err.message ?? err}`);
     } finally {

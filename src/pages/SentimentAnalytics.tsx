@@ -1,20 +1,20 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChannelFilter } from '@/components/dashboard/filters/ChannelFilter';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useSentimentAnalyticsData } from '@/hooks/sentiment/useSentimentAnalyticsData';
 import { SentimentTrendChart } from '@/components/analytics/sentiment/SentimentTrendChart';
 import { SentimentDistributionChart } from '@/components/analytics/sentiment/SentimentDistributionChart';
 import { SentimentCategoryChart } from '@/components/analytics/sentiment/SentimentCategoryChart';
+import { useSentimentRecalculate } from '@/hooks/sentiment/useSentimentRecalculate';
 
 const SentimentAnalytics: React.FC = () => {
-  const [isRecalculating, setIsRecalculating] = useState(false);
   const {
     isLoading,
     channelFilter,
@@ -26,26 +26,11 @@ const SentimentAnalytics: React.FC = () => {
     availableChannels
   } = useSentimentAnalyticsData();
   
-  const handleRecalculate = async () => {
-    setIsRecalculating(true);
-    try {
-      const { error } = await supabase.rpc('recalculate_sentiment_scores');
-      if (error) throw error;
-      
-      toast.success('Sentiment scores have been recalculated');
-      // Refresh the data to show updated scores
-      await refreshData();
-    } catch (error) {
-      console.error('Error recalculating sentiment scores:', error);
-      toast.error('Failed to recalculate sentiment scores');
-    } finally {
-      setIsRecalculating(false);
-    }
-  };
+  const { isProcessing, progress, stats, recalculate } = useSentimentRecalculate();
   
   return (
     <div className="animate-fade-in">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-6">
         <PageHeader 
           title="Sentiment Analytics" 
           description="Analyze sentiment trends, distribution, and categories across feedback"
@@ -56,10 +41,10 @@ const SentimentAnalytics: React.FC = () => {
             variant="outline" 
             size="sm" 
             className="flex items-center gap-1"
-            onClick={handleRecalculate}
-            disabled={isRecalculating}
+            onClick={recalculate}
+            disabled={isProcessing}
           >
-            <RefreshCw className={`h-4 w-4 ${isRecalculating ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isProcessing ? 'animate-spin' : ''}`} />
             Recalculate Sentiment
           </Button>
           
@@ -75,6 +60,34 @@ const SentimentAnalytics: React.FC = () => {
           </Button>
         </div>
       </div>
+      
+      {/* Sentiment recalculation progress */}
+      {isProcessing && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Analyzing sentiment...</span>
+                <span className="text-sm text-muted-foreground">{progress}%</span>
+              </div>
+              <Progress value={progress} />
+              
+              {stats && (
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <p className="text-green-800 font-medium">Processed</p>
+                    <p className="text-2xl font-bold">{stats.processed}</p>
+                  </div>
+                  <div className="p-3 bg-red-50 rounded-lg">
+                    <p className="text-red-800 font-medium">Errors</p>
+                    <p className="text-2xl font-bold">{stats.errors}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       {/* Channel filter */}
       <div className="mb-6">

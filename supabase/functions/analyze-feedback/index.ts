@@ -11,6 +11,8 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
 
+console.log("Edge function starting up with Supabase URL:", supabaseUrl);
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -18,7 +20,13 @@ serve(async (req) => {
   }
 
   try {
+    if (!openAIApiKey) {
+      throw new Error("OPENAI_API_KEY is not set in environment variables");
+    }
+
     const { batchSize = 10, delay = 0.2 } = await req.json().catch(() => ({}));
+    console.log(`Processing batch of ${batchSize} with ${delay}s delay between requests`);
+    
     let processed = 0;
     let errors = 0;
 
@@ -32,10 +40,23 @@ serve(async (req) => {
         },
       }
     );
+
+    if (!feedbackRes.ok) {
+      throw new Error(`Failed to fetch feedback: ${feedbackRes.status} ${await feedbackRes.text()}`);
+    }
+
     const feedbackList = await feedbackRes.json();
+    console.log(`Found ${feedbackList.length} feedback items to analyze`);
 
     for (const record of feedbackList) {
       try {
+        if (!record.feedback || typeof record.feedback !== 'string' || record.feedback.trim() === '') {
+          console.log(`Skipping record ${record.id}: Empty feedback`);
+          continue;
+        }
+
+        console.log(`Analyzing feedback ID ${record.id}: "${record.feedback.substring(0, 50)}..."`);
+
         const prompt = [
           {
             role: "system",
@@ -48,7 +69,7 @@ serve(async (req) => {
           },
         ];
         const body = {
-          model: "gpt-4o", // Use the latest, fast model
+          model: "gpt-4o-mini", // Use a fast, cost-effective model
           messages: prompt,
           temperature: 0.2,
           max_tokens: 50,
@@ -62,29 +83,60 @@ serve(async (req) => {
           },
           body: JSON.stringify(body),
         });
+        
+        if (!aiRes.ok) {
+          console.error(`OpenAI API error: ${aiRes.status} ${await aiRes.text()}`);
+          throw new Error(`OpenAI API returned ${aiRes.status}`);
+        }
+
         const aiJson = await aiRes.json();
+        console.log(`Got OpenAI response for ID ${record.id}`);
 
         // Robust parsing (OpenAI might not ALWAYS return valid JSON!)
         let sentiment = "neutral";
         let score = 0;
         const content = aiJson.choices?.[0]?.message?.content ?? "";
+        console.log(`Raw content from OpenAI: "${content}"`);
+        
         try {
-          const jsonResp = JSON.parse(content);
+          // Try to extract JSON, handling cases where it might be in backticks, etc.
+          let jsonText = content;
+          
+          // If we have backticks around JSON, extract just the content
+          const jsonMatch = content.match(/```(?:json)?(.*?)```/s);
+          if (jsonMatch && jsonMatch[1]) {
+            jsonText = jsonMatch[1].trim();
+          }
+          
+          // Handle possible content with markdown or text before/after JSON
+          const jsonStartPos = jsonText.indexOf('{');
+          const jsonEndPos = jsonText.lastIndexOf('}');
+          
+          if (jsonStartPos !== -1 && jsonEndPos !== -1 && jsonEndPos > jsonStartPos) {
+            jsonText = jsonText.substring(jsonStartPos, jsonEndPos + 1);
+          }
+          
+          console.log(`Extracted JSON: ${jsonText}`);
+          const jsonResp = JSON.parse(jsonText);
+          
           if (
             ["positive", "neutral", "negative"].includes(jsonResp.sentiment) &&
             typeof jsonResp.score === "number"
           ) {
             sentiment = jsonResp.sentiment;
             score = Math.max(-1, Math.min(1, Number(jsonResp.score)));
+            console.log(`Parsed sentiment: ${sentiment}, score: ${score}`);
+          } else {
+            console.log(`Invalid sentiment data in response: ${JSON.stringify(jsonResp)}`);
           }
-        } catch {
-          // If not proper JSON, mark as error (or fallback)
+        } catch (parseError) {
+          console.error(`Failed to parse OpenAI response: ${parseError.message}`, content);
           errors++;
           continue;
         }
 
         // Update the feedback record with new sentiment & score
-        await fetch(
+        const updateRes = await fetch(
           `${supabaseUrl}/rest/v1/customer_feedback?id=eq.${record.id}`,
           {
             method: "PATCH",
@@ -100,8 +152,16 @@ serve(async (req) => {
             }),
           }
         );
+        
+        if (!updateRes.ok) {
+          console.error(`Failed to update record ${record.id}: ${updateRes.status} ${await updateRes.text()}`);
+          throw new Error(`Database update failed with status ${updateRes.status}`);
+        }
+        
+        console.log(`Successfully updated feedback ID ${record.id} with sentiment: ${sentiment}, score: ${score}`);
         processed++;
       } catch (err) {
+        console.error(`Error processing feedback ID ${record.id}:`, err);
         errors++;
         // Continue loop even on failure
       }
@@ -119,6 +179,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
+    console.error("Edge function error:", error);
     return new Response(
       JSON.stringify({ error: error?.message ?? "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
