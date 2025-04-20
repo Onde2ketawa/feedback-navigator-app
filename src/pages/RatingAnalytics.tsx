@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { FilterControls } from '@/components/analytics/FilterControls';
@@ -35,7 +34,7 @@ const RatingAnalytics: React.FC = () => {
     monthlyRatingData,
     categoryRatingData,
     refreshData
-  } = useRatingAnalyticsData(channelFilter); // Pass channelFilter to the hook
+  } = useRatingAnalyticsData();
 
   const { 
     averageRating, 

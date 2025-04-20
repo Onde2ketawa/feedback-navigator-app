@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { YoyTrendDataPoint } from '@/hooks/rating/useYoyTrendData';
+import { YoyTrendDataPoint } from '@/hooks/rating/types';
 
 interface YearOverYearTrendChartProps {
   data: YoyTrendDataPoint[];
