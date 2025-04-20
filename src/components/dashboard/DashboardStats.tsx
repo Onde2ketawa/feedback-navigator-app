@@ -55,7 +55,7 @@ export function DashboardStats() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       {/* Total Feedback */}
       <Card>
         <CardHeader className="pb-2">
@@ -87,17 +87,28 @@ export function DashboardStats() {
       </Card>
       
       {/* Feedback by Channel */}
-      <Card className="col-span-1 md:col-span-2">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">Feedback by Channel</CardTitle>
         </CardHeader>
-        <CardContent className="aspect-square flex items-center justify-center">
-          <div className="w-full h-full max-h-40">
+        <CardContent className="flex items-center justify-center">
+          <div className="w-full aspect-square max-w-[200px]">
             <Doughnut 
               data={channelChartData} 
               options={{
+                responsive: true,
+                maintainAspectRatio: true,
                 plugins: {
-                  legend: { position: 'bottom', align: 'center' },
+                  legend: { 
+                    position: 'bottom',
+                    display: true,
+                    align: 'center',
+                    labels: {
+                      boxWidth: 12,
+                      padding: 15,
+                      usePointStyle: true,
+                    }
+                  },
                 }
               }}
             />
