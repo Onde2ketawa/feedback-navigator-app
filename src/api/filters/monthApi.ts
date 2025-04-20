@@ -2,29 +2,51 @@
 import { supabase } from '@/integrations/supabase/client';
 import { MonthOption } from '@/hooks/useFilterOptions';
 
-/**
- * Fetches months for a specific year
- */
-export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOption[]> => {
-  // Always return all months for any year selection
-  return getDefaultMonths();
-};
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
 
-// Helper function to get default months
-function getDefaultMonths(): MonthOption[] {
-  return [
-    { value: 'all', label: 'All Months' },
-    { value: '1', label: 'January' },
-    { value: '2', label: 'February' },
-    { value: '3', label: 'March' },
-    { value: '4', label: 'April' },
-    { value: '5', label: 'May' },
-    { value: '6', label: 'June' },
-    { value: '7', label: 'July' },
-    { value: '8', label: 'August' },
-    { value: '9', label: 'September' },
-    { value: '10', label: 'October' },
-    { value: '11', label: 'November' },
-    { value: '12', label: 'December' }
-  ];
-}
+export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOption[]> => {
+  if (selectedYear === 'all') {
+    return MONTH_NAMES.map((name, index) => ({
+      value: (index + 1).toString(),
+      label: name
+    }));
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('customer_feedback')
+      .select('submit_date')
+      .not('submit_date', 'is', null)
+      .ilike('submit_date', `${selectedYear}-%`);
+
+    if (error) {
+      throw error;
+    }
+
+    const months = data
+      .filter(item => item.submit_date)
+      .map(item => {
+        const date = new Date(item.submit_date);
+        return date.getMonth();
+      });
+
+    // Get unique months
+    const uniqueMonths = Array.from(new Set(months))
+      .sort((a, b) => a - b)
+      .map(monthIndex => ({
+        value: (monthIndex + 1).toString(),
+        label: MONTH_NAMES[monthIndex]
+      }));
+
+    return [
+      { value: 'all', label: 'All Months' },
+      ...uniqueMonths
+    ];
+  } catch (err) {
+    console.error('Error in fetchMonthsForYear:', err);
+    return [{ value: 'all', label: 'All Months' }];
+  }
+};

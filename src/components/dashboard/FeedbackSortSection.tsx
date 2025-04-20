@@ -22,17 +22,6 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     monthsError
   } = useFilterOptions();
 
-  // Remove duplicates and ensure uniqueness for channels
-  const uniqueChannels = Array.from(new Set(availableChannels.map(c => c.value)))
-    .map(value => availableChannels.find(c => c.value === value)!);
-
-  // Remove duplicates and ensure uniqueness for years
-  const uniqueYears = Array.from(new Set(availableYears));
-
-  // Remove duplicates and ensure uniqueness for months
-  const uniqueMonths = Array.from(new Set(availableMonths.map(m => m.value)))
-    .map(value => availableMonths.find(m => m.value === value)!);
-
   const handleFilterSubmit = (filters: FeedbackFilter) => {
     onFilterChange({
       channel: filters.channel,
@@ -67,7 +56,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Channels</SelectItem>
-                {uniqueChannels.map((channel) => (
+                {availableChannels.map((channel) => (
                   <SelectItem key={channel.value} value={channel.value}>
                     {channel.label}
                   </SelectItem>
@@ -97,7 +86,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Years</SelectItem>
-                {uniqueYears.map((year) => (
+                {availableYears.map((year) => (
                   <SelectItem key={year} value={year}>{year}</SelectItem>
                 ))}
               </SelectContent>
@@ -124,7 +113,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Months</SelectItem>
-                {uniqueMonths.map((month) => (
+                {availableMonths.map((month) => (
                   <SelectItem key={month.value} value={month.value}>
                     {month.label}
                   </SelectItem>
