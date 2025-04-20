@@ -1,14 +1,20 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useFilterOptions } from '@/hooks/useFilterOptions';
 
 export interface UseChannelFilterResult {
   channelFilter: string;
   setChannelFilter: (channelId: string) => void;
+  availableChannels: {
+    value: string;
+    label: string;
+  }[];
+  isLoading: boolean;
 }
 
 export function useChannelFilter() {
   const [channelFilter, setChannelFilter] = useState<string>('all');
+  const { availableChannels, isLoading } = useFilterOptions();
 
   const handleChannelChange = (channelId: string) => {
     console.log("Changing channel filter to:", channelId);
@@ -17,6 +23,8 @@ export function useChannelFilter() {
 
   return {
     channelFilter,
-    setChannelFilter: handleChannelChange
+    setChannelFilter: handleChannelChange,
+    availableChannels,
+    isLoading
   };
 }
