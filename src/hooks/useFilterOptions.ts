@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchMonthsForYear } from '@/api/filters/monthApi';
@@ -23,18 +22,18 @@ export function useFilterOptions() {
   
   const [availableMonths, setAvailableMonths] = useState<MonthOption[]>([
     { value: 'all', label: 'All Months' },
-    { value: '1', label: 'January' },
-    { value: '2', label: 'February' },
-    { value: '3', label: 'March' },
-    { value: '4', label: 'April' },
+    { value: '1', label: 'Jan' },
+    { value: '2', label: 'Feb' },
+    { value: '3', label: 'Mar' },
+    { value: '4', label: 'Apr' },
     { value: '5', label: 'May' },
-    { value: '6', label: 'June' },
-    { value: '7', label: 'July' },
-    { value: '8', label: 'August' },
-    { value: '9', label: 'September' },
-    { value: '10', label: 'October' },
-    { value: '11', label: 'November' },
-    { value: '12', label: 'December' }
+    { value: '6', label: 'Jun' },
+    { value: '7', label: 'Jul' },
+    { value: '8', label: 'Aug' },
+    { value: '9', label: 'Sep' },
+    { value: '10', label: 'Oct' },
+    { value: '11', label: 'Nov' },
+    { value: '12', label: 'Dec' }
   ]);
 
   const [isLoading, setIsLoading] = useState(true);

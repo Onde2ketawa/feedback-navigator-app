@@ -1,10 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { MonthOption } from '@/hooks/useFilterOptions';
 
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 ];
 
 export const fetchMonthsForYear = async (selectedYear: string): Promise<MonthOption[]> => {
