@@ -4,26 +4,45 @@ import { ChannelOption } from '@/hooks/useFilterOptions';
 
 export const fetchChannels = async (): Promise<ChannelOption[]> => {
   try {
-    const { data: channels, error } = await supabase
+    // First, let's get all unique channel_id values from customer_feedback
+    const { data: feedbackData, error: feedbackError } = await supabase
       .from('customer_feedback')
-      .select('channel:channel_id(id, name)')
-      .distinct();
+      .select('channel_id');
     
-    if (error) {
-      console.error('Error fetching channels:', error);
-      throw new Error(`Failed to fetch channels: ${error.message}`);
+    if (feedbackError) {
+      console.error('Error fetching channel IDs:', feedbackError);
+      throw new Error(`Failed to fetch channel IDs: ${feedbackError.message}`);
     }
 
-    const uniqueChannels = channels
-      .filter(item => item.channel) // Remove null values
-      .map(item => ({
-        value: item.channel.id,
-        label: item.channel.name
-      }));
+    // Extract unique channel_ids
+    const uniqueChannelIds = Array.from(
+      new Set(feedbackData.map(item => item.channel_id))
+    ).filter(Boolean); // Remove any null/undefined values
+    
+    if (uniqueChannelIds.length === 0) {
+      return [{ value: 'all', label: 'All Channels' }];
+    }
+
+    // Now fetch the channel details for these IDs
+    const { data: channelData, error: channelError } = await supabase
+      .from('channel')
+      .select('id, name')
+      .in('id', uniqueChannelIds);
+
+    if (channelError) {
+      console.error('Error fetching channel details:', channelError);
+      throw new Error(`Failed to fetch channel details: ${channelError.message}`);
+    }
+
+    // Map the channel data to the format we need
+    const channels = channelData.map(channel => ({
+      value: channel.id,
+      label: channel.name
+    }));
 
     return [
       { value: 'all', label: 'All Channels' },
-      ...uniqueChannels
+      ...channels
     ];
   } catch (err) {
     console.error('Error in fetchChannels:', err);
