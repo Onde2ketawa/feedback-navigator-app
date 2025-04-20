@@ -13,11 +13,18 @@ import { RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AverageRatingCard } from '@/components/analytics/rating/AverageRatingCard';
 import { useAverageRating } from '@/hooks/rating/useAverageRating';
+import { useChannelFilter } from '@/hooks/useChannelFilter';
 
 const RatingAnalytics: React.FC = () => {
+  // Get channel filter from useChannelFilter hook
   const {
     channelFilter,
     setChannelFilter,
+    availableChannels,
+    isLoading: isLoadingChannels
+  } = useChannelFilter();
+
+  const {
     yearFilter, 
     setYearFilter,
     monthFilter,
@@ -28,7 +35,7 @@ const RatingAnalytics: React.FC = () => {
     monthlyRatingData,
     categoryRatingData,
     refreshData
-  } = useRatingAnalyticsData();
+  } = useRatingAnalyticsData(channelFilter); // Pass channelFilter to the hook
 
   const { 
     averageRating, 
@@ -37,7 +44,7 @@ const RatingAnalytics: React.FC = () => {
 
   React.useEffect(() => {
     fetchAverageRating();
-  }, [channelFilter, yearFilter, monthFilter]);
+  }, [channelFilter, yearFilter, monthFilter, fetchAverageRating]);
   
   return (
     <div className="animate-fade-in">
