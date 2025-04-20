@@ -11,6 +11,8 @@ import {
   Upload,
   Users,
   Clock,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface SidebarNavProps {
@@ -21,7 +23,12 @@ interface SidebarNavProps {
   }[];
 }
 
-export function MainSidebar() {
+interface MainSidebarProps {
+  isOpen: boolean;
+  toggleSidebar: () => void;
+}
+
+export function MainSidebar({ isOpen, toggleSidebar }: MainSidebarProps) {
   const location = useLocation();
   
   // Define sidebar navigation items
@@ -68,10 +75,30 @@ export function MainSidebar() {
     },
   ];
   
-  return <SidebarNav items={sidebarNavItems} />;
+  return (
+    <aside 
+      className={cn(
+        "fixed left-0 top-0 z-40 h-screen transition-width duration-300 bg-card border-r",
+        isOpen ? "w-64" : "w-16"
+      )}
+    >
+      <div className="h-full px-3 py-4">
+        <div className="flex items-center justify-between mb-6">
+          {isOpen && <h2 className="text-xl font-semibold">Analytics</h2>}
+          <button 
+            onClick={toggleSidebar}
+            className="p-2 rounded-md hover:bg-muted"
+          >
+            {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+          </button>
+        </div>
+        <SidebarNav items={sidebarNavItems} isOpen={isOpen} />
+      </div>
+    </aside>
+  );
 }
 
-function SidebarNav({ items }: SidebarNavProps) {
+function SidebarNav({ items, isOpen }: SidebarNavProps & { isOpen: boolean }) {
   const location = useLocation();
   const pathname = location.pathname;
   
@@ -86,11 +113,13 @@ function SidebarNav({ items }: SidebarNavProps) {
             pathname === item.href
               ? "bg-muted hover:bg-muted text-primary"
               : "hover:bg-transparent hover:underline",
-            "justify-start"
+            "justify-start",
+            !isOpen && "justify-center px-2"
           )}
+          title={!isOpen ? item.title : undefined}
         >
           {item.icon}
-          {item.title}
+          {isOpen && item.title}
         </Link>
       ))}
     </nav>
