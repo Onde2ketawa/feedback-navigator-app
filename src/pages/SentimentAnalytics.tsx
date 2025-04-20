@@ -1,17 +1,20 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChannelFilter } from '@/components/dashboard/filters/ChannelFilter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { useSentimentAnalyticsData } from '@/hooks/sentiment/useSentimentAnalyticsData';
 import { SentimentTrendChart } from '@/components/analytics/sentiment/SentimentTrendChart';
 import { SentimentDistributionChart } from '@/components/analytics/sentiment/SentimentDistributionChart';
 import { SentimentCategoryChart } from '@/components/analytics/sentiment/SentimentCategoryChart';
 
 const SentimentAnalytics: React.FC = () => {
+  const [isRecalculating, setIsRecalculating] = useState(false);
   const {
     isLoading,
     channelFilter,
@@ -23,6 +26,23 @@ const SentimentAnalytics: React.FC = () => {
     availableChannels
   } = useSentimentAnalyticsData();
   
+  const handleRecalculate = async () => {
+    setIsRecalculating(true);
+    try {
+      const { error } = await supabase.rpc('recalculate_sentiment_scores');
+      if (error) throw error;
+      
+      toast.success('Sentiment scores have been recalculated');
+      // Refresh the data to show updated scores
+      await refreshData();
+    } catch (error) {
+      console.error('Error recalculating sentiment scores:', error);
+      toast.error('Failed to recalculate sentiment scores');
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
+  
   return (
     <div className="animate-fade-in">
       <div className="flex justify-between items-center">
@@ -31,16 +51,29 @@ const SentimentAnalytics: React.FC = () => {
           description="Analyze sentiment trends, distribution, and categories across feedback"
         />
         
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-1"
-          onClick={refreshData}
-          disabled={isLoading}
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={handleRecalculate}
+            disabled={isRecalculating}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRecalculating ? 'animate-spin' : ''}`} />
+            Recalculate Sentiment
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={refreshData}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
       
       {/* Channel filter */}

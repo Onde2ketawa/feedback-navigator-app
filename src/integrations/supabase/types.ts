@@ -208,6 +208,10 @@ export type Database = {
           color: string
         }[]
       }
+      recalculate_sentiment_scores: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
