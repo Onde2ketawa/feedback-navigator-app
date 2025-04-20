@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -19,6 +18,7 @@ import Auth from './pages/Auth';
 import UserManagement from './pages/UserManagement';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
+import DeviceAnalytics from './pages/DeviceAnalytics';
 
 // Auth Context & Protection
 import { AuthProvider } from './contexts/AuthContext';
@@ -105,6 +105,13 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <UserManagement />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/device-analytics" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <DeviceAnalytics />
                 </MainLayout>
               </ProtectedRoute>
             } />

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -11,6 +10,7 @@ import {
   Upload,
   Users,
   Clock,
+  Smartphone,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -31,7 +31,6 @@ interface MainSidebarProps {
 export function MainSidebar({ isOpen, toggleSidebar }: MainSidebarProps) {
   const location = useLocation();
   
-  // Define sidebar navigation items
   const sidebarNavItems = [
     {
       href: "/dashboard",
@@ -72,6 +71,11 @@ export function MainSidebar({ isOpen, toggleSidebar }: MainSidebarProps) {
       href: "/user-management",
       title: "User Management",
       icon: <Users className="mr-2 h-4 w-4" />,
+    },
+    {
+      href: "/device-analytics",
+      title: "Device Analytics",
+      icon: <Smartphone className="mr-2 h-4 w-4" />,
     },
   ];
   
