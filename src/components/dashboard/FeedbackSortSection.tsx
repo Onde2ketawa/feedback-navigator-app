@@ -2,9 +2,9 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Filter } from 'lucide-react';
 import { FeedbackFilter } from '@/hooks/useFeedbackData';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
+import { useFeedbackFilters } from './filters/useFeedbackFilters';
 
 interface SortSectionProps {
   onFilterChange: (filters: FeedbackFilter) => void;
@@ -15,21 +15,24 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     availableChannels, 
     availableYears, 
     availableMonths,
-    fetchMonthsForYear,
     isLoading,
-    isLoadingMonths,
-    error,
-    monthsError
+    isLoadingMonths
   } = useFilterOptions();
 
-  const handleFilterSubmit = (filters: FeedbackFilter) => {
-    onFilterChange({
-      channel: filters.channel,
-      year: filters.year,
-      month: filters.month,
-      ratingMin: filters.ratingMin,
-      ratingMax: filters.ratingMax
-    });
+  const {
+    selectedChannel,
+    selectedYear,
+    selectedMonth,
+    ratingRange,
+    handleChannelChange,
+    handleYearChange,
+    handleMonthChange,
+    setRatingRange,
+    applyFilters
+  } = useFeedbackFilters();
+
+  const handleFilterSubmit = () => {
+    applyFilters(onFilterChange);
   };
 
   return (
@@ -41,21 +44,13 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
             <label className="text-sm font-medium">Channel</label>
             <Select
               disabled={isLoading}
-              onValueChange={(value) => 
-                handleFilterSubmit({ 
-                  channel: value, 
-                  year: null, 
-                  month: null,
-                  ratingMin: 1,
-                  ratingMax: 5
-                })
-              }
+              value={selectedChannel}
+              onValueChange={handleChannelChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select channel" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Channels</SelectItem>
                 {availableChannels.map((channel) => (
                   <SelectItem key={channel.value} value={channel.value}>
                     {channel.label}
@@ -70,24 +65,17 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
             <label className="text-sm font-medium">Year</label>
             <Select
               disabled={isLoading}
-              onValueChange={(value) => {
-                fetchMonthsForYear(value);
-                handleFilterSubmit({ 
-                  channel: null, 
-                  year: value, 
-                  month: null,
-                  ratingMin: 1,
-                  ratingMax: 5
-                });
-              }}
+              value={selectedYear}
+              onValueChange={handleYearChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select year" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
                 {availableYears.map((year) => (
-                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                  <SelectItem key={year} value={year}>
+                    {year === 'all' ? 'All Years' : year}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -97,22 +85,14 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
           <div className="space-y-2 w-full md:w-64">
             <label className="text-sm font-medium">Month</label>
             <Select
-              disabled={isLoadingMonths}
-              onValueChange={(value) => 
-                handleFilterSubmit({ 
-                  channel: null, 
-                  year: null, 
-                  month: value,
-                  ratingMin: 1,
-                  ratingMax: 5
-                })
-              }
+              disabled={isLoading || isLoadingMonths}
+              value={selectedMonth}
+              onValueChange={handleMonthChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select month" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Months</SelectItem>
                 {availableMonths.map((month) => (
                   <SelectItem key={month.value} value={month.value}>
                     {month.label}
@@ -126,22 +106,17 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
           <div className="space-y-2 w-full md:w-64">
             <label className="text-sm font-medium">Rating</label>
             <Select
+              value={`${ratingRange[0]}-${ratingRange[1]}`}
               onValueChange={(value) => {
                 const [min, max] = value.split('-').map(Number);
-                handleFilterSubmit({ 
-                  channel: null, 
-                  year: null, 
-                  month: null,
-                  ratingMin: min,
-                  ratingMax: max
-                });
+                setRatingRange([min, max]);
               }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select rating range" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1-5">All Ratings</SelectItem>
+                <SelectItem value="1-5">All Ratings (1-5)</SelectItem>
                 <SelectItem value="1-2">1-2 Stars</SelectItem>
                 <SelectItem value="3-3">3 Stars</SelectItem>
                 <SelectItem value="4-5">4-5 Stars</SelectItem>
@@ -150,11 +125,15 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
           </div>
         </div>
 
-        {error && (
-          <div className="text-sm text-destructive mt-2">
-            Error loading filter options. Please try again.
-          </div>
-        )}
+        {/* Apply Filters Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={handleFilterSubmit}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Apply Filters
+          </button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -1,8 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { fetchChannels } from '@/api/filters/channelApi';
-import { fetchYears } from '@/api/filters/yearApi';
-import { fetchMonthsForYear as fetchMonthsApi } from '@/api/filters/monthApi';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ChannelOption {
   value: string;
@@ -14,64 +12,41 @@ export interface MonthOption {
   label: string;
 }
 
-/**
- * Custom hook that provides filtering options for feedback data
- */
 export function useFilterOptions() {
-  // State definitions
+  // State definitions with predefined values
   const [availableChannels, setAvailableChannels] = useState<ChannelOption[]>([
-    { value: 'all', label: 'All Channels' }
+    { value: 'all', label: 'All Channels' },
+    { value: 'LINE Bank', label: 'LINE Bank' },
+    { value: 'MyHana', label: 'MyHana' }
   ]);
-  const [availableYears, setAvailableYears] = useState<string[]>(['all']);
-  const [availableMonths, setAvailableMonths] = useState<MonthOption[]>([
-    { value: 'all', label: 'All Months' }
+  
+  const [availableYears] = useState<string[]>(['all', '2024', '2025']);
+  
+  const [availableMonths] = useState<MonthOption[]>([
+    { value: 'all', label: 'All Months' },
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' }
   ]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMonths, setIsLoadingMonths] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [monthsError, setMonthsError] = useState<Error | null>(null);
 
-  // Load initial filter options
-  useEffect(() => {
-    const loadFilterOptions = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Fetch channels and years in parallel for better performance
-        const [channelsResult, yearsResult] = await Promise.all([
-          fetchChannels(),
-          fetchYears()
-        ]);
-        
-        setAvailableChannels(channelsResult);
-        setAvailableYears(yearsResult);
-      } catch (err) {
-        console.error('Error in loadFilterOptions:', err);
-        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadFilterOptions();
-  }, []);
-
-  // Memoized function to fetch months for a specific year
+  // Function to fetch months for a specific year (if needed)
   const fetchMonthsForYear = useCallback(async (selectedYear: string) => {
-    try {
-      setIsLoadingMonths(true);
-      setMonthsError(null);
-
-      const monthOptions = await fetchMonthsApi(selectedYear);
-      setAvailableMonths(monthOptions);
-    } catch (err) {
-      console.error('Error in fetchMonths:', err);
-      setMonthsError(err instanceof Error ? err : new Error('An unknown error occurred'));
-      setAvailableMonths([{ value: 'all', label: 'All Months' }]);
-    } finally {
-      setIsLoadingMonths(false);
-    }
+    // Since we're using predefined months, we don't need to fetch them
+    return;
   }, []);
 
   return {
