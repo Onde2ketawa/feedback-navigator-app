@@ -24,7 +24,7 @@ export function useBertSentimentRecalculate() {
         .throwOnError();
 
       if (countError) {
-        throw new Error(`Error counting feedback: ${countError.message}`);
+        throw new Error(`Error counting feedback: ${countError.error || countError.toString()}`);
       }
 
       if (!count || count === 0) {
@@ -46,7 +46,7 @@ export function useBertSentimentRecalculate() {
         try {
           console.log("Calling edge function with batch size:", batchSize);
           
-          // Call the edge function with a timeout
+          // Create an abort controller for the timeout
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
           
@@ -54,8 +54,8 @@ export function useBertSentimentRecalculate() {
             body: { 
               batchSize,
               delay: 0.3
-            },
-            signal: controller.signal
+            }
+            // Note: Removed the signal property as it's not supported in FunctionInvokeOptions
           });
           
           clearTimeout(timeoutId);
@@ -63,10 +63,10 @@ export function useBertSentimentRecalculate() {
           console.log("Edge function response:", data, error);
 
           if (error) {
-            if (error.message && error.message.includes("aborted")) {
+            if (error.toString().includes("aborted")) {
               throw new Error("Request timed out. The server may be busy. Try again later.");
             }
-            throw new Error(error.message || "Unknown error occurred");
+            throw new Error(error.toString() || "Unknown error occurred");
           }
           
           // Check if data is null or undefined
