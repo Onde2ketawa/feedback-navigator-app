@@ -26,6 +26,7 @@ const SentimentAnalytics: React.FC = () => {
     isProcessing: isDbProcessing, 
     progress: dbProgress, 
     stats: dbStats, 
+    lastMessage: dbLastMessage,
     recalculate, 
     recalculateWithEdgeFunction 
   } = useSentimentRecalculate();
@@ -64,7 +65,11 @@ const SentimentAnalytics: React.FC = () => {
     selectedMethod === 'bert' ? bertLastError : null;
     
   const lastMessage =
-    selectedMethod === 'bert' ? bertLastMessage : null;
+    selectedMethod === 'database' 
+      ? dbLastMessage 
+      : selectedMethod === 'edge'
+      ? dbLastMessage
+      : bertLastMessage;
 
   const handleRecalculate = () => {
     if (selectedMethod === 'database') {

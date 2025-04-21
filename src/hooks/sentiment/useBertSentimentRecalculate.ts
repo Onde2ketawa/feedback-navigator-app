@@ -6,7 +6,7 @@ import { toast } from "sonner";
 export function useBertSentimentRecalculate() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [stats, setStats] = useState<{ processed: number; errors: number } | null>(null);
+  const [stats, setStats] = useState<{ processed: number; errors: number; blankProcessed?: number } | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
 
@@ -14,7 +14,7 @@ export function useBertSentimentRecalculate() {
   const recalculateWithBert = async () => {
     setIsProcessing(true);
     setProgress(0);
-    setStats({ processed: 0, errors: 0 });
+    setStats({ processed: 0, errors: 0, blankProcessed: 0 });
     setLastError(null);
     setLastMessage(null);
 
@@ -24,8 +24,7 @@ export function useBertSentimentRecalculate() {
       try {
         const countResult = await supabase
           .from("customer_feedback")
-          .select("*", { count: "exact", head: true })
-          .not("feedback", "is", null);
+          .select("*", { count: "exact", head: true });
           
         if (countResult.error) {
           throw countResult.error;
@@ -48,6 +47,7 @@ export function useBertSentimentRecalculate() {
       }
 
       let processed = 0;
+      let blankProcessed = 0;
       let errors = 0;
       const batchSize = 10;
       let retries = 0;
@@ -67,7 +67,8 @@ export function useBertSentimentRecalculate() {
           const { data, error } = await supabase.functions.invoke("recalculate-bert-sentiment", {
             body: { 
               batchSize,
-              delay: 0.3
+              delay: 0.3,
+              includeBlanks: true
             }
           });
 
@@ -109,15 +110,16 @@ export function useBertSentimentRecalculate() {
 
           // Update progress counters
           processed += (data as any).processed ?? 0;
+          blankProcessed += (data as any).blankProcessed ?? 0;
           errors += (data as any).errors ?? 0;
 
-          setStats({ processed, errors });
+          setStats({ processed, errors, blankProcessed });
 
           // Calculate progress based on estimated total
           if (count > 0) {
             const newProgress = Math.min(100, Math.round(((processed + errors) / count) * 100));
             setProgress(newProgress);
-            console.log(`Progress updated: ${newProgress}% (${processed}/${count})`);
+            console.log(`Progress updated: ${newProgress}% (${processed}/${count}) - Blank items: ${blankProcessed}`);
           }
 
           retries = 0;
@@ -145,7 +147,8 @@ export function useBertSentimentRecalculate() {
       }
 
       if (processed > 0 || errors > 0) {
-        toast.success(`BERT sentiment recalculation complete: ${processed} processed, ${errors} errors`);
+        const blankMsg = blankProcessed > 0 ? ` (including ${blankProcessed} blank items)` : '';
+        toast.success(`BERT sentiment recalculation complete: ${processed} processed${blankMsg}, ${errors} errors`);
       } else if (done) {
         const message = lastMessage || "No feedback was processed. There might be no items that need analysis.";
         toast.info(message);

@@ -24,16 +24,18 @@ serve(async (req) => {
   }
 
   try {
-    const { batchSize = 10, delay = 0.2 } = await req.json().catch(() => ({}));
-    console.log(`Processing batch of ${batchSize} with ${delay}s delay between requests.`);
+    const { batchSize = 10, delay = 0.2, includeBlanks = true } = await req.json().catch(() => ({}));
+    console.log(`Processing batch of ${batchSize} with ${delay}s delay between requests. Include blanks: ${includeBlanks}`);
     
     let processed = 0;
     let errors = 0;
+    let blankProcessed = 0;
 
     try {
-      // Fetch records to process (not-yet-analyzed or null sentiment_score) that have non-empty feedback
+      // Fetch records to process (not-yet-analyzed or null sentiment_score) 
+      // Note: We're now including records with empty feedback too
       const feedbackRes = await fetch(
-        `${supabaseUrl}/rest/v1/customer_feedback?select=id,feedback&or=(sentiment_score.is.null,sentiment_score.eq.0)&not.feedback.is.null&limit=${batchSize}`,
+        `${supabaseUrl}/rest/v1/customer_feedback?select=id,feedback&or=(sentiment_score.is.null,sentiment_score.eq.0)&limit=${batchSize}`,
         {
           headers: {
             apikey: supabaseKey,
@@ -62,33 +64,80 @@ serve(async (req) => {
         );
       }
 
-      // Filter out any items with empty feedback to avoid processing them
+      // Separate items into blank and non-blank feedback
+      const blankFeedbackList = feedbackList.filter(record => 
+        !record.feedback || 
+        typeof record.feedback !== 'string' || 
+        record.feedback.trim() === ''
+      );
+      
       const validFeedbackList = feedbackList.filter(record => 
         record.feedback && 
         typeof record.feedback === 'string' && 
         record.feedback.trim() !== ''
       );
       
+      console.log(`Found ${validFeedbackList.length} valid feedback items and ${blankFeedbackList.length} blank items`);
+      
+      // Process blank feedback first - set them as neutral with score 0
+      if (includeBlanks && blankFeedbackList.length > 0) {
+        for (const record of blankFeedbackList) {
+          try {
+            console.log(`Processing blank feedback ID ${record.id}: Setting as neutral with score 0`);
+            
+            // Update the feedback record with neutral sentiment & 0 score for blank feedback
+            const updateRes = await fetch(
+              `${supabaseUrl}/rest/v1/customer_feedback?id=eq.${record.id}`,
+              {
+                method: "PATCH",
+                headers: {
+                  apikey: supabaseKey,
+                  Authorization: `Bearer ${supabaseKey}`,
+                  "Content-Type": "application/json",
+                  Prefer: "return=minimal",
+                },
+                body: JSON.stringify({
+                  sentiment: "neutral",
+                  sentiment_score: 0,
+                }),
+              }
+            );
+            
+            if (!updateRes.ok) {
+              const errorText = await updateRes.text();
+              console.error(`Failed to update blank record ${record.id}: ${updateRes.status} ${errorText}`);
+              throw new Error(`Database update failed with status ${updateRes.status}`);
+            }
+            
+            console.log(`Successfully updated blank feedback ID ${record.id} with neutral sentiment and score 0`);
+            blankProcessed++;
+            processed++;
+          } catch (err) {
+            console.error(`Error processing blank feedback ID ${record.id}:`, err);
+            errors++;
+          }
+        }
+      }
+
+      // If we only have blank items and they're all processed, we're done
       if (validFeedbackList.length === 0) {
         return new Response(
           JSON.stringify({
             done: true,
-            processed: 0,
-            errors: 0,
-            message: "No valid feedback content to analyze"
+            processed,
+            blankProcessed,
+            errors,
+            message: blankProcessed > 0 
+              ? `Processed ${blankProcessed} blank feedback items as neutral with score 0` 
+              : "No valid feedback content to analyze"
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
+      // Process non-blank feedback items
       for (const record of validFeedbackList) {
         try {
-          // Double check if feedback is empty or not a string
-          if (!record.feedback || typeof record.feedback !== 'string' || record.feedback.trim() === '') {
-            console.log(`Skipping record ${record.id}: Empty feedback`);
-            continue;
-          }
-
           console.log(`Analyzing feedback ID ${record.id}: "${record.feedback.substring(0, 50)}..."`);
 
           let sentimentResult;
@@ -159,7 +208,6 @@ serve(async (req) => {
         } catch (err) {
           console.error(`Error processing feedback ID ${record.id}:`, err);
           errors++;
-          // Continue loop even on failure
         }
 
         // Rate limit between processing each item
@@ -168,12 +216,18 @@ serve(async (req) => {
         }
       }
 
+      const isDone = feedbackList.length < batchSize;
+      const message = processed > 0 
+        ? `Successfully processed ${processed} items (including ${blankProcessed} blank items)` 
+        : "No items processed";
+
       return new Response(
         JSON.stringify({
-          done: validFeedbackList.length < batchSize,
+          done: isDone,
           processed,
+          blankProcessed,
           errors,
-          message: processed > 0 ? `Successfully processed ${processed} items` : "No items processed"
+          message
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Database, Cpu, Brain, AlertCircle } from "lucide-react";
+import { RefreshCw, Database, Cpu, Brain, AlertCircle, Info } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface SentimentRecalculationCardProps {
@@ -12,7 +12,7 @@ interface SentimentRecalculationCardProps {
   onRecalculate: () => void;
   isProcessing: boolean;
   progress: number;
-  stats?: { processed: number; errors: number } | null;
+  stats?: { processed: number; errors: number; blankProcessed?: number } | null;
   lastError?: string | null;
   lastMessage?: string | null;
 }
@@ -67,6 +67,8 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
             <p className="text-sm text-muted-foreground mb-4">
               Uses BERT machine learning model via external API for high-accuracy multilingual sentiment analysis.
               Best for nuanced sentiment but requires external API setup.
+              <br />
+              <span className="font-medium text-blue-600">Note: Blank feedback will be marked as neutral with score 0.</span>
             </p>
           </TabsContent>
         </Tabs>
@@ -80,6 +82,9 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
           <div className="p-3 bg-green-50 rounded-lg">
             <p className="text-green-800 font-medium">Processed</p>
             <p className="text-2xl font-bold">{stats ? stats.processed : 0}</p>
+            {stats?.blankProcessed ? (
+              <p className="text-sm text-green-600">Including {stats.blankProcessed} blank items</p>
+            ) : null}
           </div>
           <div className="p-3 bg-red-50 rounded-lg">
             <p className="text-red-800 font-medium">Errors</p>
@@ -99,7 +104,8 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
       )}
       
       {lastMessage && !isProcessing && (
-        <div className="mt-3 px-3 py-2 rounded bg-blue-50 text-blue-700 text-xs border border-blue-200">
+        <div className="mt-3 px-3 py-2 rounded bg-blue-50 text-blue-700 text-xs border border-blue-200 flex items-start gap-2">
+          <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
           <p>{lastMessage}</p>
         </div>
       )}
