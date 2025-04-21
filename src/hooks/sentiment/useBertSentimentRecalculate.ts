@@ -19,7 +19,8 @@ export function useBertSentimentRecalculate() {
       const { count } = await supabase
         .from("customer_feedback")
         .select("*", { count: "exact", head: true })
-        .not("feedback", "is", null);
+        .not("feedback", "is", null)
+        .or("sentiment_score.is.null,sentiment_score.eq.0");
 
       if (!count || count === 0) {
         toast.success("No feedback needs analysis");
@@ -48,11 +49,21 @@ export function useBertSentimentRecalculate() {
 
           if (error) throw new Error(error.message);
           
+          if (data.message && data.processed === 0) {
+            toast.info(data.message);
+            done = true;
+            break;
+          }
+          
           processed += data.processed ?? 0;
           errors += data.errors ?? 0;
 
           setStats({ processed, errors });
-          setProgress(Math.round(((processed + errors) / count) * 100));
+          
+          // Calculate progress based on estimated total
+          if (count > 0) {
+            setProgress(Math.round((processed + errors) / count * 100));
+          }
           
           retries = 0;
           
@@ -76,7 +87,9 @@ export function useBertSentimentRecalculate() {
       toast.success(`BERT sentiment recalculation complete: ${processed} processed, ${errors} errors`);
       
       // Force a reload to update the dashboard
-      window.location.reload();
+      if (processed > 0) {
+        window.location.reload();
+      }
     } catch (err: any) {
       toast.error(`BERT recalculation error: ${err.message ?? err}`);
       console.error("Full BERT recalculation error:", err);

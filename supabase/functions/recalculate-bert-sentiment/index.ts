@@ -30,9 +30,9 @@ serve(async (req) => {
     let processed = 0;
     let errors = 0;
 
-    // Fetch records to process (not-yet-analyzed or null sentiment_score)
+    // Fetch records to process (not-yet-analyzed or null sentiment_score) that have non-empty feedback
     const feedbackRes = await fetch(
-      `${supabaseUrl}/rest/v1/customer_feedback?select=id,feedback&or=(sentiment_score.is.null,sentiment_score.eq.0)&feedback=not.is.null&limit=${batchSize}`,
+      `${supabaseUrl}/rest/v1/customer_feedback?select=id,feedback&or=(sentiment_score.is.null,sentiment_score.eq.0)&not.feedback.is.null&limit=${batchSize}`,
       {
         headers: {
           apikey: supabaseKey,
@@ -47,6 +47,18 @@ serve(async (req) => {
 
     const feedbackList = await feedbackRes.json();
     console.log(`Found ${feedbackList.length} feedback items to analyze with sentiment model`);
+
+    if (feedbackList.length === 0) {
+      return new Response(
+        JSON.stringify({
+          done: true,
+          processed: 0,
+          errors: 0,
+          message: "No feedback items found that need sentiment analysis"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     for (const record of feedbackList) {
       try {
@@ -90,7 +102,6 @@ serve(async (req) => {
         const score = sentimentResult.sentiment_score || 0;
 
         // Update the feedback record with new sentiment & score
-        // Removed last_analyzed_at field since it doesn't exist in the schema
         const updateRes = await fetch(
           `${supabaseUrl}/rest/v1/customer_feedback?id=eq.${record.id}`,
           {
@@ -130,6 +141,7 @@ serve(async (req) => {
         done: feedbackList.length < batchSize,
         processed,
         errors,
+        message: processed > 0 ? `Successfully processed ${processed} items` : "No items processed"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
