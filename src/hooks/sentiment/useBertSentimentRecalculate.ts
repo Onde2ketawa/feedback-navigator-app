@@ -34,6 +34,8 @@ export function useBertSentimentRecalculate() {
       const maxRetries = 3;
       let done = false;
 
+      toast.info("Starting sentiment analysis with BERT model...");
+
       while (!done && retries < maxRetries) {
         try {
           // Call the edge function
@@ -77,6 +79,7 @@ export function useBertSentimentRecalculate() {
       window.location.reload();
     } catch (err: any) {
       toast.error(`BERT recalculation error: ${err.message ?? err}`);
+      console.error("Full BERT recalculation error:", err);
     } finally {
       setIsProcessing(false);
     }

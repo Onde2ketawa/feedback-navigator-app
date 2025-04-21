@@ -9,10 +9,13 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const bertApiUrl = Deno.env.get("BERT_API_URL") || "https://your-bert-api-url.com/predict";
-const bertApiToken = Deno.env.get("BERT_API_TOKEN") || ""; // Use the token securely
+const bertApiUrl = Deno.env.get("BERT_API_URL");
+const bertApiToken = Deno.env.get("BERT_API_TOKEN");
 
-console.log("Edge function starting up with BERT API URL:", bertApiUrl);
+console.log("Edge function starting up with BERT API URL:", bertApiUrl || "Not configured");
+
+// Fallback to use our own sentiment analysis if BERT API is not configured
+import { analyzeSentiment } from "./sentiment.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -43,7 +46,7 @@ serve(async (req) => {
     }
 
     const feedbackList = await feedbackRes.json();
-    console.log(`Found ${feedbackList.length} feedback items to analyze with BERT model`);
+    console.log(`Found ${feedbackList.length} feedback items to analyze with sentiment model`);
 
     for (const record of feedbackList) {
       try {
@@ -52,28 +55,39 @@ serve(async (req) => {
           continue;
         }
 
-        console.log(`Analyzing feedback ID ${record.id} with BERT: "${record.feedback.substring(0, 50)}..."`);
+        console.log(`Analyzing feedback ID ${record.id}: "${record.feedback.substring(0, 50)}..."`);
 
-        // Call the external BERT API with authorization token
-        const bertRes = await fetch(bertApiUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${bertApiToken}`,
-          },
-          body: JSON.stringify({ feedback: record.feedback }),
-        });
+        let sentimentResult;
         
-        if (!bertRes.ok) {
-          console.error(`BERT API error: ${bertRes.status} ${await bertRes.text()}`);
-          throw new Error(`BERT API returned ${bertRes.status}`);
+        // If BERT API is configured, use it
+        if (bertApiUrl && bertApiToken) {
+          console.log(`Using external BERT API for analysis of ${record.id}`);
+          
+          // Call the external BERT API with authorization token
+          const bertRes = await fetch(bertApiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${bertApiToken}`,
+            },
+            body: JSON.stringify({ feedback: record.feedback }),
+          });
+          
+          if (!bertRes.ok) {
+            console.error(`BERT API error: ${bertRes.status} ${await bertRes.text()}`);
+            throw new Error(`BERT API returned ${bertRes.status}`);
+          }
+
+          sentimentResult = await bertRes.json();
+          console.log(`Got BERT analysis for ID ${record.id}: ${JSON.stringify(sentimentResult)}`);
+        } else {
+          // Fallback to local sentiment analysis if BERT API is not configured
+          console.log(`Using fallback sentiment analysis for ${record.id}`);
+          sentimentResult = analyzeSentiment(record.feedback);
         }
-
-        const bertResult = await bertRes.json();
-        console.log(`Got BERT analysis for ID ${record.id}: ${JSON.stringify(bertResult)}`);
         
-        const sentiment = bertResult.sentiment || "neutral";
-        const score = bertResult.sentiment_score || 0;
+        const sentiment = sentimentResult.sentiment || "neutral";
+        const score = sentimentResult.sentiment_score || 0;
 
         // Update the feedback record with new sentiment & score
         const updateRes = await fetch(
@@ -99,7 +113,7 @@ serve(async (req) => {
           throw new Error(`Database update failed with status ${updateRes.status}`);
         }
         
-        console.log(`Successfully updated feedback ID ${record.id} with BERT sentiment: ${sentiment}, score: ${score}`);
+        console.log(`Successfully updated feedback ID ${record.id} with sentiment: ${sentiment}, score: ${score}`);
         processed++;
       } catch (err) {
         console.error(`Error processing feedback ID ${record.id}:`, err);
