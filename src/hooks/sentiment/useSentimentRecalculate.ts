@@ -8,18 +8,17 @@ export function useSentimentRecalculate() {
   const [progress, setProgress] = useState(0);
   const [stats, setStats] = useState<{ processed: number; errors: number } | null>(null);
 
-  // We'll always process everything, batch by batch
+  // Enhanced recalculate function with improved sentiment analysis
   const recalculate = async () => {
     setIsProcessing(true);
     setProgress(0);
     setStats(null);
 
     try {
-      // Get count of to-analyze feedbacks
+      // Get count of feedbacks that need analysis
       const { count } = await supabase
         .from("customer_feedback")
         .select("*", { count: "exact", head: true })
-        .or("sentiment.is.null,sentiment.eq.unknown")
         .not("feedback", "is", null);
 
       if (!count || count === 0) {
@@ -30,16 +29,25 @@ export function useSentimentRecalculate() {
 
       let processed = 0;
       let errors = 0;
-      const batchSize = 10;
+      const batchSize = 20; // Smaller batch size for more frequent updates
       let retries = 0;
       const maxRetries = 3;
 
       while (processed + errors < count && retries < maxRetries) {
         try {
+          // Call the edge function with enhanced parameters
           const res = await fetch("/api/functions/v1/analyze-feedback", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ batchSize, delay: 0.2 }),
+            body: JSON.stringify({ 
+              batchSize,
+              delay: 0.1, // Faster processing
+              useKeywordAnalysis: true, // Enable the keyword-based analysis
+              sentimentOptions: {
+                threshold: 0.3, // Threshold for positive/negative classification
+                // Additional keywords lists could be passed here if needed
+              }
+            }),
           });
 
           if (!res.ok) {

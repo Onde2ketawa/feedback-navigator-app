@@ -13,6 +13,67 @@ const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
 
 console.log("Edge function starting up with Supabase URL:", supabaseUrl);
 
+// Define keyword lists for enhanced sentiment analysis
+const positiveKeywords = [
+  "good", "great", "excellent", "happy", "satisfied", "awesome", "fantastic", 
+  "perfect", "love", "recommend", "wonderful", "pleased", "impressed", "thank",
+  "bagus", "puas", "memuaskan", "mantap", "suka", "terima kasih", "recommend",
+  "cepat", "mudah", "helpful", "baik", "senang", "nikmat", "keren", "top"
+];
+
+const negativeKeywords = [
+  "bad", "poor", "terrible", "horrible", "disappointed", "frustrated", "angry",
+  "hate", "worst", "problem", "issue", "failed", "error", "broken", "slow",
+  "gagal", "kecewa", "tidak puas", "sulit", "lambat", "error", "bug", "masalah",
+  "jelek", "buruk", "tidak bisa", "tidak berfungsi", "komplain", "keluhan"
+];
+
+const neutralKeywords = [
+  "ok", "okay", "average", "normal", "biasa", "lumayan", "cukup"
+];
+
+// Function to perform keyword-based sentiment analysis
+function analyzeWithKeywords(text: string, threshold = 0.3) {
+  if (!text) return { sentiment: "neutral", score: 0 };
+  
+  const lowercasedText = text.toLowerCase();
+  
+  let positiveCount = 0;
+  let negativeCount = 0;
+  let neutralCount = 0;
+  
+  // Count keyword occurrences
+  for (const keyword of positiveKeywords) {
+    if (lowercasedText.includes(keyword)) positiveCount++;
+  }
+  
+  for (const keyword of negativeKeywords) {
+    if (lowercasedText.includes(keyword)) negativeCount++;
+  }
+  
+  for (const keyword of neutralKeywords) {
+    if (lowercasedText.includes(keyword)) neutralCount++;
+  }
+  
+  const totalKeywords = positiveCount + negativeCount + neutralCount;
+  
+  // Calculate sentiment score (-1 to 1 scale)
+  let score = 0;
+  if (totalKeywords > 0) {
+    score = (positiveCount - negativeCount) / totalKeywords;
+  }
+  
+  // Determine sentiment category based on score and threshold
+  let sentiment = "neutral";
+  if (score > threshold) {
+    sentiment = "positive";
+  } else if (score < -threshold) {
+    sentiment = "negative";
+  }
+  
+  return { sentiment, score };
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -24,8 +85,8 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY is not set in environment variables");
     }
 
-    const { batchSize = 10, delay = 0.2 } = await req.json().catch(() => ({}));
-    console.log(`Processing batch of ${batchSize} with ${delay}s delay between requests`);
+    const { batchSize = 10, delay = 0.2, useKeywordAnalysis = false, sentimentOptions = {} } = await req.json().catch(() => ({}));
+    console.log(`Processing batch of ${batchSize} with ${delay}s delay between requests. Use keywords: ${useKeywordAnalysis}`);
     
     let processed = 0;
     let errors = 0;
@@ -57,82 +118,94 @@ serve(async (req) => {
 
         console.log(`Analyzing feedback ID ${record.id}: "${record.feedback.substring(0, 50)}..."`);
 
-        const prompt = [
-          {
-            role: "system",
-            content:
-              'Analyze the sentiment of this customer feedback. Respond ONLY with a JSON object containing "sentiment" (positive/neutral/negative) and "score" (-1 to 1). Example: {"sentiment": "positive", "score": 0.8}',
-          },
-          {
-            role: "user",
-            content: record.feedback,
-          },
-        ];
-        const body = {
-          model: "gpt-4o-mini", // Use a fast, cost-effective model
-          messages: prompt,
-          temperature: 0.2,
-          max_tokens: 50,
-        };
-
-        const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${openAIApiKey}`,
-          },
-          body: JSON.stringify(body),
-        });
-        
-        if (!aiRes.ok) {
-          console.error(`OpenAI API error: ${aiRes.status} ${await aiRes.text()}`);
-          throw new Error(`OpenAI API returned ${aiRes.status}`);
-        }
-
-        const aiJson = await aiRes.json();
-        console.log(`Got OpenAI response for ID ${record.id}`);
-
-        // Robust parsing (OpenAI might not ALWAYS return valid JSON!)
         let sentiment = "neutral";
         let score = 0;
-        const content = aiJson.choices?.[0]?.message?.content ?? "";
-        console.log(`Raw content from OpenAI: "${content}"`);
         
-        try {
-          // Try to extract JSON, handling cases where it might be in backticks, etc.
-          let jsonText = content;
+        if (useKeywordAnalysis) {
+          // Use the keyword-based analysis if requested
+          const threshold = sentimentOptions.threshold || 0.3;
+          const result = analyzeWithKeywords(record.feedback, threshold);
+          sentiment = result.sentiment;
+          score = result.score;
           
-          // If we have backticks around JSON, extract just the content
-          const jsonMatch = content.match(/```(?:json)?(.*?)```/s);
-          if (jsonMatch && jsonMatch[1]) {
-            jsonText = jsonMatch[1].trim();
+          console.log(`Keyword analysis for ${record.id}: sentiment=${sentiment}, score=${score}`);
+        } else {
+          // Fall back to OpenAI analysis
+          const prompt = [
+            {
+              role: "system",
+              content:
+                'Analyze the sentiment of this customer feedback. Respond ONLY with a JSON object containing "sentiment" (positive/neutral/negative) and "score" (-1 to 1). Example: {"sentiment": "positive", "score": 0.8}',
+            },
+            {
+              role: "user",
+              content: record.feedback,
+            },
+          ];
+          const body = {
+            model: "gpt-4o-mini", // Use a fast, cost-effective model
+            messages: prompt,
+            temperature: 0.2,
+            max_tokens: 50,
+          };
+
+          const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${openAIApiKey}`,
+            },
+            body: JSON.stringify(body),
+          });
+          
+          if (!aiRes.ok) {
+            console.error(`OpenAI API error: ${aiRes.status} ${await aiRes.text()}`);
+            throw new Error(`OpenAI API returned ${aiRes.status}`);
           }
+
+          const aiJson = await aiRes.json();
+          console.log(`Got OpenAI response for ID ${record.id}`);
+
+          // Robust parsing (OpenAI might not ALWAYS return valid JSON!)
+          const content = aiJson.choices?.[0]?.message?.content ?? "";
+          console.log(`Raw content from OpenAI: "${content}"`);
           
-          // Handle possible content with markdown or text before/after JSON
-          const jsonStartPos = jsonText.indexOf('{');
-          const jsonEndPos = jsonText.lastIndexOf('}');
-          
-          if (jsonStartPos !== -1 && jsonEndPos !== -1 && jsonEndPos > jsonStartPos) {
-            jsonText = jsonText.substring(jsonStartPos, jsonEndPos + 1);
+          try {
+            // Try to extract JSON, handling cases where it might be in backticks, etc.
+            let jsonText = content;
+            
+            // If we have backticks around JSON, extract just the content
+            const jsonMatch = content.match(/```(?:json)?(.*?)```/s);
+            if (jsonMatch && jsonMatch[1]) {
+              jsonText = jsonMatch[1].trim();
+            }
+            
+            // Handle possible content with markdown or text before/after JSON
+            const jsonStartPos = jsonText.indexOf('{');
+            const jsonEndPos = jsonText.lastIndexOf('}');
+            
+            if (jsonStartPos !== -1 && jsonEndPos !== -1 && jsonEndPos > jsonStartPos) {
+              jsonText = jsonText.substring(jsonStartPos, jsonEndPos + 1);
+            }
+            
+            console.log(`Extracted JSON: ${jsonText}`);
+            const jsonResp = JSON.parse(jsonText);
+            
+            if (
+              ["positive", "neutral", "negative"].includes(jsonResp.sentiment) &&
+              typeof jsonResp.score === "number"
+            ) {
+              sentiment = jsonResp.sentiment;
+              score = Math.max(-1, Math.min(1, Number(jsonResp.score)));
+              console.log(`Parsed sentiment: ${sentiment}, score: ${score}`);
+            } else {
+              console.log(`Invalid sentiment data in response: ${JSON.stringify(jsonResp)}`);
+            }
+          } catch (parseError) {
+            console.error(`Failed to parse OpenAI response: ${parseError.message}`, content);
+            errors++;
+            continue;
           }
-          
-          console.log(`Extracted JSON: ${jsonText}`);
-          const jsonResp = JSON.parse(jsonText);
-          
-          if (
-            ["positive", "neutral", "negative"].includes(jsonResp.sentiment) &&
-            typeof jsonResp.score === "number"
-          ) {
-            sentiment = jsonResp.sentiment;
-            score = Math.max(-1, Math.min(1, Number(jsonResp.score)));
-            console.log(`Parsed sentiment: ${sentiment}, score: ${score}`);
-          } else {
-            console.log(`Invalid sentiment data in response: ${JSON.stringify(jsonResp)}`);
-          }
-        } catch (parseError) {
-          console.error(`Failed to parse OpenAI response: ${parseError.message}`, content);
-          errors++;
-          continue;
         }
 
         // Update the feedback record with new sentiment & score
@@ -149,6 +222,7 @@ serve(async (req) => {
             body: JSON.stringify({
               sentiment,
               sentiment_score: score,
+              last_analyzed_at: new Date().toISOString(),
             }),
           }
         );
