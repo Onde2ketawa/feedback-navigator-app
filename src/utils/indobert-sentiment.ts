@@ -1,14 +1,15 @@
 
-import { pipeline, PipelineType, SentimentClassificationPipeline } from "@huggingface/transformers";
+import { pipeline, PipelineType, TextClassificationPipeline } from "@huggingface/transformers";
+import { Sentiment } from "./sentiment-analysis";
 
-let bertPipeline: SentimentClassificationPipeline | null = null;
+let bertPipeline: TextClassificationPipeline | null = null;
 let isLoading = false;
 
 /**
  * Loads IndoBERT sentiment analysis pipeline (cached on first use).
  * Uses: finalproject/indobertweet-base-sentiment-classification
  */
-export async function getIndoBertSentimentPipeline(): Promise<SentimentClassificationPipeline> {
+export async function getIndoBertSentimentPipeline(): Promise<TextClassificationPipeline> {
   if (bertPipeline) return bertPipeline;
   if (isLoading) {
     // Wait until it's loaded (avoid duplicate loads)
@@ -18,9 +19,8 @@ export async function getIndoBertSentimentPipeline(): Promise<SentimentClassific
   isLoading = true;
   bertPipeline = await pipeline(
     "sentiment-analysis" as PipelineType, 
-    "finalproject/indobertweet-base-sentiment-classification", 
-    { quantized: false }
-  ) as SentimentClassificationPipeline;
+    "finalproject/indobertweet-base-sentiment-classification"
+  ) as TextClassificationPipeline;
   isLoading = false;
   return bertPipeline;
 }
@@ -28,13 +28,13 @@ export async function getIndoBertSentimentPipeline(): Promise<SentimentClassific
 /**
  * Runs IndoBERTTweet sentiment analysis prediction on given text.
  */
-export async function analyzeIndoBertSentiment(text: string) {
+export async function analyzeIndoBertSentiment(text: string): Promise<{ sentiment: Sentiment; sentiment_score: number }> {
   const pipeline = await getIndoBertSentimentPipeline();
   const predictions = await pipeline(text);
   // IndoBERTweet labels are (POS, NEG, NEU)
   if (Array.isArray(predictions) && predictions[0]) {
     const label = predictions[0].label;
-    let sentiment: "positive" | "neutral" | "negative" = "neutral";
+    let sentiment: Sentiment = "neutral";
     if (label === "POS") sentiment = "positive";
     else if (label === "NEG") sentiment = "negative";
     // IndoBERTweet usually uses score (0..1), we map it as-is to sentiment_score
