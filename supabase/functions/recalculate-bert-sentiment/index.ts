@@ -90,6 +90,7 @@ serve(async (req) => {
         const score = sentimentResult.sentiment_score || 0;
 
         // Update the feedback record with new sentiment & score
+        // Removed last_analyzed_at field since it doesn't exist in the schema
         const updateRes = await fetch(
           `${supabaseUrl}/rest/v1/customer_feedback?id=eq.${record.id}`,
           {
@@ -103,7 +104,6 @@ serve(async (req) => {
             body: JSON.stringify({
               sentiment,
               sentiment_score: score,
-              last_analyzed_at: new Date().toISOString(),
             }),
           }
         );
