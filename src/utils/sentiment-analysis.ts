@@ -4,6 +4,8 @@
  * Supports English and Indonesian keywords.
  */
 
+export type Sentiment = "positive" | "neutral" | "negative";
+
 // Enhanced keyword lists in English and Indonesian
 const positiveKeywords = [
   "good", "great", "excellent", "happy", "satisfied", "awesome", "fantastic", 
@@ -32,7 +34,7 @@ const neutralKeywords = [
  * @param threshold The threshold for determining sentiment (default 0.2)
  * @returns Object containing sentiment and sentiment_score
  */
-export function analyzeSentiment(text: string, threshold = 0.2) {
+export function analyzeSentiment(text: string, threshold = 0.2): { sentiment: Sentiment; sentiment_score: number } {
   // Handle empty or null text
   if (!text) return { sentiment: "neutral", sentiment_score: 0 };
   
@@ -53,9 +55,10 @@ export function analyzeSentiment(text: string, threshold = 0.2) {
   }
   
   // Determine sentiment category based on score and threshold
-  let sentiment: "positive" | "neutral" | "negative" = "neutral";
+  let sentiment: Sentiment = "neutral";
   if (score > threshold) sentiment = "positive";
   else if (score < -threshold) sentiment = "negative";
 
   return { sentiment, sentiment_score: score };
 }
+

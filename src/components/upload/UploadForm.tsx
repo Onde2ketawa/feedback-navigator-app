@@ -11,7 +11,7 @@ import { RatingField } from './form-components/RatingField';
 import { DatePickerField } from './form-components/DatePickerField';
 import { FeedbackTextField } from './form-components/FeedbackTextField';
 import { FileUploadSection } from './form-components/FileUploadSection';
-import { analyzeSentiment } from "@/utils/sentiment-analysis";
+import { analyzeSentiment, Sentiment } from "@/utils/sentiment-analysis";
 
 interface UploadFormProps {
   onSubmit: SubmitHandler<UploadFormValues>;
@@ -45,10 +45,11 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
     // Analyze sentiment of the feedback text
     const { sentiment, sentiment_score } = analyzeSentiment(data.feedback, 0.2);
     
-    // Include sentiment analysis results in the submission
+    // Include sentiment analysis results in the submission,
+    // using the exact Sentiment union type for `sentiment`
     onSubmit({
       ...data,
-      sentiment,
+      sentiment: sentiment as Sentiment,
       sentiment_score
     });
 
@@ -56,7 +57,6 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
     toast({
       title: `Feedback analyzed as ${sentiment}`,
       description: `Sentiment score: ${sentiment_score.toFixed(2)}`,
-      // Fix the variant to use only allowed values
       variant: sentiment === "positive" ? "default" : 
                sentiment === "negative" ? "destructive" : "default",
     });
@@ -82,3 +82,4 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
     </Form>
   );
 };
+
