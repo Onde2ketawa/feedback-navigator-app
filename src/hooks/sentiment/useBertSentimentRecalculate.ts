@@ -7,12 +7,14 @@ export function useBertSentimentRecalculate() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [stats, setStats] = useState<{ processed: number; errors: number } | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   // Recalculate using BERT model via edge function
   const recalculateWithBert = async () => {
     setIsProcessing(true);
     setProgress(0);
     setStats(null);
+    setLastError(null);
 
     try {
       // Get count of feedbacks that need analysis
@@ -58,9 +60,12 @@ export function useBertSentimentRecalculate() {
           console.log("Edge function response:", data, error);
 
           if (error) {
-            // Handle error object properly with type safety
-            const errorString = typeof error === 'object' && error !== null ? 
-              error.toString() : String(error);
+            // Convert unknown error to string
+            const errorString = typeof error === 'object' && error !== null && 'toString' in error
+                ? (error as any).toString()
+                : String(error);
+
+            setLastError(errorString);
 
             if (errorString.includes("aborted")) {
               throw new Error("Request timed out. The server may be busy. Try again later.");
@@ -70,21 +75,22 @@ export function useBertSentimentRecalculate() {
 
           // Check if data is null or undefined
           if (!data) {
+            setLastError("No response data received from server");
             throw new Error("No response data received from server");
           }
 
           // Handle the case where there's a message but no processing happened
-          if (data.message && data.processed === 0) {
-            toast.info(data.message);
-            if (data.done) {
+          if ((data as any).message && (data as any).processed === 0) {
+            toast.info((data as any).message);
+            if ((data as any).done) {
               done = true;
               break;
             }
           }
 
           // Update progress counters
-          processed += data.processed ?? 0;
-          errors += data.errors ?? 0;
+          processed += (data as any).processed ?? 0;
+          errors += (data as any).errors ?? 0;
 
           setStats({ processed, errors });
 
@@ -98,12 +104,13 @@ export function useBertSentimentRecalculate() {
           retries = 0;
 
           // Check if processing is complete
-          if (data.done) {
+          if ((data as any).done) {
             done = true;
             break;
           }
         } catch (err: any) {
           console.error("Error during BERT sentiment analysis:", err);
+          setLastError(err?.message ?? String(err));
           retries++;
 
           if (retries < maxRetries) {
@@ -131,6 +138,7 @@ export function useBertSentimentRecalculate() {
       }
     } catch (err: any) {
       console.error("Full BERT recalculation error:", err);
+      setLastError(err?.message ?? String(err));
 
       // Provide more helpful error messages for common network issues
       let errorMessage = err.message ?? err;
@@ -150,6 +158,7 @@ export function useBertSentimentRecalculate() {
     isProcessing, 
     progress, 
     stats, 
+    lastError,
     recalculateWithBert
   };
 }

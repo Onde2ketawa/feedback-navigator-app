@@ -13,6 +13,7 @@ interface SentimentRecalculationCardProps {
   isProcessing: boolean;
   progress: number;
   stats?: { processed: number; errors: number } | null;
+  lastError?: string | null;
 }
 
 export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProps> = ({
@@ -22,6 +23,7 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
   isProcessing,
   progress,
   stats,
+  lastError
 }) => (
   <Card className="mb-6">
     <CardHeader>
@@ -70,6 +72,17 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
           <RefreshCw className={`h-4 w-4 mr-2 ${isProcessing ? 'animate-spin' : ''}`} />
           {isProcessing ? "Processing..." : `Recalculate with ${selectedMethod === "database" ? "Database" : selectedMethod === "edge" ? "Edge Function" : "BERT"}`}
         </Button>
+        {/* Always show processed/errors box for monitoring */}
+        <div className="grid grid-cols-2 gap-4 mt-2">
+          <div className="p-3 bg-green-50 rounded-lg">
+            <p className="text-green-800 font-medium">Processed</p>
+            <p className="text-2xl font-bold">{stats ? stats.processed : 0}</p>
+          </div>
+          <div className="p-3 bg-red-50 rounded-lg">
+            <p className="text-red-800 font-medium">Errors</p>
+            <p className="text-2xl font-bold">{stats ? stats.errors : 0}</p>
+          </div>
+        </div>
       </div>
       {isProcessing && (
         <div className="space-y-2 mt-4">
@@ -78,16 +91,9 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
             <span className="text-sm text-muted-foreground">{progress}%</span>
           </div>
           <Progress value={progress} />
-          {stats && (
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="p-3 bg-green-50 rounded-lg">
-                <p className="text-green-800 font-medium">Processed</p>
-                <p className="text-2xl font-bold">{stats.processed}</p>
-              </div>
-              <div className="p-3 bg-red-50 rounded-lg">
-                <p className="text-red-800 font-medium">Errors</p>
-                <p className="text-2xl font-bold">{stats.errors}</p>
-              </div>
+          {lastError && (
+            <div className="mt-3 px-3 py-2 rounded bg-red-100 text-red-700 text-xs border border-red-200">
+              <strong>Error:</strong> {lastError}
             </div>
           )}
         </div>

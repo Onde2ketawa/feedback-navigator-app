@@ -22,18 +22,33 @@ const SentimentAnalytics: React.FC = () => {
     availableChannels
   } = useSentimentAnalyticsData();
   
-  const { isProcessing: isDbProcessing, progress: dbProgress, stats: dbStats, recalculate } = useSentimentRecalculate();
-  const { isProcessing: isEdgeProcessing, progress: edgeProgress, stats: edgeStats, recalculateWithEdgeFunction } = useSentimentRecalculate();
-  const { isProcessing: isBertProcessing, progress: bertProgress, stats: bertStats, recalculateWithBert } = useBertSentimentRecalculate();
+  const { isProcessing: isDbProcessing, progress: dbProgress, stats: dbStats, recalculate, recalculateWithEdgeFunction } = useSentimentRecalculate();
+  const { isProcessing: isBertProcessing, progress: bertProgress, stats: bertStats, lastError: bertLastError, recalculateWithBert } = useBertSentimentRecalculate();
   
   const [selectedMethod, setSelectedMethod] = useState<'database' | 'edge' | 'bert'>('database');
   
-  const isProcessing = isDbProcessing || isEdgeProcessing || isBertProcessing;
-  const progress = selectedMethod === 'database' ? dbProgress : 
-                   selectedMethod === 'edge' ? edgeProgress : bertProgress;
-  const stats = selectedMethod === 'database' ? dbStats : 
-                selectedMethod === 'edge' ? edgeStats : bertStats;
-  
+  const isProcessing =
+    (selectedMethod === 'database' && isDbProcessing) ||
+    (selectedMethod === 'edge' && isDbProcessing) || // Since recalculateWithEdgeFunction is now tied to db hook for progress, key reuse
+    (selectedMethod === 'bert' && isBertProcessing);
+
+  const progress =
+    selectedMethod === 'database'
+      ? dbProgress
+      : selectedMethod === 'edge'
+      ? dbProgress // Still reusing DB hook for edge method as per hook
+      : bertProgress;
+
+  const stats =
+    selectedMethod === 'database'
+      ? dbStats
+      : selectedMethod === 'edge'
+      ? dbStats // Still reusing DB hook for edge method as per hook
+      : bertStats;
+
+  const lastError =
+    selectedMethod === 'bert' ? bertLastError : null;
+
   const handleRecalculate = () => {
     if (selectedMethod === 'database') {
       recalculate();
@@ -71,6 +86,7 @@ const SentimentAnalytics: React.FC = () => {
         isProcessing={isProcessing}
         progress={progress}
         stats={stats}
+        lastError={lastError}
       />
       <div className="mb-6">
         <ChannelFilter
