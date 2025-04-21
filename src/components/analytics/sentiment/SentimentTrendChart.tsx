@@ -47,7 +47,7 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
 
   // Transform: output array of objects per month, shape:
   // { month: "Jan", "2024_positive": n, "2024_neutral": ..., "2025_positive": ... }
-  const chartData: Record<string, any>[] = months.map(month => {
+  const chartData = months.map(month => {
     const base: Record<string, any> = { month };
     years.forEach(year => {
       const found = data.find(d => d.month === month && d.year === year);
@@ -75,7 +75,6 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
           <YAxis />
           <ChartTooltip content={<ChartTooltipContent />} />
           <Legend />
-          {/* Render a line for each year-sentiment pair */}
           {years.map(year => (
             <React.Fragment key={year}>
               <Line

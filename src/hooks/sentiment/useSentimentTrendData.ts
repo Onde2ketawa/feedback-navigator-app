@@ -32,7 +32,7 @@ export const useSentimentTrendData = (channelFilter: string) => {
             .from('channel')
             .select('id')
             .eq('name', channelFilter)
-            .single();
+            .maybeSingle();
           
           if (channelData) {
             query = query.eq('channel_id', channelData.id);
@@ -58,10 +58,16 @@ export const useSentimentTrendData = (channelFilter: string) => {
     // Group by year and month for enhanced time series split
     // Structure: result[year][monthIdx] = {positive, neutral, negative}
     const grouped: Record<string, Record<number, { positive: number; neutral: number; negative: number }>> = {};
+    
+    // Get unique years from data to ensure we create placeholders for all months
+    const uniqueYears = new Set<string>();
+    
     data.forEach(item => {
       if (!item.submit_date) return;
       const dateObj = new Date(item.submit_date);
       const year = `${dateObj.getFullYear()}`;
+      uniqueYears.add(year);
+      
       const monthIdx = dateObj.getMonth(); // 0-11
 
       if (!grouped[year]) {
@@ -78,12 +84,14 @@ export const useSentimentTrendData = (channelFilter: string) => {
         grouped[year][monthIdx].neutral++;
       }
     });
-
-    // Flatten into array of { month, year, positive, neutral, negative }
+    
+    // Ensure all months are represented for each year
     const result: SentimentTrendMonthYearPoint[] = [];
-    Object.entries(grouped).forEach(([year, monthsObj]) => {
+    uniqueYears.forEach(year => {
+      // Create entries for all 12 months (0-11)
       for (let m = 0; m < 12; m++) {
-        const monthCounts = monthsObj[m] || { positive: 0, neutral: 0, negative: 0 };
+        // If we have data for this month, use it; otherwise use zeros
+        const monthCounts = grouped[year]?.[m] || { positive: 0, neutral: 0, negative: 0 };
         result.push({
           month: MONTHS[m],
           year,
@@ -92,8 +100,14 @@ export const useSentimentTrendData = (channelFilter: string) => {
       }
     });
 
-    // Sorted: year ascending, month ascending
-    result.sort((a, b) => (a.year === b.year ? MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month) : Number(a.year) - Number(b.year)));
+    // Sort by year ascending, then month ascending
+    result.sort((a, b) => {
+      if (a.year !== b.year) {
+        return Number(a.year) - Number(b.year);
+      }
+      return MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month);
+    });
+    
     return result;
   };
 
