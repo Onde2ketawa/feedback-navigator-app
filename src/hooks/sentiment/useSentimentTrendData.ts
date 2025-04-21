@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { SentimentTrendDataPoint } from './types';
 
 interface SentimentTrendMonthYearPoint {
   month: string;      // "Jan", "Feb", ...
@@ -15,6 +14,14 @@ const MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
+
+function getMonthIdx(month: string) {
+  return MONTHS.indexOf(month);
+}
+
+function getMonthName(idx: number) {
+  return MONTHS[idx] || "";
+}
 
 export const useSentimentTrendData = (channelFilter: string) => {
   const [sentimentTrendData, setSentimentTrendData] = useState<SentimentTrendMonthYearPoint[]>([]);
@@ -33,7 +40,6 @@ export const useSentimentTrendData = (channelFilter: string) => {
             .select('id')
             .eq('name', channelFilter)
             .maybeSingle();
-          
           if (channelData) {
             query = query.eq('channel_id', channelData.id);
           }
@@ -54,20 +60,35 @@ export const useSentimentTrendData = (channelFilter: string) => {
     }
   };
 
+  // Produce ALL months present from min to max date, inclusive, for each year.
   const processSentimentTrendData = (data: any[]): SentimentTrendMonthYearPoint[] => {
-    // Group by year and month for enhanced time series split
-    // Structure: result[year][monthIdx] = {positive, neutral, negative}
+    if (!data || data.length === 0) return [];
+    
+    // Find min and max dates
+    let minDate = null, maxDate = null;
+    data.forEach(item => {
+      if (!item.submit_date) return;
+      const d = new Date(item.submit_date);
+      if (!minDate || d < minDate) minDate = d;
+      if (!maxDate || d > maxDate) maxDate = d;
+    });
+    if (!minDate || !maxDate) return [];
+
+    // Make a set of years present in the data
+    const yearsSet = new Set<string>();
+    data.forEach(item => {
+      if (!item.submit_date) return;
+      const year = new Date(item.submit_date).getFullYear().toString();
+      yearsSet.add(year);
+    });
+    const years = Array.from(yearsSet).sort();
+
+    // Group sentiment counts by year and month index (0-11)
     const grouped: Record<string, Record<number, { positive: number; neutral: number; negative: number }>> = {};
-    
-    // Get unique years from data to ensure we create placeholders for all months
-    const uniqueYears = new Set<string>();
-    
     data.forEach(item => {
       if (!item.submit_date) return;
       const dateObj = new Date(item.submit_date);
       const year = `${dateObj.getFullYear()}`;
-      uniqueYears.add(year);
-      
       const monthIdx = dateObj.getMonth(); // 0-11
 
       if (!grouped[year]) {
@@ -84,30 +105,32 @@ export const useSentimentTrendData = (channelFilter: string) => {
         grouped[year][monthIdx].neutral++;
       }
     });
-    
-    // Ensure all months are represented for each year
+
+    // Build result: for each year, from Jan to Dec IF year fully inside min-max, otherwise partial for first/last year
     const result: SentimentTrendMonthYearPoint[] = [];
-    uniqueYears.forEach(year => {
-      // Create entries for all 12 months (0-11)
-      for (let m = 0; m < 12; m++) {
-        // If we have data for this month, use it; otherwise use zeros
+
+    years.forEach(year => {
+      // For first and last year, restrict months based on min/max dates
+      let minMonth = 0, maxMonth = 11;
+      if (year === minDate.getFullYear().toString()) minMonth = minDate.getMonth();
+      if (year === maxDate.getFullYear().toString()) maxMonth = maxDate.getMonth();
+
+      for (let m = minMonth; m <= maxMonth; m++) {
         const monthCounts = grouped[year]?.[m] || { positive: 0, neutral: 0, negative: 0 };
         result.push({
-          month: MONTHS[m],
+          month: getMonthName(m),
           year,
           ...monthCounts,
         });
       }
     });
 
-    // Sort by year ascending, then month ascending
+    // Sort by year ascending then month index ascending
     result.sort((a, b) => {
-      if (a.year !== b.year) {
-        return Number(a.year) - Number(b.year);
-      }
-      return MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month);
+      if (a.year !== b.year) return Number(a.year) - Number(b.year);
+      return getMonthIdx(a.month) - getMonthIdx(b.month);
     });
-    
+
     return result;
   };
 
@@ -117,3 +140,4 @@ export const useSentimentTrendData = (channelFilter: string) => {
     fetchSentimentTrendData
   };
 };
+
