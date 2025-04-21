@@ -1,4 +1,3 @@
-
 import { pipeline, TextClassificationPipeline } from "@huggingface/transformers";
 import { Sentiment } from "./sentiment-analysis";
 
@@ -17,12 +16,14 @@ export async function getIndoBertSentimentPipeline(): Promise<TextClassification
     if (bertPipeline) return bertPipeline;
   }
   isLoading = true;
-  
-  // Use explicit type casting to avoid complex union type inference
-  const pipe = await pipeline("sentiment-analysis", 
-    "finalproject/indobertweet-base-sentiment-classification");
-  
+
+  // Fix: Explicitly assign to `any` then cast, to avoid TS2590 union type complexity
+  const pipe: any = await pipeline(
+    "sentiment-analysis", 
+    "finalproject/indobertweet-base-sentiment-classification"
+  );
   bertPipeline = pipe as TextClassificationPipeline;
+
   isLoading = false;
   return bertPipeline;
 }
