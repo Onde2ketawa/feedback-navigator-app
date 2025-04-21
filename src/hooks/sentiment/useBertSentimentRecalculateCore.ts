@@ -87,13 +87,22 @@ export function useBertSentimentRecalculateCore(): UseBertSentimentRecalculateCo
 
         // Analyze the batch using the helper function
         const analysisResult = await analyzeBertFeedbackBatch(data);
-        // Update feedback table with analysis results
-        if (analysisResult.updates.length > 0) {
+        
+        // Update each feedback item individually instead of using upsert
+        for (const update of analysisResult.updates) {
           const { error: updateError } = await supabase
             .from("customer_feedback")
-            .upsert(analysisResult.updates, { onConflict: "id" });
+            .update({
+              sentiment: update.sentiment,
+              sentiment_score: update.sentiment_score,
+              last_analyzed_at: update.last_analyzed_at
+            })
+            .eq("id", update.id);
 
-          if (updateError) throw new Error(`Failed to upsert analysis result: ${updateError.message}`);
+          if (updateError) {
+            console.error(`Failed to update feedback ${update.id}: ${updateError.message}`);
+            aggregatedStats.errors += 1;
+          }
         }
 
         // Merge stats and progress
@@ -128,4 +137,3 @@ export function useBertSentimentRecalculateCore(): UseBertSentimentRecalculateCo
     recalculateWithBert,
   };
 }
-
