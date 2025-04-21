@@ -26,10 +26,10 @@ export async function getIndoBertSentimentPipeline(): Promise<TextClassification
 
   try {
     // Use the exact model from HuggingFace you requested  
+    // Remove the timeout option as it's not supported in the type definition
     const pipe: any = await pipeline(
       "sentiment-analysis",
-      "finalproject/indobertweet-base-sentiment-classification",
-      { timeout: 60000 } // Increase timeout to 60 seconds
+      "finalproject/indobertweet-base-sentiment-classification"
     );
     bertPipeline = pipe as TextClassificationPipeline;
   } catch (err) {
