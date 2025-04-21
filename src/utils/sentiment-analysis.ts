@@ -1,8 +1,7 @@
-
 /**
- * Enhanced sentiment analysis utility based on keyword matching for domain-specific banking app feedback.
- * Covers Bahasa Indonesia (baku & slang) and English (formal & informal) keywords.
+ * Enhanced sentiment analysis utility using both classic keywords and IndoBERT model (Huggingface).
  */
+import { analyzeIndoBertSentiment } from "./indobert-sentiment";
 
 export type Sentiment = "positive" | "neutral" | "negative";
 
@@ -151,10 +150,7 @@ const neutralKeywords = [
 ];
 
 /**
- * Analyzes text sentiment based on keyword matching with extended banking-specific context
- * @param text The text to analyze
- * @param threshold The threshold for determining sentiment (default 0.2)
- * @returns Object containing sentiment and sentiment_score
+ * Classic keywords logic (unchanged)
  */
 export function analyzeSentiment(text: string, threshold = 0.2): { sentiment: Sentiment; sentiment_score: number } {
   if (!text) return { sentiment: "neutral", sentiment_score: 0 };
@@ -176,4 +172,11 @@ export function analyzeSentiment(text: string, threshold = 0.2): { sentiment: Se
   else if (score < -threshold) sentiment = "negative";
 
   return { sentiment, sentiment_score: score };
+}
+
+/**
+ * IndoBERTweet sentiment analysis (async)
+ */
+export async function analyzeSentimentWithIndoBert(text: string): Promise<{ sentiment: Sentiment; sentiment_score: number }> {
+  return await analyzeIndoBertSentiment(text);
 }
