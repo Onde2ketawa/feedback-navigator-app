@@ -16,11 +16,15 @@ export function useBertSentimentRecalculate() {
 
     try {
       // Get count of feedbacks that need analysis
-      const { count } = await supabase
+      const { count, error: countError } = await supabase
         .from("customer_feedback")
         .select("*", { count: "exact", head: true })
         .not("feedback", "is", null)
         .or("sentiment_score.is.null,sentiment_score.eq.0");
+
+      if (countError) {
+        throw new Error(`Error counting feedback: ${countError.message}`);
+      }
 
       if (!count || count === 0) {
         toast.success("No feedback needs analysis");
@@ -35,10 +39,12 @@ export function useBertSentimentRecalculate() {
       const maxRetries = 3;
       let done = false;
 
-      toast.info("Starting sentiment analysis with BERT model...");
+      toast.info(`Starting sentiment analysis with BERT model for ${count} items...`);
 
       while (!done && retries < maxRetries) {
         try {
+          console.log("Calling edge function with batch size:", batchSize);
+          
           // Call the edge function
           const { data, error } = await supabase.functions.invoke("recalculate-bert-sentiment", {
             body: { 
@@ -46,6 +52,8 @@ export function useBertSentimentRecalculate() {
               delay: 0.3
             }
           });
+
+          console.log("Edge function response:", data, error);
 
           if (error) throw new Error(error.message);
           
@@ -64,7 +72,9 @@ export function useBertSentimentRecalculate() {
           
           // Calculate progress based on estimated total
           if (count > 0) {
-            setProgress(Math.round((processed + errors) / count * 100));
+            const newProgress = Math.min(100, Math.round((processed + errors) / count * 100));
+            setProgress(newProgress);
+            console.log(`Progress updated: ${newProgress}% (${processed}/${count})`);
           }
           
           retries = 0;
@@ -87,7 +97,11 @@ export function useBertSentimentRecalculate() {
         }
       }
 
-      toast.success(`BERT sentiment recalculation complete: ${processed} processed, ${errors} errors`);
+      if (processed > 0 || errors > 0) {
+        toast.success(`BERT sentiment recalculation complete: ${processed} processed, ${errors} errors`);
+      } else {
+        toast.info("No feedback was processed. There might be no items that need analysis.");
+      }
       
       // Only reload if we actually processed something
       if (processed > 0) {
