@@ -3,16 +3,16 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Database, Cpu } from "lucide-react";
+import { RefreshCw, Database, Cpu, Brain } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface SentimentRecalculationCardProps {
-  selectedMethod: "database" | "edge";
-  setSelectedMethod: (v: "database" | "edge") => void;
+  selectedMethod: "database" | "edge" | "bert";
+  setSelectedMethod: (v: "database" | "edge" | "bert") => void;
   onRecalculate: () => void;
   isProcessing: boolean;
   progress: number;
-  stats?: { processed: number; errors: number };
+  stats?: { processed: number; errors: number } | null;
 }
 
 export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProps> = ({
@@ -32,15 +32,19 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
     </CardHeader>
     <CardContent>
       <div className="space-y-4">
-        <Tabs value={selectedMethod} onValueChange={(v) => setSelectedMethod(v as "database" | "edge")}>
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+        <Tabs value={selectedMethod} onValueChange={(v) => setSelectedMethod(v as "database" | "edge" | "bert")}>
+          <TabsList className="grid w-full grid-cols-3 mb-4">
             <TabsTrigger value="database">
               <Database className="h-4 w-4 mr-2" />
-              Database Function
+              Database
             </TabsTrigger>
             <TabsTrigger value="edge">
               <Cpu className="h-4 w-4 mr-2" />
               Edge Function
+            </TabsTrigger>
+            <TabsTrigger value="bert">
+              <Brain className="h-4 w-4 mr-2" />
+              BERT Model
             </TabsTrigger>
           </TabsList>
           <TabsContent value="database">
@@ -55,10 +59,16 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
               Better for complex sentiment analysis but slower processing.
             </p>
           </TabsContent>
+          <TabsContent value="bert">
+            <p className="text-sm text-muted-foreground mb-4">
+              Uses BERT machine learning model via external API for high-accuracy multilingual sentiment analysis.
+              Best for nuanced sentiment but requires external API setup.
+            </p>
+          </TabsContent>
         </Tabs>
         <Button onClick={onRecalculate} disabled={isProcessing} className="w-full">
           <RefreshCw className={`h-4 w-4 mr-2 ${isProcessing ? 'animate-spin' : ''}`} />
-          {isProcessing ? "Processing..." : "Recalculate Sentiment"}
+          {isProcessing ? "Processing..." : `Recalculate with ${selectedMethod === "database" ? "Database" : selectedMethod === "edge" ? "Edge Function" : "BERT"}`}
         </Button>
       </div>
       {isProcessing && (

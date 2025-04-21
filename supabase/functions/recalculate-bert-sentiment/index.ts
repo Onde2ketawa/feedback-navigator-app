@@ -1,0 +1,127 @@
+
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const bertApiUrl = Deno.env.get("BERT_API_URL") || "https://your-bert-api-url.com/predict";
+
+console.log("Edge function starting up with BERT API URL:", bertApiUrl);
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { batchSize = 10, delay = 0.2 } = await req.json().catch(() => ({}));
+    console.log(`Processing batch of ${batchSize} with ${delay}s delay between requests.`);
+    
+    let processed = 0;
+    let errors = 0;
+
+    // Fetch records to process (not-yet-analyzed or null sentiment_score)
+    const feedbackRes = await fetch(
+      `${supabaseUrl}/rest/v1/customer_feedback?select=id,feedback&or=(sentiment_score.is.null,sentiment_score.eq.0)&feedback=not.is.null&limit=${batchSize}`,
+      {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+      }
+    );
+
+    if (!feedbackRes.ok) {
+      throw new Error(`Failed to fetch feedback: ${feedbackRes.status} ${await feedbackRes.text()}`);
+    }
+
+    const feedbackList = await feedbackRes.json();
+    console.log(`Found ${feedbackList.length} feedback items to analyze with BERT model`);
+
+    for (const record of feedbackList) {
+      try {
+        if (!record.feedback || typeof record.feedback !== 'string' || record.feedback.trim() === '') {
+          console.log(`Skipping record ${record.id}: Empty feedback`);
+          continue;
+        }
+
+        console.log(`Analyzing feedback ID ${record.id} with BERT: "${record.feedback.substring(0, 50)}..."`);
+
+        // Call the external BERT API
+        const bertRes = await fetch(bertApiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ feedback: record.feedback }),
+        });
+        
+        if (!bertRes.ok) {
+          console.error(`BERT API error: ${bertRes.status} ${await bertRes.text()}`);
+          throw new Error(`BERT API returned ${bertRes.status}`);
+        }
+
+        const bertResult = await bertRes.json();
+        console.log(`Got BERT analysis for ID ${record.id}: ${JSON.stringify(bertResult)}`);
+        
+        const sentiment = bertResult.sentiment || "neutral";
+        const score = bertResult.sentiment_score || 0;
+
+        // Update the feedback record with new sentiment & score
+        const updateRes = await fetch(
+          `${supabaseUrl}/rest/v1/customer_feedback?id=eq.${record.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              apikey: supabaseKey,
+              Authorization: `Bearer ${supabaseKey}`,
+              "Content-Type": "application/json",
+              Prefer: "return=minimal",
+            },
+            body: JSON.stringify({
+              sentiment,
+              sentiment_score: score,
+              last_analyzed_at: new Date().toISOString(),
+            }),
+          }
+        );
+        
+        if (!updateRes.ok) {
+          console.error(`Failed to update record ${record.id}: ${updateRes.status} ${await updateRes.text()}`);
+          throw new Error(`Database update failed with status ${updateRes.status}`);
+        }
+        
+        console.log(`Successfully updated feedback ID ${record.id} with BERT sentiment: ${sentiment}, score: ${score}`);
+        processed++;
+      } catch (err) {
+        console.error(`Error processing feedback ID ${record.id}:`, err);
+        errors++;
+        // Continue loop even on failure
+      }
+
+      // Rate limit
+      await new Promise((resolve) => setTimeout(resolve, delay * 1000));
+    }
+
+    return new Response(
+      JSON.stringify({
+        done: feedbackList.length < batchSize,
+        processed,
+        errors,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Edge function error:", error);
+    return new Response(
+      JSON.stringify({ error: error?.message ?? "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { ChannelFilter } from '@/components/dashboard/filters/ChannelFilter';
 import { useSentimentAnalyticsData } from '@/hooks/sentiment/useSentimentAnalyticsData';
 import { useSentimentRecalculate } from '@/hooks/sentiment/useSentimentRecalculate';
+import { useBertSentimentRecalculate } from '@/hooks/sentiment/useBertSentimentRecalculate';
 import { SentimentRecalculationCard } from '@/components/analytics/sentiment/SentimentRecalculationCard';
 import { SentimentChartsGrid } from '@/components/analytics/sentiment/SentimentChartsGrid';
 import { Button } from '@/components/ui/button';
@@ -21,14 +22,25 @@ const SentimentAnalytics: React.FC = () => {
     availableChannels
   } = useSentimentAnalyticsData();
   
-  const { isProcessing, progress, stats, recalculate, recalculateWithEdgeFunction } = useSentimentRecalculate();
-  const [selectedMethod, setSelectedMethod] = useState<'database' | 'edge'>('database');
+  const { isProcessing: isDbProcessing, progress: dbProgress, stats: dbStats, recalculate } = useSentimentRecalculate();
+  const { isProcessing: isEdgeProcessing, progress: edgeProgress, stats: edgeStats, recalculateWithEdgeFunction } = useSentimentRecalculate();
+  const { isProcessing: isBertProcessing, progress: bertProgress, stats: bertStats, recalculateWithBert } = useBertSentimentRecalculate();
+  
+  const [selectedMethod, setSelectedMethod] = useState<'database' | 'edge' | 'bert'>('database');
+  
+  const isProcessing = isDbProcessing || isEdgeProcessing || isBertProcessing;
+  const progress = selectedMethod === 'database' ? dbProgress : 
+                   selectedMethod === 'edge' ? edgeProgress : bertProgress;
+  const stats = selectedMethod === 'database' ? dbStats : 
+                selectedMethod === 'edge' ? edgeStats : bertStats;
   
   const handleRecalculate = () => {
     if (selectedMethod === 'database') {
       recalculate();
-    } else {
+    } else if (selectedMethod === 'edge') {
       recalculateWithEdgeFunction();
+    } else {
+      recalculateWithBert();
     }
   };
   
