@@ -1,3 +1,4 @@
+
 import { pipeline, TextClassificationPipeline } from "@huggingface/transformers";
 import { Sentiment } from "./sentiment-analysis";
 
@@ -29,7 +30,7 @@ export async function getIndoBertSentimentPipeline(): Promise<TextClassification
 }
 
 /**
- * Runs IndoBERTTweet sentiment analysis prediction on given text.
+ * Runs IndoBERTweet sentiment analysis prediction on given text.
  */
 export async function analyzeIndoBertSentiment(text: string): Promise<{ sentiment: Sentiment; sentiment_score: number }> {
   const pipeline = await getIndoBertSentimentPipeline();
@@ -40,16 +41,19 @@ export async function analyzeIndoBertSentiment(text: string): Promise<{ sentimen
     let sentiment: Sentiment = "neutral";
     
     // Type guard to ensure we can access label and score
-    if ('label' in prediction) {
-      const label = prediction.label;
+    if (typeof prediction === 'object' && prediction !== null) {
+      // Use safe property access 
+      const label = 'label' in prediction ? prediction.label : null;
+      
       if (label === "POS") sentiment = "positive";
       else if (label === "NEG") sentiment = "negative";
       
       // IndoBERTweet usually uses score (0..1), we map it as-is to sentiment_score
-      if ('score' in prediction) {
+      if ('score' in prediction && typeof prediction.score === 'number') {
         return {
           sentiment,
-          sentiment_score: label === "POS" ? prediction.score : label === "NEG" ? -prediction.score : 0
+          sentiment_score: label === "POS" ? prediction.score : 
+                           label === "NEG" ? -prediction.score : 0
         };
       }
     }
