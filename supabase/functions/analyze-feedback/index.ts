@@ -85,7 +85,7 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY is not set in environment variables");
     }
 
-    const { batchSize = 10, delay = 0.2, useKeywordAnalysis = false, sentimentOptions = {} } = await req.json().catch(() => ({}));
+    const { batchSize = 10, delay = 0.2, useKeywordAnalysis = true, sentimentOptions = {} } = await req.json().catch(() => ({}));
     console.log(`Processing batch of ${batchSize} with ${delay}s delay between requests. Use keywords: ${useKeywordAnalysis}`);
     
     let processed = 0;
@@ -122,7 +122,7 @@ serve(async (req) => {
         let score = 0;
         
         if (useKeywordAnalysis) {
-          // Use the keyword-based analysis if requested
+          // Use the keyword-based analysis
           const threshold = sentimentOptions.threshold || 0.3;
           const result = analyzeWithKeywords(record.feedback, threshold);
           sentiment = result.sentiment;
@@ -143,7 +143,7 @@ serve(async (req) => {
             },
           ];
           const body = {
-            model: "gpt-4o-mini", // Use a fast, cost-effective model
+            model: "gpt-4o-mini",
             messages: prompt,
             temperature: 0.2,
             max_tokens: 50,
