@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { ChannelFilter } from '@/components/dashboard/filters/ChannelFilter';
@@ -11,6 +12,7 @@ import { RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const SentimentAnalytics: React.FC = () => {
+  const { toast } = useToast();
   const {
     isLoading,
     channelFilter,
