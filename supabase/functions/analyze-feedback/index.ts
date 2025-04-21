@@ -1,7 +1,9 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { analyzeWithKeywords } from "./analysis.ts";
 
+// CORS headers for Edge Functions
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -12,67 +14,6 @@ const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
 
 console.log("Edge function starting up with Supabase URL:", supabaseUrl);
-
-// Define keyword lists for enhanced sentiment analysis
-const positiveKeywords = [
-  "good", "great", "excellent", "happy", "satisfied", "awesome", "fantastic", 
-  "perfect", "love", "recommend", "wonderful", "pleased", "impressed", "thank",
-  "bagus", "puas", "memuaskan", "mantap", "suka", "terima kasih", "recommend",
-  "cepat", "mudah", "helpful", "baik", "senang", "nikmat", "keren", "top"
-];
-
-const negativeKeywords = [
-  "bad", "poor", "terrible", "horrible", "disappointed", "frustrated", "angry",
-  "hate", "worst", "problem", "issue", "failed", "error", "broken", "slow",
-  "gagal", "kecewa", "tidak puas", "sulit", "lambat", "error", "bug", "masalah",
-  "jelek", "buruk", "tidak bisa", "tidak berfungsi", "komplain", "keluhan"
-];
-
-const neutralKeywords = [
-  "ok", "okay", "average", "normal", "biasa", "lumayan", "cukup"
-];
-
-// Function to perform keyword-based sentiment analysis
-function analyzeWithKeywords(text: string, threshold = 0.3) {
-  if (!text) return { sentiment: "neutral", score: 0 };
-  
-  const lowercasedText = text.toLowerCase();
-  
-  let positiveCount = 0;
-  let negativeCount = 0;
-  let neutralCount = 0;
-  
-  // Count keyword occurrences
-  for (const keyword of positiveKeywords) {
-    if (lowercasedText.includes(keyword)) positiveCount++;
-  }
-  
-  for (const keyword of negativeKeywords) {
-    if (lowercasedText.includes(keyword)) negativeCount++;
-  }
-  
-  for (const keyword of neutralKeywords) {
-    if (lowercasedText.includes(keyword)) neutralCount++;
-  }
-  
-  const totalKeywords = positiveCount + negativeCount + neutralCount;
-  
-  // Calculate sentiment score (-1 to 1 scale)
-  let score = 0;
-  if (totalKeywords > 0) {
-    score = (positiveCount - negativeCount) / totalKeywords;
-  }
-  
-  // Determine sentiment category based on score and threshold
-  let sentiment = "neutral";
-  if (score > threshold) {
-    sentiment = "positive";
-  } else if (score < -threshold) {
-    sentiment = "negative";
-  }
-  
-  return { sentiment, score };
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -260,3 +201,4 @@ serve(async (req) => {
     );
   }
 });
+
