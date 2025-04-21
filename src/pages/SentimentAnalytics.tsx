@@ -44,25 +44,26 @@ const SentimentAnalytics: React.FC = () => {
   
   const isProcessing =
     (selectedMethod === 'database' && isDbProcessing) ||
-    (selectedMethod === 'edge' && isDbProcessing) || // Since recalculateWithEdgeFunction is now tied to db hook for progress, key reuse
+    (selectedMethod === 'edge' && isDbProcessing) || 
     (selectedMethod === 'bert' && isBertProcessing);
 
   const progress =
     selectedMethod === 'database'
       ? dbProgress
       : selectedMethod === 'edge'
-      ? dbProgress // Still reusing DB hook for edge method as per hook
+      ? dbProgress 
       : bertProgress;
 
   const stats =
     selectedMethod === 'database'
       ? dbStats
       : selectedMethod === 'edge'
-      ? dbStats // Still reusing DB hook for edge method as per hook
+      ? dbStats 
       : bertStats;
 
+  // Convert Error object to string when passing to component
   const lastError =
-    selectedMethod === 'bert' ? bertLastError : null;
+    selectedMethod === 'bert' ? (bertLastError ? bertLastError.message : null) : null;
     
   const lastMessage =
     selectedMethod === 'database' 

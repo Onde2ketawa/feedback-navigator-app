@@ -12,7 +12,7 @@ interface SentimentRecalculationCardProps {
   onRecalculate: () => void;
   isProcessing: boolean;
   progress: number;
-  stats?: { processed: number; errors: number; blankProcessed?: number } | null;
+  stats?: { processed: number; errors: number; blankProcessed?: number; byLanguage?: Record<string, number>; byModel?: Record<string, number>; } | null;
   lastError?: string | null;
   lastMessage?: string | null;
 }
@@ -91,6 +91,35 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
             <p className="text-2xl font-bold">{stats ? stats.errors : 0}</p>
           </div>
         </div>
+        
+        {/* Display language and model stats when present */}
+        {stats?.byLanguage && Object.keys(stats.byLanguage).length > 0 && (
+          <div className="mt-2 p-3 bg-blue-50 rounded-lg">
+            <p className="text-blue-800 font-medium">Language Distribution</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-sm">
+              {Object.entries(stats.byLanguage).map(([lang, count]) => (
+                <div key={lang} className="flex justify-between">
+                  <span>{lang === 'id' ? 'Indonesian' : lang === 'en' ? 'English' : lang}</span>
+                  <span className="font-medium">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {stats?.byModel && Object.keys(stats.byModel).length > 0 && (
+          <div className="mt-2 p-3 bg-purple-50 rounded-lg">
+            <p className="text-purple-800 font-medium">Model Usage</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-sm">
+              {Object.entries(stats.byModel).map(([model, count]) => (
+                <div key={model} className="flex justify-between">
+                  <span>{model}</span>
+                  <span className="font-medium">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       
       {isProcessing && (
