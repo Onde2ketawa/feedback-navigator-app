@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { ChannelFilter } from '@/components/dashboard/filters/ChannelFilter';
@@ -9,6 +8,7 @@ import { SentimentRecalculationCard } from '@/components/analytics/sentiment/Sen
 import { SentimentChartsGrid } from '@/components/analytics/sentiment/SentimentChartsGrid';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const SentimentAnalytics: React.FC = () => {
   const {
@@ -61,7 +61,6 @@ const SentimentAnalytics: React.FC = () => {
       ? dbStats 
       : bertStats;
 
-  // Convert Error object to string when passing to component
   const lastError =
     selectedMethod === 'bert' ? (bertLastError ? bertLastError.message : null) : null;
     
@@ -72,6 +71,8 @@ const SentimentAnalytics: React.FC = () => {
       ? dbLastMessage
       : bertLastMessage;
 
+  const [reanalyzeLoading, setReanalyzeLoading] = useState(false);
+
   const handleRecalculate = () => {
     if (selectedMethod === 'database') {
       recalculate();
@@ -81,7 +82,44 @@ const SentimentAnalytics: React.FC = () => {
       recalculateWithBert();
     }
   };
-  
+
+  const handleReanalyzeNeutral = async () => {
+    setReanalyzeLoading(true);
+    try {
+      const res = await fetch(
+        'https://pltjqahdsvlngfjyqoma.supabase.co/functions/v1/reanalyze-neutral-feedback-with-bert',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ batchSize: 500 }),
+        }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        toast({
+          title: `Reanalyze Complete`,
+          description: `${data.message || "Operation done."}`,
+          variant: data.failed > 0 ? "destructive" : "default",
+        });
+        refreshData();
+      } else {
+        toast({
+          title: "Failed to reanalyze neutral feedback",
+          description: data.error || "Unknown error.",
+          variant: "destructive"
+        });
+      }
+    } catch (e: any) {
+      toast({
+        title: "Failed to reanalyze neutral feedback",
+        description: e.message || "Unknown error.",
+        variant: "destructive"
+      });
+    } finally {
+      setReanalyzeLoading(false);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="flex justify-between items-center mb-6">
@@ -99,6 +137,16 @@ const SentimentAnalytics: React.FC = () => {
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex items-center gap-1"
+            onClick={handleReanalyzeNeutral}
+            disabled={reanalyzeLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${reanalyzeLoading ? 'animate-spin' : ''}`} />
+            {reanalyzeLoading ? "Reanalyzing..." : "Reanalyze Neutral Feedback (IndoBERT)"}
           </Button>
         </div>
       </div>
