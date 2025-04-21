@@ -17,10 +17,12 @@ export async function getIndoBertSentimentPipeline(): Promise<TextClassification
     if (bertPipeline) return bertPipeline;
   }
   isLoading = true;
-  bertPipeline = await pipeline(
-    "sentiment-analysis", 
-    "finalproject/indobertweet-base-sentiment-classification"
-  ) as TextClassificationPipeline;
+  
+  // Use explicit type casting to avoid complex union type inference
+  const pipe = await pipeline("sentiment-analysis", 
+    "finalproject/indobertweet-base-sentiment-classification");
+  
+  bertPipeline = pipe as TextClassificationPipeline;
   isLoading = false;
   return bertPipeline;
 }
