@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export async function updateBlankFeedbackToNeutral() {
-  // Fetch blank feedback data (feedback is null, "", or ".")
+  // Fetch blank feedback data (feedback is null or empty)
   const { data: blankData, error: blankError } = await supabase
     .from("customer_feedback")
     .select("id")
@@ -15,7 +15,7 @@ export async function updateBlankFeedbackToNeutral() {
   let processed = 0;
 
   if (blankData && blankData.length > 0) {
-    // Update blank items to neutral sentiment
+    // Update blank items to neutral sentiment, including last_analyzed_at
     const { error: updateBlankError } = await supabase
       .from("customer_feedback")
       .update({

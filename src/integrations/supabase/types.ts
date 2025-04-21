@@ -56,6 +56,7 @@ export type Database = {
           feedback: string
           id: string
           language: string
+          last_analyzed_at: string | null
           rating: number
           sentiment: string
           sentiment_score: number
@@ -75,6 +76,7 @@ export type Database = {
           feedback: string
           id?: string
           language?: string
+          last_analyzed_at?: string | null
           rating: number
           sentiment?: string
           sentiment_score?: number
@@ -94,6 +96,7 @@ export type Database = {
           feedback?: string
           id?: string
           language?: string
+          last_analyzed_at?: string | null
           rating?: number
           sentiment?: string
           sentiment_score?: number
