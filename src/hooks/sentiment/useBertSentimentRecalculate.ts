@@ -2,128 +2,191 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { analyzeIndoBertSentiment } from "@/utils/indobert-sentiment";
+import { analyzeMultilingualSentiment } from "@/utils/sentiment-analysis";
 
 export function useBertSentimentRecalculate() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [stats, setStats] = useState<{ processed: number; errors: number; blankProcessed?: number } | null>(null);
-  const [lastError, setLastError] = useState<string | null>(null);
+  const [stats, setStats] = useState<{
+    processed: number;
+    errors: number;
+    byLanguage?: Record<string, number>;
+    byModel?: Record<string, number>;
+  } | null>(null);
+  const [lastError, setLastError] = useState<Error | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
 
-  // Recalculate using BERT model via edge function
   const recalculateWithBert = async () => {
     setIsProcessing(true);
     setProgress(0);
-    setStats({ processed: 0, errors: 0, blankProcessed: 0 });
+    setStats(null);
     setLastError(null);
     setLastMessage(null);
 
+    let processed = 0;
+    let errors = 0;
+    const languageStats: Record<string, number> = {};
+    const modelStats: Record<string, number> = {};
+    const batchSize = 10;
+
     try {
-      let count = 0;
-      try {
-        const countResult = await supabase
-          .from("customer_feedback")
-          .select("*", { count: "exact", head: true });
-        if (countResult.error) throw countResult.error;
-        count = countResult.count || 0;
-      } catch (err: any) {
-        toast.error(`Failed to get feedback count: ${err?.message || String(err)}`);
-        setLastError(err?.message || String(err));
-        setIsProcessing(false);
-        return;
+      // Get count of feedback items
+      const { count, error: countError } = await supabase
+        .from("customer_feedback")
+        .select("*", { count: "exact", head: true })
+        .not("feedback", "is", null)
+        .not("feedback", "eq", "");
+
+      if (countError) {
+        throw new Error(`Count error: ${countError.message}`);
       }
 
-      if (count === 0) {
-        toast.info("No feedback needs analysis");
+      if (!count || count === 0) {
         setLastMessage("No feedback needs analysis");
+        toast.success("No feedback needs analysis");
         setIsProcessing(false);
         return;
       }
 
-      let processed = 0;
-      let blankProcessed = 0;
-      let errors = 0;
-      const batchSize = 10;
-      let retries = 0;
-      const maxRetries = 3;
-      let done = false;
+      // Process blank feedback separately
+      const { data: blankData, error: blankError } = await supabase
+        .from("customer_feedback")
+        .select("id")
+        .or("feedback.is.null,feedback.eq.,feedback.eq.\"\"");
 
-      toast.info(`Starting sentiment analysis with BERT model for ${count} items...`);
+      if (blankError) {
+        throw new Error(`Error fetching blank feedback: ${blankError.message}`);
+      }
 
-      while (!done && retries < maxRetries) {
-        try {
-          // 30 second timeout
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000);
+      if (blankData && blankData.length > 0) {
+        // Update blank items to neutral sentiment
+        const { error: updateBlankError } = await supabase
+          .from("customer_feedback")
+          .update({
+            sentiment: "neutral",
+            sentiment_score: 0,
+            last_analyzed_at: new Date().toISOString(),
+          })
+          .or("feedback.is.null,feedback.eq.,feedback.eq.\"\"");
 
-          // Directly call the edge function
-          const { data, error } = await supabase.functions.invoke("recalculate-bert-sentiment", {
-            body: { batchSize, delay: 0.3, includeBlanks: true }
-          });
+        if (updateBlankError) {
+          throw new Error(`Error updating blank feedback: ${updateBlankError.message}`);
+        }
 
-          clearTimeout(timeoutId);
+        processed += blankData.length;
+        languageStats["blank"] = (languageStats["blank"] || 0) + blankData.length;
+        modelStats["none"] = (modelStats["none"] || 0) + blankData.length;
+      }
 
-          if (error) {
-            setLastError(typeof error === "object" ? (error.toString ? error.toString() : JSON.stringify(error)) : String(error));
-            if (String(error).includes("aborted")) throw new Error("Request timed out.");
-            throw new Error(error || "Unknown error occurred");
-          }
+      // Process remaining items with text in batches
+      let offset = 0;
+      while (true) {
+        // Fetch batch of feedback to analyze
+        const { data: feedbackBatch, error: batchError } = await supabase
+          .from("customer_feedback")
+          .select("id, feedback")
+          .not("feedback", "is", null)
+          .not("feedback", "eq", "")
+          .range(offset, offset + batchSize - 1);
 
-          // New: check for blankProcessed in response
-          if (!data) {
-            setLastError("No response data received from server");
-            throw new Error("No response data received from server");
-          }
+        if (batchError) {
+          throw new Error(`Error fetching feedback batch: ${batchError.message}`);
+        }
 
-          // Read processed, errors, blankProcessed
-          processed += (data as any).processed ?? 0;
-          blankProcessed += (data as any).blankProcessed ?? 0;
-          errors += (data as any).errors ?? 0;
+        if (!feedbackBatch || feedbackBatch.length === 0) {
+          break;
+        }
 
-          setStats({ processed, errors, blankProcessed });
+        // Process each feedback in batch
+        const updates: Array<{
+          id: string;
+          sentiment: string;
+          sentiment_score: number;
+          language?: string;
+          model_used?: string;
+          last_analyzed_at: string;
+        }> = [];
 
-          if (count > 0) {
-            setProgress(Math.min(100, Math.round(((processed + errors) / count) * 100)));
-          }
-
-          if (typeof (data as any).message === "string") setLastMessage((data as any).message);
-          retries = 0;
-
-          if ((data as any).done) {
-            done = true;
-            break;
-          }
-        } catch (err: any) {
-          setLastError(err?.message ?? String(err));
-          retries++;
-          if (retries < maxRetries) {
-            toast.warning(`Analysis attempt failed, retrying (${retries}/${maxRetries})...`, { duration: 3000 });
-            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
-          } else {
-            throw err;
+        for (const item of feedbackBatch) {
+          try {
+            if (!item.feedback) continue;
+            
+            // Use multilingual sentiment analysis
+            const result = await analyzeMultilingualSentiment(item.feedback);
+            
+            updates.push({
+              id: item.id,
+              sentiment: result.sentiment,
+              sentiment_score: result.sentiment_score,
+              language: result.language,
+              model_used: result.modelUsed,
+              last_analyzed_at: new Date().toISOString(),
+            });
+            
+            // Update stats
+            languageStats[result.language] = (languageStats[result.language] || 0) + 1;
+            modelStats[result.modelUsed] = (modelStats[result.modelUsed] || 0) + 1;
+            
+            processed++;
+          } catch (err) {
+            console.error(`Error analyzing feedback ${item.id}:`, err);
+            errors++;
           }
         }
+
+        // Batch update to database
+        if (updates.length > 0) {
+          for (const update of updates) {
+            const { error: updateError } = await supabase
+              .from("customer_feedback")
+              .update({
+                sentiment: update.sentiment,
+                sentiment_score: update.sentiment_score,
+                // Only add these columns if they exist in the database schema
+                // language: update.language,
+                // model_used: update.model_used,
+                last_analyzed_at: update.last_analyzed_at,
+              })
+              .eq("id", update.id);
+
+            if (updateError) {
+              console.error(`Error updating feedback ${update.id}:`, updateError);
+              errors++;
+            }
+          }
+        }
+
+        // Update progress
+        if (count) {
+          setProgress(Math.round(((processed + errors) / count) * 100));
+        }
+        
+        // Update stats
+        setStats({
+          processed,
+          errors,
+          byLanguage: languageStats,
+          byModel: modelStats,
+        });
+
+        offset += batchSize;
       }
 
-      if (processed > 0 || errors > 0) {
-        let blankMsg = blankProcessed > 0 ? ` (including ${blankProcessed} blank items)` : '';
-        toast.success(`BERT sentiment recalculation complete: ${processed} processed${blankMsg}, ${errors} errors`);
-      } else if (done) {
-        const message = lastMessage || "No feedback was processed. There might be no items that need analysis.";
-        toast.info(message);
-      } else {
-        toast.warning("Process completed but no feedback was processed");
-      }
-
-      if (processed > 0) {
-        window.location.reload();
-      }
+      let languageSummary = Object.entries(languageStats)
+        .map(([lang, count]) => `${lang}: ${count}`)
+        .join(", ");
+      
+      const message = `Analysis complete: ${processed} processed (${languageSummary}), ${errors} errors`;
+      setLastMessage(message);
+      toast.success(message);
+      
+      // Force a reload to update the dashboard
+      window.location.reload();
     } catch (err: any) {
-      setLastError(err?.message ?? String(err));
-      let displayErrorMessage = err?.message ?? String(err);
-      if (err.name === "AxiosError" && err.message === "Network Error") displayErrorMessage = "Network connection error.";
-      else if (err.message && err.message.includes("Failed to fetch")) displayErrorMessage = "Could not connect to the server.";
-      toast.error(`BERT recalculation error: ${displayErrorMessage}`);
+      console.error("Error in recalculateWithBert:", err);
+      setLastError(err);
+      toast.error(`Analysis error: ${err.message ?? err}`);
     } finally {
       setIsProcessing(false);
     }
@@ -135,6 +198,6 @@ export function useBertSentimentRecalculate() {
     stats,
     lastError,
     lastMessage,
-    recalculateWithBert
+    recalculateWithBert,
   };
 }

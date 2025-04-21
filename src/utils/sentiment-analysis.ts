@@ -1,5 +1,7 @@
+
 /**
  * Enhanced sentiment analysis utility using both classic keywords and IndoBERT model (Huggingface).
+ * Supports multilingual analysis with automatic language detection.
  */
 import { analyzeIndoBertSentiment } from "./indobert-sentiment";
 
@@ -150,6 +152,78 @@ const neutralKeywords = [
 ];
 
 /**
+ * Basic language detection function
+ * Returns 'id' for Indonesian, 'en' for English, or 'other'
+ */
+export function detectLanguage(text: string): 'id' | 'en' | 'other' {
+  if (!text) return 'en';
+  
+  const lowerText = text.toLowerCase();
+  
+  // Indonesian-specific words
+  const idWords = ['yang', 'dengan', 'tidak', 'ini', 'dan', 'di', 'itu', 'untuk', 'adalah', 'ada', 
+    'pada', 'juga', 'dari', 'akan', 'bisa', 'dalam', 'oleh', 'saya', 'kamu', 'dia', 'mereka', 
+    'nya', 'gak', 'nggak', 'gak bisa', 'ga', 'gimana', 'kenapa', 'banget', 'sih', 'dong', 'mah', 
+    'aja', 'deh', 'kok', 'mau', 'udah', 'sudah', 'belum', 'jadi', 'kalo', 'kalau', 'sama', 'buat'];
+  
+  // Count Indonesian words
+  let idWordCount = 0;
+  for (const word of idWords) {
+    const regex = new RegExp(`\\b${word}\\b`, 'g');
+    const matches = lowerText.match(regex);
+    if (matches) {
+      idWordCount += matches.length;
+    }
+  }
+  
+  const wordCount = lowerText.split(/\s+/).length;
+  
+  // If more than 10% of words are Indonesian-specific, classify as Indonesian
+  if (idWordCount / wordCount > 0.1) {
+    return 'id';
+  }
+  
+  // Default to English for now (can be expanded with more sophisticated detection)
+  return 'en';
+}
+
+/**
+ * English-specific sentiment analysis using keywords.
+ * Similar to the classic keywords logic but with English-specific handling.
+ */
+function analyzeEnglishSentiment(text: string, threshold = 0.3): { sentiment: Sentiment; sentiment_score: number } {
+  if (!text) return { sentiment: "neutral", sentiment_score: 0 };
+  const lowerText = text.toLowerCase();
+  let pos = 0, neg = 0, neu = 0;
+
+  // Filter keywords to English only (simplified for this implementation)
+  const enPositiveKeywords = positiveKeywords.filter(k => !k.match(/[áàãâéèêíìîóòõôúùûçñ]/i));
+  const enNegativeKeywords = negativeKeywords.filter(k => !k.match(/[áàãâéèêíìîóòõôúùûçñ]/i)); 
+  const enNeutralKeywords = neutralKeywords.filter(k => !k.match(/[áàãâéèêíìîóòõôúùûçñ]/i));
+
+  enPositiveKeywords.forEach((kw) => { if (lowerText.includes(kw)) pos++; });
+  enNegativeKeywords.forEach((kw) => { if (lowerText.includes(kw)) neg++; });
+  enNeutralKeywords.forEach((kw) => { if (lowerText.includes(kw)) neu++; });
+
+  // Additional English-specific patterns
+  if (lowerText.includes('!') && pos > 0) pos++;
+  if (lowerText.match(/\bvery\s+(?:good|nice|great)\b/i)) pos += 2;
+  if (lowerText.match(/\bawful\b|\bterrible\b|\bworst\b/i)) neg += 2;
+  
+  const total = pos + neg + neu;
+  let score = 0;
+  if (total > 0) {
+    score = (pos - neg) / total;
+  }
+
+  let sentiment: Sentiment = "neutral";
+  if (score > threshold) sentiment = "positive";
+  else if (score < -threshold) sentiment = "negative";
+
+  return { sentiment, sentiment_score: score };
+}
+
+/**
  * Classic keywords logic (unchanged)
  */
 export function analyzeSentiment(text: string, threshold = 0.2): { sentiment: Sentiment; sentiment_score: number } {
@@ -172,6 +246,46 @@ export function analyzeSentiment(text: string, threshold = 0.2): { sentiment: Se
   else if (score < -threshold) sentiment = "negative";
 
   return { sentiment, sentiment_score: score };
+}
+
+/**
+ * Multilingual sentiment analysis with automatic language detection
+ */
+export async function analyzeMultilingualSentiment(text: string): Promise<{ 
+  sentiment: Sentiment; 
+  sentiment_score: number;
+  language: string;
+  modelUsed: string;
+}> {
+  if (!text || text.trim() === '') {
+    return { sentiment: "neutral", sentiment_score: 0, language: 'unknown', modelUsed: 'none' };
+  }
+  
+  // Detect language
+  const language = detectLanguage(text);
+  console.log(`[Sentiment] Detected language: ${language} for text: "${text.substring(0, 50)}..."`);
+  
+  try {
+    if (language === 'id') {
+      // Use IndoBERT for Indonesian text
+      const result = await analyzeIndoBertSentiment(text);
+      return { ...result, language: 'id', modelUsed: 'IndoBERTweet' };
+    } else {
+      // Use English-specific analyzer for English text
+      const result = analyzeEnglishSentiment(text);
+      return { ...result, language: 'en', modelUsed: 'EnglishKeywords' };
+    }
+  } catch (error) {
+    console.error("[Sentiment] Error in multilingual analysis:", error);
+    
+    // Fallback to basic keyword analysis
+    const fallbackResult = analyzeSentiment(text);
+    return { 
+      ...fallbackResult, 
+      language: language, 
+      modelUsed: 'KeywordsFallback' 
+    };
+  }
 }
 
 /**
