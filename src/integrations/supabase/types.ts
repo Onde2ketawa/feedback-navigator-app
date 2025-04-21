@@ -58,8 +58,8 @@ export type Database = {
           language: string
           last_analyzed_at: string | null
           rating: number
-          sentiment: string
-          sentiment_score: number
+          sentiment: string | null
+          sentiment_score: number | null
           status: string
           sub_category: string | null
           submit_date: string | null
@@ -78,8 +78,8 @@ export type Database = {
           language?: string
           last_analyzed_at?: string | null
           rating: number
-          sentiment?: string
-          sentiment_score?: number
+          sentiment?: string | null
+          sentiment_score?: number | null
           status?: string
           sub_category?: string | null
           submit_date?: string | null
@@ -98,8 +98,8 @@ export type Database = {
           language?: string
           last_analyzed_at?: string | null
           rating?: number
-          sentiment?: string
-          sentiment_score?: number
+          sentiment?: string | null
+          sentiment_score?: number | null
           status?: string
           sub_category?: string | null
           submit_date?: string | null
