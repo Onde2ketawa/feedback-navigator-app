@@ -49,12 +49,14 @@ export function useBertSentimentRecalculate() {
 
           if (error) throw new Error(error.message);
           
+          // Handle the case where there's a message but no processing happened
           if (data.message && data.processed === 0) {
             toast.info(data.message);
             done = true;
             break;
           }
           
+          // Update progress counters
           processed += data.processed ?? 0;
           errors += data.errors ?? 0;
 
@@ -67,6 +69,7 @@ export function useBertSentimentRecalculate() {
           
           retries = 0;
           
+          // Check if processing is complete
           if (data.done) {
             done = true;
             break;
@@ -86,7 +89,7 @@ export function useBertSentimentRecalculate() {
 
       toast.success(`BERT sentiment recalculation complete: ${processed} processed, ${errors} errors`);
       
-      // Force a reload to update the dashboard
+      // Only reload if we actually processed something
       if (processed > 0) {
         window.location.reload();
       }

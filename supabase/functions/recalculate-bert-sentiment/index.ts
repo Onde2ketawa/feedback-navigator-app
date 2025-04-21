@@ -31,6 +31,7 @@ serve(async (req) => {
     let errors = 0;
 
     // Fetch records to process (not-yet-analyzed or null sentiment_score) that have non-empty feedback
+    // Make sure the query is correctly formatted with proper filters
     const feedbackRes = await fetch(
       `${supabaseUrl}/rest/v1/customer_feedback?select=id,feedback&or=(sentiment_score.is.null,sentiment_score.eq.0)&not.feedback.is.null&limit=${batchSize}`,
       {
@@ -42,7 +43,8 @@ serve(async (req) => {
     );
 
     if (!feedbackRes.ok) {
-      throw new Error(`Failed to fetch feedback: ${feedbackRes.status} ${await feedbackRes.text()}`);
+      console.error(`Failed to fetch feedback: ${feedbackRes.status} ${await feedbackRes.text()}`);
+      throw new Error(`Failed to fetch feedback: ${feedbackRes.status}`);
     }
 
     const feedbackList = await feedbackRes.json();
@@ -62,6 +64,7 @@ serve(async (req) => {
 
     for (const record of feedbackList) {
       try {
+        // Skip if feedback is empty or not a string
         if (!record.feedback || typeof record.feedback !== 'string' || record.feedback.trim() === '') {
           console.log(`Skipping record ${record.id}: Empty feedback`);
           continue;
@@ -120,7 +123,8 @@ serve(async (req) => {
         );
         
         if (!updateRes.ok) {
-          console.error(`Failed to update record ${record.id}: ${updateRes.status} ${await updateRes.text()}`);
+          const errorText = await updateRes.text();
+          console.error(`Failed to update record ${record.id}: ${updateRes.status} ${errorText}`);
           throw new Error(`Database update failed with status ${updateRes.status}`);
         }
         
@@ -132,8 +136,10 @@ serve(async (req) => {
         // Continue loop even on failure
       }
 
-      // Rate limit
-      await new Promise((resolve) => setTimeout(resolve, delay * 1000));
+      // Rate limit between processing each item
+      if (delay > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delay * 1000));
+      }
     }
 
     return new Response(
