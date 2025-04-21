@@ -10,6 +10,7 @@ import { SentimentChartsGrid } from '@/components/analytics/sentiment/SentimentC
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const SentimentAnalytics: React.FC = () => {
   const { toast } = useToast();
@@ -88,28 +89,26 @@ const SentimentAnalytics: React.FC = () => {
   const handleReanalyzeNeutral = async () => {
     setReanalyzeLoading(true);
     try {
-      const res = await fetch(
-        'https://pltjqahdsvlngfjyqoma.supabase.co/functions/v1/reanalyze-neutral-feedback-with-bert',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ batchSize: 500 }),
-        }
-      );
-      const data = await res.json();
-      if (res.ok) {
+      // Call the Supabase Edge Function using the client library instead of raw fetch
+      const { data, error } = await supabase.functions.invoke('reanalyze-neutral-feedback-with-bert', {
+        method: 'POST',
+        body: { batchSize: 500 }
+      });
+      
+      if (error) {
+        toast({
+          title: "Failed to reanalyze neutral feedback",
+          description: error.message || "Unknown error.",
+          variant: "destructive"
+        });
+        console.error("Edge function error:", error);
+      } else {
         toast({
           title: `Reanalyze Complete`,
           description: `${data.message || "Operation done."}`,
           variant: data.failed > 0 ? "destructive" : "default",
         });
         refreshData();
-      } else {
-        toast({
-          title: "Failed to reanalyze neutral feedback",
-          description: data.error || "Unknown error.",
-          variant: "destructive"
-        });
       }
     } catch (e: any) {
       toast({
@@ -117,6 +116,7 @@ const SentimentAnalytics: React.FC = () => {
         description: e.message || "Unknown error.",
         variant: "destructive"
       });
+      console.error("Error invoking edge function:", e);
     } finally {
       setReanalyzeLoading(false);
     }
