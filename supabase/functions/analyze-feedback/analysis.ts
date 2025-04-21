@@ -1,9 +1,16 @@
 
-// Sentiment analysis logic using keywords
+// Enhanced sentiment analysis logic using keywords
 
 import { positiveKeywords, negativeKeywords, neutralKeywords } from "./keywords.ts";
 
-export function analyzeWithKeywords(text: string, threshold = 0.3) {
+/**
+ * Analyzes text sentiment based on keyword matching
+ * @param text The text to analyze
+ * @param threshold The threshold for determining sentiment (default 0.2)
+ * @returns Object containing sentiment and score
+ */
+export function analyzeWithKeywords(text: string, threshold = 0.2) {
+  // Handle empty or null text
   if (!text) return { sentiment: "neutral", score: 0 };
   
   const lowercasedText = text.toLowerCase();

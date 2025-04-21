@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,13 +42,23 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
       return;
     }
 
-    const { sentiment, sentiment_score } = analyzeSentiment(data.feedback);
-
+    // Analyze sentiment of the feedback text
+    const { sentiment, sentiment_score } = analyzeSentiment(data.feedback, 0.2);
+    
+    // Include sentiment analysis results in the submission
     onSubmit({
       ...data,
       sentiment,
       sentiment_score
-    } as any);
+    });
+
+    // Display sentiment analysis result
+    toast({
+      title: `Feedback analyzed as ${sentiment}`,
+      description: `Sentiment score: ${sentiment_score.toFixed(2)}`,
+      variant: sentiment === "positive" ? "default" : 
+               sentiment === "negative" ? "destructive" : "secondary",
+    });
 
     form.reset();
     if (fileInput) {

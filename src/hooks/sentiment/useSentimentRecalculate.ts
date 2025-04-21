@@ -27,7 +27,7 @@ export function useSentimentRecalculate() {
         return;
       }
 
-      // Use the recalculate_sentiment_scores function which is in our types
+      // Use the recalculate_sentiment_scores function
       const { error } = await supabase.rpc("recalculate_sentiment_scores");
       
       if (error) throw new Error(`RPC error: ${error.message}`);
@@ -83,7 +83,7 @@ export function useSentimentRecalculate() {
               delay: 0.1,
               useKeywordAnalysis: true,
               sentimentOptions: {
-                threshold: 0.3,
+                threshold: 0.2,
               }
             }),
           });
