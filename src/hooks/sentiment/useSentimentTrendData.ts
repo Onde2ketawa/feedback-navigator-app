@@ -3,18 +3,29 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { SentimentTrendDataPoint } from './types';
 
+interface SentimentTrendMonthYearPoint {
+  month: string;      // "Jan", "Feb", ...
+  year: string;       // "2024", "2025", ...
+  positive: number;
+  neutral: number;
+  negative: number;
+}
+
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+
 export const useSentimentTrendData = (channelFilter: string) => {
-  const [sentimentTrendData, setSentimentTrendData] = useState<SentimentTrendDataPoint[]>([]);
+  const [sentimentTrendData, setSentimentTrendData] = useState<SentimentTrendMonthYearPoint[]>([]);
   
-  const fetchSentimentTrendData = async (): Promise<SentimentTrendDataPoint[]> => {
+  const fetchSentimentTrendData = async (): Promise<SentimentTrendMonthYearPoint[]> => {
     try {
-      // Base query to get feedback with sentiment data
       let query = supabase
         .from('customer_feedback')
         .select('submit_date, sentiment, channel_id')
         .order('submit_date', { ascending: true });
-        
-      // Apply channel filter if not 'all'
+
       if (channelFilter !== 'all') {
         try {
           const { data: channelData } = await supabase
@@ -27,61 +38,62 @@ export const useSentimentTrendData = (channelFilter: string) => {
             query = query.eq('channel_id', channelData.id);
           }
         } catch (err) {
-          // If it's already an ID, use it directly
           query = query.eq('channel_id', channelFilter);
         }
       }
-      
+
       const { data, error } = await query;
-      
       if (error) throw error;
       if (data && data.length > 0) {
         return processSentimentTrendData(data);
       }
-      
       return [];
     } catch (error) {
       console.error('Error fetching sentiment trend data:', error);
       return [];
     }
   };
-  
-  const processSentimentTrendData = (data: any[]): SentimentTrendDataPoint[] => {
-    // Group by month for a time series visualization
-    const sentimentByDate = new Map<string, { positive: number, neutral: number, negative: number }>();
-    
+
+  const processSentimentTrendData = (data: any[]): SentimentTrendMonthYearPoint[] => {
+    // Group by year and month for enhanced time series split
+    // Structure: result[year][monthIdx] = {positive, neutral, negative}
+    const grouped: Record<string, Record<number, { positive: number; neutral: number; negative: number }>> = {};
     data.forEach(item => {
       if (!item.submit_date) return;
-      
-      // Format date as YYYY-MM for monthly grouping
-      const date = new Date(item.submit_date);
-      const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
-      // Initialize if first time seeing this month
-      if (!sentimentByDate.has(monthYear)) {
-        sentimentByDate.set(monthYear, { positive: 0, neutral: 0, negative: 0 });
+      const dateObj = new Date(item.submit_date);
+      const year = `${dateObj.getFullYear()}`;
+      const monthIdx = dateObj.getMonth(); // 0-11
+
+      if (!grouped[year]) {
+        grouped[year] = {};
       }
-      
-      // Update sentiment count
-      const currentValues = sentimentByDate.get(monthYear)!;
-      
+      if (!grouped[year][monthIdx]) {
+        grouped[year][monthIdx] = { positive: 0, neutral: 0, negative: 0 };
+      }
       if (item.sentiment === 'positive') {
-        currentValues.positive++;
+        grouped[year][monthIdx].positive++;
       } else if (item.sentiment === 'negative') {
-        currentValues.negative++;
+        grouped[year][monthIdx].negative++;
       } else {
-        currentValues.neutral++;
+        grouped[year][monthIdx].neutral++;
       }
     });
-    
-    // Convert to array and sort by date
-    const result: SentimentTrendDataPoint[] = Array.from(sentimentByDate.entries())
-      .map(([date, counts]) => ({
-        date,
-        ...counts
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-    
+
+    // Flatten into array of { month, year, positive, neutral, negative }
+    const result: SentimentTrendMonthYearPoint[] = [];
+    Object.entries(grouped).forEach(([year, monthsObj]) => {
+      for (let m = 0; m < 12; m++) {
+        const monthCounts = monthsObj[m] || { positive: 0, neutral: 0, negative: 0 };
+        result.push({
+          month: MONTHS[m],
+          year,
+          ...monthCounts,
+        });
+      }
+    });
+
+    // Sorted: year ascending, month ascending
+    result.sort((a, b) => (a.year === b.year ? MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month) : Number(a.year) - Number(b.year)));
     return result;
   };
 
