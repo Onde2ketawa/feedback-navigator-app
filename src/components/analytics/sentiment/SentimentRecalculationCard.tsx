@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Database, Cpu, Brain } from "lucide-react";
+import { RefreshCw, Database, Cpu, Brain, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface SentimentRecalculationCardProps {
@@ -14,6 +14,7 @@ interface SentimentRecalculationCardProps {
   progress: number;
   stats?: { processed: number; errors: number } | null;
   lastError?: string | null;
+  lastMessage?: string | null;
 }
 
 export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProps> = ({
@@ -23,7 +24,8 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
   isProcessing,
   progress,
   stats,
-  lastError
+  lastError,
+  lastMessage
 }) => (
   <Card className="mb-6">
     <CardHeader>
@@ -72,6 +74,7 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
           <RefreshCw className={`h-4 w-4 mr-2 ${isProcessing ? 'animate-spin' : ''}`} />
           {isProcessing ? "Processing..." : `Recalculate with ${selectedMethod === "database" ? "Database" : selectedMethod === "edge" ? "Edge Function" : "BERT"}`}
         </Button>
+        
         {/* Always show processed/errors box for monitoring */}
         <div className="grid grid-cols-2 gap-4 mt-2">
           <div className="p-3 bg-green-50 rounded-lg">
@@ -84,6 +87,7 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
           </div>
         </div>
       </div>
+      
       {isProcessing && (
         <div className="space-y-2 mt-4">
           <div className="flex justify-between">
@@ -91,11 +95,19 @@ export const SentimentRecalculationCard: React.FC<SentimentRecalculationCardProp
             <span className="text-sm text-muted-foreground">{progress}%</span>
           </div>
           <Progress value={progress} />
-          {lastError && (
-            <div className="mt-3 px-3 py-2 rounded bg-red-100 text-red-700 text-xs border border-red-200">
-              <strong>Error:</strong> {lastError}
-            </div>
-          )}
+        </div>
+      )}
+      
+      {lastMessage && !isProcessing && (
+        <div className="mt-3 px-3 py-2 rounded bg-blue-50 text-blue-700 text-xs border border-blue-200">
+          <p>{lastMessage}</p>
+        </div>
+      )}
+      
+      {lastError && (
+        <div className="mt-3 px-3 py-2 rounded bg-red-100 text-red-700 text-xs border border-red-200 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+          <span><strong>Error:</strong> {lastError}</span>
         </div>
       )}
     </CardContent>

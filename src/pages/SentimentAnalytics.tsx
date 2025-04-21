@@ -22,8 +22,22 @@ const SentimentAnalytics: React.FC = () => {
     availableChannels
   } = useSentimentAnalyticsData();
   
-  const { isProcessing: isDbProcessing, progress: dbProgress, stats: dbStats, recalculate, recalculateWithEdgeFunction } = useSentimentRecalculate();
-  const { isProcessing: isBertProcessing, progress: bertProgress, stats: bertStats, lastError: bertLastError, recalculateWithBert } = useBertSentimentRecalculate();
+  const { 
+    isProcessing: isDbProcessing, 
+    progress: dbProgress, 
+    stats: dbStats, 
+    recalculate, 
+    recalculateWithEdgeFunction 
+  } = useSentimentRecalculate();
+  
+  const { 
+    isProcessing: isBertProcessing, 
+    progress: bertProgress, 
+    stats: bertStats, 
+    lastError: bertLastError, 
+    lastMessage: bertLastMessage,
+    recalculateWithBert 
+  } = useBertSentimentRecalculate();
   
   const [selectedMethod, setSelectedMethod] = useState<'database' | 'edge' | 'bert'>('database');
   
@@ -48,6 +62,9 @@ const SentimentAnalytics: React.FC = () => {
 
   const lastError =
     selectedMethod === 'bert' ? bertLastError : null;
+    
+  const lastMessage =
+    selectedMethod === 'bert' ? bertLastMessage : null;
 
   const handleRecalculate = () => {
     if (selectedMethod === 'database') {
@@ -87,6 +104,7 @@ const SentimentAnalytics: React.FC = () => {
         progress={progress}
         stats={stats}
         lastError={lastError}
+        lastMessage={lastMessage}
       />
       <div className="mb-6">
         <ChannelFilter
