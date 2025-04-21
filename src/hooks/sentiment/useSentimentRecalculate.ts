@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -132,11 +131,9 @@ export function useSentimentRecalculate() {
 
       while (processed + errors < count && retries < maxRetries) {
         try {
-          // Call the edge function with enhanced parameters
-          const res = await fetch("/api/functions/v1/analyze-feedback", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
+          // FIXED: Use supabase.functions.invoke instead of direct fetch to avoid URL issues
+          const { data, error } = await supabase.functions.invoke("analyze-feedback", {
+            body: { 
               batchSize,
               delay: 0.1,
               useKeywordAnalysis: true,
@@ -144,16 +141,12 @@ export function useSentimentRecalculate() {
                 threshold: 0.2,
               },
               skipBlankFeedback: true // Skip blank feedback since we've already processed them
-            }),
+            }
           });
 
-          if (!res.ok) {
-            throw new Error(`Server responded with status: ${res.status}`);
-          }
-
-          const data = await res.json();
-
-          if (data.error) throw new Error(data.error);
+          if (error) throw new Error(`Function error: ${error.message || error}`);
+          
+          if (!data) throw new Error("No data returned from function");
 
           processed += data.processed ?? 0;
           errors += data.errors ?? 0;
