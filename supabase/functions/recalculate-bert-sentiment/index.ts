@@ -10,6 +10,7 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const bertApiUrl = Deno.env.get("BERT_API_URL") || "https://your-bert-api-url.com/predict";
+const bertApiToken = Deno.env.get("BERT_API_TOKEN") || ""; // Use the token securely
 
 console.log("Edge function starting up with BERT API URL:", bertApiUrl);
 
@@ -53,11 +54,12 @@ serve(async (req) => {
 
         console.log(`Analyzing feedback ID ${record.id} with BERT: "${record.feedback.substring(0, 50)}..."`);
 
-        // Call the external BERT API
+        // Call the external BERT API with authorization token
         const bertRes = await fetch(bertApiUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${bertApiToken}`,
           },
           body: JSON.stringify({ feedback: record.feedback }),
         });
