@@ -24,7 +24,11 @@ export function useBertSentimentRecalculate() {
         .throwOnError();
 
       if (countError) {
-        throw new Error(`Error counting feedback: ${countError.error || countError.toString()}`);
+        // Fix: Use type assertion to handle the error object properly
+        const errorMessage = typeof countError === 'object' ? 
+          (countError as any).error || countError.toString() : 
+          String(countError);
+        throw new Error(`Error counting feedback: ${errorMessage}`);
       }
 
       if (!count || count === 0) {
@@ -63,10 +67,14 @@ export function useBertSentimentRecalculate() {
           console.log("Edge function response:", data, error);
 
           if (error) {
-            if (error.toString().includes("aborted")) {
+            // Fix: Handle error object properly with type safety
+            const errorString = typeof error === 'object' && error !== null ? 
+              error.toString() : String(error);
+              
+            if (errorString.includes("aborted")) {
               throw new Error("Request timed out. The server may be busy. Try again later.");
             }
-            throw new Error(error.toString() || "Unknown error occurred");
+            throw new Error(errorString || "Unknown error occurred");
           }
           
           // Check if data is null or undefined
