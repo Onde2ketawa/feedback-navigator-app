@@ -1,5 +1,5 @@
 
-import { pipeline, PipelineType, TextClassificationPipeline } from "@huggingface/transformers";
+import { pipeline, TextClassificationPipeline } from "@huggingface/transformers";
 import { Sentiment } from "./sentiment-analysis";
 
 let bertPipeline: TextClassificationPipeline | null = null;
@@ -18,7 +18,7 @@ export async function getIndoBertSentimentPipeline(): Promise<TextClassification
   }
   isLoading = true;
   bertPipeline = await pipeline(
-    "sentiment-analysis" as PipelineType, 
+    "sentiment-analysis", 
     "finalproject/indobertweet-base-sentiment-classification"
   ) as TextClassificationPipeline;
   isLoading = false;
@@ -33,15 +33,23 @@ export async function analyzeIndoBertSentiment(text: string): Promise<{ sentimen
   const predictions = await pipeline(text);
   // IndoBERTweet labels are (POS, NEG, NEU)
   if (Array.isArray(predictions) && predictions[0]) {
-    const label = predictions[0].label;
+    const prediction = predictions[0];
     let sentiment: Sentiment = "neutral";
-    if (label === "POS") sentiment = "positive";
-    else if (label === "NEG") sentiment = "negative";
-    // IndoBERTweet usually uses score (0..1), we map it as-is to sentiment_score
-    return {
-      sentiment,
-      sentiment_score: label === "POS" ? predictions[0].score : label === "NEG" ? -predictions[0].score : 0
-    };
+    
+    // Type guard to ensure we can access label and score
+    if ('label' in prediction) {
+      const label = prediction.label;
+      if (label === "POS") sentiment = "positive";
+      else if (label === "NEG") sentiment = "negative";
+      
+      // IndoBERTweet usually uses score (0..1), we map it as-is to sentiment_score
+      if ('score' in prediction) {
+        return {
+          sentiment,
+          sentiment_score: label === "POS" ? prediction.score : label === "NEG" ? -prediction.score : 0
+        };
+      }
+    }
   }
   return { sentiment: "neutral", sentiment_score: 0 };
 }
