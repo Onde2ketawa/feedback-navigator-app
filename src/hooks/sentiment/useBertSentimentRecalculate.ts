@@ -20,7 +20,8 @@ export function useBertSentimentRecalculate() {
         .from("customer_feedback")
         .select("*", { count: "exact", head: true })
         .not("feedback", "is", null)
-        .or("sentiment_score.is.null,sentiment_score.eq.0");
+        .or("sentiment_score.is.null,sentiment_score.eq.0")
+        .throwOnError();
 
       if (countError) {
         throw new Error(`Error counting feedback: ${countError.message}`);
@@ -45,23 +46,41 @@ export function useBertSentimentRecalculate() {
         try {
           console.log("Calling edge function with batch size:", batchSize);
           
-          // Call the edge function
+          // Call the edge function with a timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+          
           const { data, error } = await supabase.functions.invoke("recalculate-bert-sentiment", {
             body: { 
               batchSize,
               delay: 0.3
-            }
+            },
+            signal: controller.signal
           });
+          
+          clearTimeout(timeoutId);
 
           console.log("Edge function response:", data, error);
 
-          if (error) throw new Error(error.message);
+          if (error) {
+            if (error.message && error.message.includes("aborted")) {
+              throw new Error("Request timed out. The server may be busy. Try again later.");
+            }
+            throw new Error(error.message || "Unknown error occurred");
+          }
+          
+          // Check if data is null or undefined
+          if (!data) {
+            throw new Error("No response data received from server");
+          }
           
           // Handle the case where there's a message but no processing happened
           if (data.message && data.processed === 0) {
             toast.info(data.message);
-            done = true;
-            break;
+            if (data.done) {
+              done = true;
+              break;
+            }
           }
           
           // Update progress counters
@@ -89,7 +108,9 @@ export function useBertSentimentRecalculate() {
           retries++;
           
           if (retries < maxRetries) {
-            toast.warning(`Analysis attempt failed, retrying (${retries}/${maxRetries})...`);
+            toast.warning(`Analysis attempt failed, retrying (${retries}/${maxRetries})...`, {
+              duration: 3000
+            });
             await new Promise(resolve => setTimeout(resolve, 1000 * retries));
           } else {
             throw err;
@@ -99,8 +120,10 @@ export function useBertSentimentRecalculate() {
 
       if (processed > 0 || errors > 0) {
         toast.success(`BERT sentiment recalculation complete: ${processed} processed, ${errors} errors`);
-      } else {
+      } else if (done) {
         toast.info("No feedback was processed. There might be no items that need analysis.");
+      } else {
+        toast.warning("Process completed but no feedback was processed");
       }
       
       // Only reload if we actually processed something
@@ -108,8 +131,17 @@ export function useBertSentimentRecalculate() {
         window.location.reload();
       }
     } catch (err: any) {
-      toast.error(`BERT recalculation error: ${err.message ?? err}`);
       console.error("Full BERT recalculation error:", err);
+      
+      // Provide more helpful error messages for common network issues
+      let errorMessage = err.message ?? err;
+      if (err.name === "AxiosError" && err.message === "Network Error") {
+        errorMessage = "Network connection error. Please check your internet connection and try again.";
+      } else if (err.message && err.message.includes("Failed to fetch")) {
+        errorMessage = "Could not connect to the server. The service might be temporarily unavailable.";
+      }
+      
+      toast.error(`BERT recalculation error: ${errorMessage}`);
     } finally {
       setIsProcessing(false);
     }
