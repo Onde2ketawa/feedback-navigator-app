@@ -25,7 +25,7 @@ const Upload: React.FC = () => {
           channel_id: data.channel,
           rating: data.rating,
           feedback: data.feedback,
-          submit_date: data.date,
+          submit_date: data.submitDate,
           sentiment: data.sentiment,
           sentiment_score: data.sentiment_score,
           // Add other fields as needed
@@ -36,7 +36,7 @@ const Upload: React.FC = () => {
       
       toast({
         title: "Upload successful",
-        description: `Your feedback has been uploaded with sentiment: ${data.sentiment}`,
+        description: data.sentiment ? `Your feedback has been uploaded with sentiment: ${data.sentiment}` : "Your feedback has been uploaded successfully",
       });
     } catch (error: any) {
       toast({

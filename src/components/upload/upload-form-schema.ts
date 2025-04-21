@@ -13,6 +13,9 @@ export const uploadFormSchema = z.object({
     required_error: "Please select a date",
   }),
   feedback: z.string().optional(),
+  // Add sentiment and sentiment_score fields
+  sentiment: z.enum(['positive', 'neutral', 'negative']).optional(),
+  sentiment_score: z.number().optional(),
 });
 
 export type UploadFormValues = z.infer<typeof uploadFormSchema>;

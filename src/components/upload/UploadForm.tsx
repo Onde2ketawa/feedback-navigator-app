@@ -56,8 +56,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
     toast({
       title: `Feedback analyzed as ${sentiment}`,
       description: `Sentiment score: ${sentiment_score.toFixed(2)}`,
+      // Fix the variant to use only allowed values
       variant: sentiment === "positive" ? "default" : 
-               sentiment === "negative" ? "destructive" : "secondary",
+               sentiment === "negative" ? "destructive" : "default",
     });
 
     form.reset();
