@@ -1,5 +1,5 @@
-
 import { analyzeMultilingualSentiment } from "@/utils/sentiment-analysis";
+import { analyzeSentiment } from "@/utils/sentiment/keyword-sentiment";
 
 interface FeedbackItem {
   id: string;
@@ -35,7 +35,20 @@ export async function analyzeBertFeedbackBatch(
     try {
       if (!item.feedback) continue;
 
-      const result = await analyzeMultilingualSentiment(item.feedback);
+      let result;
+      try {
+        // Try to use multilingual sentiment analysis first (which may attempt to use BERT)
+        result = await analyzeMultilingualSentiment(item.feedback);
+      } catch (err) {
+        console.error(`Error with multilingual analysis for ${item.id}:`, err);
+        // Fall back to basic keyword analysis if multilingual fails
+        const fallbackResult = analyzeSentiment(item.feedback);
+        result = {
+          ...fallbackResult,
+          language: 'unknown',
+          modelUsed: 'FallbackKeywords'
+        };
+      }
 
       updates.push({
         id: item.id,
@@ -52,6 +65,19 @@ export async function analyzeBertFeedbackBatch(
     } catch (err) {
       console.error(`Error analyzing feedback ${item.id}:`, err);
       errors++;
+      
+      // Even on error, we'll add a default neutral sentiment to keep the process moving
+      updates.push({
+        id: item.id,
+        sentiment: 'neutral',
+        sentiment_score: 0,
+        language: 'unknown',
+        model_used: 'ErrorFallback',
+        last_analyzed_at: now,
+      });
+      
+      modelStats['ErrorFallback'] = (modelStats['ErrorFallback'] || 0) + 1;
+      languageStats['unknown'] = (languageStats['unknown'] || 0) + 1;
     }
   }
 
