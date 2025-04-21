@@ -19,20 +19,14 @@ export function useBertSentimentRecalculate() {
     setLastMessage(null);
 
     try {
-      // Get count of feedbacks that need analysis
       let count = 0;
       try {
         const countResult = await supabase
           .from("customer_feedback")
           .select("*", { count: "exact", head: true });
-          
-        if (countResult.error) {
-          throw countResult.error;
-        }
-        
+        if (countResult.error) throw countResult.error;
         count = countResult.count || 0;
       } catch (err: any) {
-        console.error("Error getting feedback count:", err);
         toast.error(`Failed to get feedback count: ${err?.message || String(err)}`);
         setLastError(err?.message || String(err));
         setIsProcessing(false);
@@ -58,87 +52,52 @@ export function useBertSentimentRecalculate() {
 
       while (!done && retries < maxRetries) {
         try {
-          console.log("Calling edge function with batch size:", batchSize);
-
-          // Create an abort controller for the timeout
+          // 30 second timeout
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+          // Directly call the edge function
           const { data, error } = await supabase.functions.invoke("recalculate-bert-sentiment", {
-            body: { 
-              batchSize,
-              delay: 0.3,
-              includeBlanks: true
-            }
+            body: { batchSize, delay: 0.3, includeBlanks: true }
           });
 
           clearTimeout(timeoutId);
 
-          console.log("Edge function response:", data, error);
-
           if (error) {
-            const errorMessage = typeof error === 'object' && error !== null 
-              ? (error.toString ? error.toString() : JSON.stringify(error))
-              : String(error);
-              
-            setLastError(errorMessage);
-
-            if (errorMessage.includes("aborted")) {
-              throw new Error("Request timed out. The server may be busy. Try again later.");
-            }
-            throw new Error(errorMessage || "Unknown error occurred");
+            setLastError(typeof error === "object" ? (error.toString ? error.toString() : JSON.stringify(error)) : String(error));
+            if (String(error).includes("aborted")) throw new Error("Request timed out.");
+            throw new Error(error || "Unknown error occurred");
           }
 
-          // Check if data is null or undefined
+          // New: check for blankProcessed in response
           if (!data) {
             setLastError("No response data received from server");
             throw new Error("No response data received from server");
           }
 
-          // Handle the case where there's a message but no processing happened
-          if ((data as any).message) {
-            setLastMessage((data as any).message);
-            
-            if ((data as any).processed === 0) {
-              toast.info((data as any).message);
-              if ((data as any).done) {
-                done = true;
-                break;
-              }
-            }
-          }
-
-          // Update progress counters
+          // Read processed, errors, blankProcessed
           processed += (data as any).processed ?? 0;
           blankProcessed += (data as any).blankProcessed ?? 0;
           errors += (data as any).errors ?? 0;
 
           setStats({ processed, errors, blankProcessed });
 
-          // Calculate progress based on estimated total
           if (count > 0) {
-            const newProgress = Math.min(100, Math.round(((processed + errors) / count) * 100));
-            setProgress(newProgress);
-            console.log(`Progress updated: ${newProgress}% (${processed}/${count}) - Blank items: ${blankProcessed}`);
+            setProgress(Math.min(100, Math.round(((processed + errors) / count) * 100)));
           }
 
+          if (typeof (data as any).message === "string") setLastMessage((data as any).message);
           retries = 0;
 
-          // Check if processing is complete
           if ((data as any).done) {
             done = true;
             break;
           }
         } catch (err: any) {
-          console.error("Error during BERT sentiment analysis:", err);
-          const errorMessage = err?.message ?? String(err);
-          setLastError(errorMessage);
+          setLastError(err?.message ?? String(err));
           retries++;
-
           if (retries < maxRetries) {
-            toast.warning(`Analysis attempt failed, retrying (${retries}/${maxRetries})...`, {
-              duration: 3000
-            });
+            toast.warning(`Analysis attempt failed, retrying (${retries}/${maxRetries})...`, { duration: 3000 });
             await new Promise(resolve => setTimeout(resolve, 1000 * retries));
           } else {
             throw err;
@@ -147,7 +106,7 @@ export function useBertSentimentRecalculate() {
       }
 
       if (processed > 0 || errors > 0) {
-        const blankMsg = blankProcessed > 0 ? ` (including ${blankProcessed} blank items)` : '';
+        let blankMsg = blankProcessed > 0 ? ` (including ${blankProcessed} blank items)` : '';
         toast.success(`BERT sentiment recalculation complete: ${processed} processed${blankMsg}, ${errors} errors`);
       } else if (done) {
         const message = lastMessage || "No feedback was processed. There might be no items that need analysis.";
@@ -156,33 +115,24 @@ export function useBertSentimentRecalculate() {
         toast.warning("Process completed but no feedback was processed");
       }
 
-      // Only reload if we actually processed something
       if (processed > 0) {
         window.location.reload();
       }
     } catch (err: any) {
-      console.error("Full BERT recalculation error:", err);
-      const errorMessage = err?.message ?? String(err);
-      setLastError(errorMessage);
-
-      // Provide more helpful error messages for common network issues
-      let displayErrorMessage = errorMessage;
-      if (err.name === "AxiosError" && err.message === "Network Error") {
-        displayErrorMessage = "Network connection error. Please check your internet connection and try again.";
-      } else if (err.message && err.message.includes("Failed to fetch")) {
-        displayErrorMessage = "Could not connect to the server. The service might be temporarily unavailable.";
-      }
-
+      setLastError(err?.message ?? String(err));
+      let displayErrorMessage = err?.message ?? String(err);
+      if (err.name === "AxiosError" && err.message === "Network Error") displayErrorMessage = "Network connection error.";
+      else if (err.message && err.message.includes("Failed to fetch")) displayErrorMessage = "Could not connect to the server.";
       toast.error(`BERT recalculation error: ${displayErrorMessage}`);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  return { 
-    isProcessing, 
-    progress, 
-    stats, 
+  return {
+    isProcessing,
+    progress,
+    stats,
     lastError,
     lastMessage,
     recalculateWithBert
