@@ -6,8 +6,7 @@ let bertPipeline: TextClassificationPipeline | null = null;
 let isLoading = false;
 
 /**
- * Loads IndoBERT sentiment analysis pipeline (cached on first use).
- * Uses: finalproject/indobertweet-base-sentiment-classification
+ * Loads IndoBERT sentiment analysis pipeline (finalproject/indobertweet-base-sentiment-classification, cached on first use).
  */
 export async function getIndoBertSentimentPipeline(): Promise<TextClassificationPipeline> {
   if (bertPipeline) return bertPipeline;
@@ -18,45 +17,55 @@ export async function getIndoBertSentimentPipeline(): Promise<TextClassification
   }
   isLoading = true;
 
-  // Fix: Explicitly assign to `any` then cast, to avoid TS2590 union type complexity
-  const pipe: any = await pipeline(
-    "sentiment-analysis", 
-    "finalproject/indobertweet-base-sentiment-classification"
-  );
-  bertPipeline = pipe as TextClassificationPipeline;
+  try {
+    // Use the exact model from HuggingFace you requested  
+    const pipe: any = await pipeline(
+      "sentiment-analysis",
+      "finalproject/indobertweet-base-sentiment-classification"
+    );
+    bertPipeline = pipe as TextClassificationPipeline;
+  } catch (err) {
+    console.error("[IndoBERT] Failed to load pipeline:", err);
+    isLoading = false;
+    throw err;
+  }
 
   isLoading = false;
-  return bertPipeline;
+  return bertPipeline!;
 }
 
 /**
  * Runs IndoBERTweet sentiment analysis prediction on given text.
  */
-export async function analyzeIndoBertSentiment(text: string): Promise<{ sentiment: Sentiment; sentiment_score: number }> {
-  const pipeline = await getIndoBertSentimentPipeline();
-  const predictions = await pipeline(text);
-  // IndoBERTweet labels are (POS, NEG, NEU)
-  if (Array.isArray(predictions) && predictions[0]) {
-    const prediction = predictions[0];
-    let sentiment: Sentiment = "neutral";
-    
-    // Type guard to ensure we can access label and score
-    if (typeof prediction === 'object' && prediction !== null) {
-      // Use safe property access 
-      const label = 'label' in prediction ? prediction.label : null;
-      
-      if (label === "POS") sentiment = "positive";
-      else if (label === "NEG") sentiment = "negative";
-      
+export async function analyzeIndoBertSentiment(
+  text: string
+): Promise<{ sentiment: Sentiment; sentiment_score: number }> {
+  try {
+    const pipe = await getIndoBertSentimentPipeline();
+    // Use batch input to workaround TS pipeline typing
+    const predictions = await pipe([text]) as Array<{ label: string; score: number }>;
+    if (Array.isArray(predictions) && predictions[0]) {
+      const prediction = predictions[0];
+      let sentiment: Sentiment = "neutral";
+      const label = prediction.label?.toUpperCase?.() || "";
+      if (label === "POS" || label === "POSITIVE") sentiment = "positive";
+      else if (label === "NEG" || label === "NEGATIVE") sentiment = "negative";
       // IndoBERTweet usually uses score (0..1), we map it as-is to sentiment_score
-      if ('score' in prediction && typeof prediction.score === 'number') {
+      if (typeof prediction.score === "number") {
         return {
           sentiment,
-          sentiment_score: label === "POS" ? prediction.score : 
-                           label === "NEG" ? -prediction.score : 0
+          sentiment_score: sentiment === "positive"
+            ? prediction.score
+            : sentiment === "negative"
+            ? -prediction.score
+            : 0
         };
       }
     }
+    // fallback if response is missing or malformed
+    return { sentiment: "neutral", sentiment_score: 0 };
+  } catch (err) {
+    console.error("[IndoBERT] analyzeIndoBertSentiment error:", err);
+    return { sentiment: "neutral", sentiment_score: 0 };
   }
-  return { sentiment: "neutral", sentiment_score: 0 };
 }
