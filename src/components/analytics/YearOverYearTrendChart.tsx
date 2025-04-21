@@ -27,14 +27,18 @@ export function YearOverYearTrendChart({
   const currentYear = new Date().getFullYear().toString();
   const previousYear = (Number(currentYear) - 1).toString();
   
-  // Filter out months with no data
-  const filteredData = data;
   // Ensure numeric comparison by converting to numbers
   const hasCurrentYearData = data.some(point => Number(point[currentYear]) > 0);
   const hasPreviousYearData = data.some(point => Number(point[previousYear]) > 0);
 
   // Get channel name for display
   const channelName = channelFilter === 'all' ? 'All Channels' : channelFilter;
+  
+  // Custom tooltip formatter for better display
+  const tooltipFormatter = (value: number | string) => {
+    if (value === 0) return ['No data', 'Average Rating'];
+    return [value, 'Average Rating'];
+  };
   
   return (
     <Card className="col-span-1 lg:col-span-2">
@@ -48,7 +52,7 @@ export function YearOverYearTrendChart({
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={filteredData}
+              data={data}
               margin={{
                 top: 5,
                 right: 30,
@@ -64,7 +68,10 @@ export function YearOverYearTrendChart({
                 ticks={[1, 2, 3, 4, 5]}
                 tickFormatter={(value) => `${value}`}
               />
-              <Tooltip formatter={(value) => value ? [value, 'Average Rating'] : ['No data', 'Average Rating']} />
+              <Tooltip 
+                formatter={tooltipFormatter} 
+                labelFormatter={(label) => `Month: ${label}`}
+              />
               <Legend />
               {hasCurrentYearData && (
                 <Line
@@ -74,7 +81,7 @@ export function YearOverYearTrendChart({
                   strokeWidth={2}
                   activeDot={{ r: 8 }}
                   name={`${currentYear}`}
-                  connectNulls={true}
+                  connectNulls={false}
                 />
               )}
               {hasPreviousYearData && (
@@ -85,7 +92,7 @@ export function YearOverYearTrendChart({
                   strokeWidth={2}
                   activeDot={{ r: 8 }}
                   name={`${previousYear}`}
-                  connectNulls={true}
+                  connectNulls={false}
                 />
               )}
             </LineChart>
