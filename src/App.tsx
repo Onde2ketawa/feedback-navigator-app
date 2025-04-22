@@ -19,6 +19,7 @@ import UserManagement from './pages/UserManagement';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 import DeviceAnalytics from './pages/DeviceAnalytics';
+import FeedbackAnalysis from './pages/FeedbackAnalysis';
 
 // Auth Context & Protection
 import { AuthProvider } from './contexts/AuthContext';
@@ -115,6 +116,7 @@ function App() {
                 </MainLayout>
               </ProtectedRoute>
             } />
+            <Route path="/feedback-analysis" element={<FeedbackAnalysis />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>

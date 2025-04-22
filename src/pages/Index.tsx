@@ -6,8 +6,8 @@ const Index: React.FC = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Redirect to the dashboard page
-    navigate('/dashboard');
+    // Redirect to the feedback analysis page
+    navigate('/feedback-analysis');
   }, [navigate]);
   
   return (
