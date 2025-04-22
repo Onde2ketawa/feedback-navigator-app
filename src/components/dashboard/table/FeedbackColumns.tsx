@@ -128,8 +128,12 @@ export function createFeedbackColumns({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => openSentimentDialog(feedback)}
+              onClick={(e) => {
+                e.stopPropagation();
+                openSentimentDialog(feedback);
+              }}
               className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+              type="button"
             >
               <Pencil className="h-4 w-4" />
               <span className="sr-only">Edit sentiment</span>
