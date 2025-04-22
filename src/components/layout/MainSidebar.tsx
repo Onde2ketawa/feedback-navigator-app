@@ -1,26 +1,16 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
-import {
-  LayoutDashboard,
-  Star,
-  MessageSquareText,
-  Layers,
-  Upload,
-  Users,
-  Clock,
-  Smartphone,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { sidebarNavItems } from '@/config/navigation';
 
 interface SidebarNavProps {
   items: {
     href: string;
     title: string;
-    icon: React.ReactNode;
+    icon: React.ElementType;
   }[];
 }
 
@@ -31,59 +21,6 @@ interface MainSidebarProps {
 
 export function MainSidebar({ isOpen, toggleSidebar }: MainSidebarProps) {
   const location = useLocation();
-  
-  const sidebarNavItems = [
-    {
-      href: "/dashboard",
-      title: "Dashboard",
-      icon: <LayoutDashboard className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/rating-analytics",
-      title: "Rating Analytics",
-      icon: <Star className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/sentiment-analytics",
-      title: "Sentiment Analytics",
-      icon: <MessageSquareText className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/category-analytics",
-      title: "Category Analytics",
-      icon: <Layers className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/time-analytics",
-      title: "Time Analytics",
-      icon: <Clock className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/upload",
-      title: "Upload",
-      icon: <Upload className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/categories",
-      title: "Categories",
-      icon: <Layers className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/user-management",
-      title: "User Management",
-      icon: <Users className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/device-analytics",
-      title: "Device Analytics",
-      icon: <Smartphone className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/feedback-analysis",
-      title: "Feedback Analysis",
-      icon: <FileText className="mr-2 h-4 w-4" />,
-    },
-  ];
   
   return (
     <aside 
@@ -114,24 +51,27 @@ function SidebarNav({ items, isOpen }: SidebarNavProps & { isOpen: boolean }) {
   
   return (
     <nav className="grid items-start gap-2">
-      {items.map((item, index) => (
-        <Link
-          key={index}
-          to={item.href}
-          className={cn(
-            buttonVariants({ variant: "ghost" }),
-            pathname === item.href
-              ? "bg-muted hover:bg-muted text-primary"
-              : "hover:bg-transparent hover:underline",
-            "justify-start",
-            !isOpen && "justify-center px-2"
-          )}
-          title={!isOpen ? item.title : undefined}
-        >
-          {item.icon}
-          {isOpen && item.title}
-        </Link>
-      ))}
+      {items.map((item, index) => {
+        const Icon = item.icon;
+        return (
+          <Link
+            key={index}
+            to={item.href}
+            className={cn(
+              buttonVariants({ variant: "ghost" }),
+              pathname === item.href
+                ? "bg-muted hover:bg-muted text-primary"
+                : "hover:bg-transparent hover:underline",
+              "justify-start",
+              !isOpen && "justify-center px-2"
+            )}
+            title={!isOpen ? item.title : undefined}
+          >
+            <Icon className="mr-2 h-4 w-4" />
+            {isOpen && item.title}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
