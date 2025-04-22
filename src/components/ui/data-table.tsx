@@ -21,7 +21,6 @@ interface DataTableProps<TData, TValue> {
   filtering?: boolean;
   pageCount?: number;
   onPaginationChange?: (pageIndex: number, pageSize: number) => void;
-  onPageChange?: (pageData: TData[]) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -31,7 +30,6 @@ export function DataTable<TData, TValue>({
   filtering = true,
   pageCount,
   onPaginationChange,
-  onPageChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -52,19 +50,6 @@ export function DataTable<TData, TValue>({
       columnFilters,
     },
   });
-
-  // Call onPageChange whenever pagination changes or the filtered data changes
-  React.useEffect(() => {
-    if (onPageChange) {
-      const currentPageData = table.getRowModel().rows.map(row => row.original);
-      onPageChange(currentPageData);
-    }
-  }, [
-    table.getState().pagination.pageIndex,
-    table.getState().pagination.pageSize,
-    table.getRowModel().rows,
-    onPageChange,
-  ]);
 
   React.useEffect(() => {
     if (onPaginationChange) {
