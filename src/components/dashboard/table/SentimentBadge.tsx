@@ -15,6 +15,9 @@ export const SentimentBadge: React.FC<SentimentBadgeProps> = ({ sentiment }) => 
     case 'negative':
       badgeClass += " bg-red-100 text-red-800";
       break;
+    case 'neutral':
+      badgeClass += " bg-blue-100 text-blue-800";
+      break;
     default:
       badgeClass += " bg-gray-100 text-gray-800";
   }
