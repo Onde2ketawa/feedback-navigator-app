@@ -11,9 +11,15 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  Home, // Added Home icon import
 } from 'lucide-react';
 
 export const sidebarNavItems = [
+  {
+    href: "/", // Updated to root path
+    title: "Home",
+    icon: Home, // Using Home icon
+  },
   {
     href: "/dashboard",
     title: "Dashboard",
@@ -65,4 +71,3 @@ export const sidebarNavItems = [
     icon: FileText,
   },
 ];
-
