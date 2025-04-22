@@ -13,6 +13,7 @@ import {
   Smartphone,
   ChevronLeft,
   ChevronRight,
+  FileText,
 } from 'lucide-react';
 
 interface SidebarNavProps {
@@ -76,6 +77,11 @@ export function MainSidebar({ isOpen, toggleSidebar }: MainSidebarProps) {
       href: "/device-analytics",
       title: "Device Analytics",
       icon: <Smartphone className="mr-2 h-4 w-4" />,
+    },
+    {
+      href: "/feedback-analysis",
+      title: "Feedback Analysis",
+      icon: <FileText className="mr-2 h-4 w-4" />,
     },
   ];
   
