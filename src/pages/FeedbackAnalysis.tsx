@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { FeedbackAnalyzer } from '@/components/dashboard/FeedbackAnalyzer';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { analyzeSentimentWithIndoBERT } from '@/utils/indobert-sentiment';
+import { analyzeIndoBertSentiment } from '@/utils/indobert-sentiment';
 
 const FeedbackAnalysis: React.FC = () => {
   const location = useLocation();
@@ -41,7 +40,7 @@ const FeedbackAnalysis: React.FC = () => {
     }
     setSentimentLoading(true);
     try {
-      const result = await analyzeSentimentWithIndoBERT(sentimentText);
+      const result = await analyzeIndoBertSentiment(sentimentText);
       setSentimentResult(result);
     } catch (error: any) {
       toast({
@@ -127,10 +126,10 @@ const FeedbackAnalysis: React.FC = () => {
                 <div>
                   <span className="font-semibold">Result:</span>{' '}
                   <span className="inline-block rounded px-2 py-1 bg-muted text-primary">
-                    {sentimentResult?.label || "unknown"}
+                    {sentimentResult?.sentiment || "unknown"}
                   </span>
-                  {typeof sentimentResult?.score === 'number' && (
-                    <span className="ml-3 text-xs text-muted-foreground">Score: {sentimentResult.score.toFixed(2)}</span>
+                  {typeof sentimentResult?.sentiment_score === 'number' && (
+                    <span className="ml-3 text-xs text-muted-foreground">Score: {sentimentResult.sentiment_score.toFixed(2)}</span>
                   )}
                 </div>
               </div>
