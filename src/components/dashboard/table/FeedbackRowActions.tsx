@@ -19,19 +19,26 @@ export const FeedbackRowActions: React.FC<FeedbackRowActionsProps> = ({
   feedback,
   openTagDialog
 }) => {
+  const handleTagClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Edit tags clicked for feedback:', feedback.id);
+    openTagDialog(feedback);
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
+        <Button variant="ghost" className="h-8 w-8 p-0" type="button">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem 
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log('Edit tags clicked for feedback:', feedback.id);
-            openTagDialog(feedback);
+          onClick={handleTagClick}
+          onSelect={(e) => {
+            // This prevents the dropdown from closing automatically
+            e.preventDefault();
           }}
         >
           <Tag className="mr-2 h-4 w-4" />

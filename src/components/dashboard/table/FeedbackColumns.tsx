@@ -115,6 +115,13 @@ export function createFeedbackColumns({
         const feedback = row.original;
         const sentiment = feedback.sentiment || 'Neutral';
         
+        const handleSentimentEditClick = (e: React.MouseEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Sentiment edit button clicked for feedback:', feedback.id);
+          openSentimentDialog(feedback);
+        };
+        
         return (
           <div className="flex items-center gap-2">
             <Badge 
@@ -128,11 +135,7 @@ export function createFeedbackColumns({
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('Sentiment edit button clicked for feedback:', feedback.id);
-                openSentimentDialog(feedback);
-              }}
+              onClick={handleSentimentEditClick}
               className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
               type="button"
             >
