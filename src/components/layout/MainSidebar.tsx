@@ -75,3 +75,4 @@ function SidebarNav({ items, isOpen }: SidebarNavProps & { isOpen: boolean }) {
     </nav>
   );
 }
+
