@@ -13,7 +13,6 @@ interface FeedbackTableProps {
   setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
   openTagDialog: (feedback: Feedback) => void;
   openSentimentDialog: (feedback: Feedback) => void;
-  onPageChange?: (pageData: Feedback[]) => void;
 }
 
 export const FeedbackTable: React.FC<FeedbackTableProps> = ({
@@ -24,7 +23,6 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   setSelectedRows,
   openTagDialog,
   openSentimentDialog,
-  onPageChange,
 }) => {
   const columns = React.useMemo(
     () => createFeedbackColumns({
@@ -42,11 +40,7 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   return (
     <div className="overflow-x-auto -mx-4 sm:mx-0">
       <div className="min-w-full inline-block align-middle px-4 sm:px-0">
-        <DataTable 
-          columns={visibleColumns} 
-          data={data}
-          onPageChange={onPageChange}
-        />
+        <DataTable columns={visibleColumns} data={data} />
       </div>
     </div>
   );

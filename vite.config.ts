@@ -1,26 +1,7 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-// Import conditionally to avoid errors if package is not fully resolved
-// This prevents the build from failing due to the peer dependency issue
-// Define type for componentTagger function
-type ComponentTaggerFn = () => any;
-
-// Initialize with null function that returns null
-let componentTagger: ComponentTaggerFn | null = null;
-
-try {
-  // Only attempt to load in development mode to prevent build errors
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const taggerModule = require("lovable-tagger");
-    componentTagger = taggerModule.componentTagger;
-  }
-} catch (e) {
-  console.warn("Lovable tagger not available, skipping component tagging");
-  componentTagger = () => null;
-}
+import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -30,22 +11,12 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' && componentTagger ? componentTagger() : null,
+    mode === 'development' &&
+    componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Add optimizeDeps configuration to help with dependency resolution
-  optimizeDeps: {
-    exclude: ['lovable-tagger'],
-  },
-  // Add special handling for peer dependencies
-  build: {
-    commonjsOptions: {
-      // This helps with some peer dependency issues
-      transformMixedEsModules: true,
-    },
-  }
 }));
