@@ -23,6 +23,7 @@ export const FeedbackRowActions: React.FC<FeedbackRowActionsProps> = ({
     e.preventDefault();
     e.stopPropagation();
     console.log('Edit tags clicked for feedback:', feedback.id);
+    // Directly call the openTagDialog function
     openTagDialog(feedback);
   };
 

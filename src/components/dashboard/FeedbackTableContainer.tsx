@@ -81,6 +81,7 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
 
   const handleOpenSentimentDialog = (feedback: Feedback) => {
     console.log('Opening sentiment dialog for feedback:', feedback);
+    // Ensure we're setting the selected feedback first and then opening the dialog
     setSelectedFeedback(feedback);
     setSentimentDialogOpen(true);
   };

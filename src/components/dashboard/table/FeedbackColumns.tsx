@@ -120,6 +120,7 @@ export function createFeedbackColumns({
           e.stopPropagation();
           e.preventDefault();
           console.log('Sentiment edit button clicked for feedback:', feedback.id);
+          // Ensure this directly calls the openSentimentDialog function
           openSentimentDialog(feedback);
         };
         
