@@ -27,7 +27,13 @@ export const FeedbackRowActions: React.FC<FeedbackRowActionsProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => openTagDialog(feedback)}>
+        <DropdownMenuItem 
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log('Edit tags clicked for feedback:', feedback.id);
+            openTagDialog(feedback);
+          }}
+        >
           <Tag className="mr-2 h-4 w-4" />
           <span>Edit Tags</span>
         </DropdownMenuItem>

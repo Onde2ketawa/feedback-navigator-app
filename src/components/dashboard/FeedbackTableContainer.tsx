@@ -80,6 +80,7 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
   }, [currentPageIds, toast]);
 
   const handleOpenSentimentDialog = (feedback: Feedback) => {
+    console.log('Opening sentiment dialog for feedback:', feedback);
     setSelectedFeedback(feedback);
     setSentimentDialogOpen(true);
   };

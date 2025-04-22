@@ -130,6 +130,7 @@ export function createFeedbackColumns({
               size="icon"
               onClick={(e) => {
                 e.stopPropagation();
+                console.log('Sentiment edit button clicked for feedback:', feedback.id);
                 openSentimentDialog(feedback);
               }}
               className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
