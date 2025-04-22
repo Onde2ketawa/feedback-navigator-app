@@ -5,6 +5,7 @@ import { FeedbackTable } from '@/components/dashboard/FeedbackTable';
 import { Feedback } from '@/models/feedback';
 import { SentimentEditDialog } from './sentiment/SentimentEditDialog';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface FeedbackTableContainerProps {
   feedbackData: Feedback[];
@@ -26,10 +27,14 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
   const [localFeedbackData, setLocalFeedbackData] = useState<Feedback[]>(feedbackData);
   const [sentimentDialogOpen, setSentimentDialogOpen] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
+  const [currentPageIds, setCurrentPageIds] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   // Update local state when props change
   useEffect(() => {
     setLocalFeedbackData(feedbackData);
+    // Update current page IDs
+    setCurrentPageIds(new Set(feedbackData.map(item => item.id)));
   }, [feedbackData]);
 
   // Set up real-time subscription
@@ -44,18 +49,27 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
           table: 'customer_feedback'
         },
         (payload) => {
-          console.log('Received real-time update:', payload);
-          setLocalFeedbackData(prevData => 
-            prevData.map(item => 
-              item.id === payload.new.id 
-                ? { 
-                    ...item, 
-                    sentiment: payload.new.sentiment,
-                    sentiment_score: payload.new.sentiment_score 
-                  }
-                : item
-            )
-          );
+          // Only update if the changed record is on the current page
+          if (currentPageIds.has(payload.new.id)) {
+            console.log('Updating record on current page:', payload.new.id);
+            setLocalFeedbackData(prevData => 
+              prevData.map(item => 
+                item.id === payload.new.id 
+                  ? { 
+                      ...item, 
+                      sentiment: payload.new.sentiment,
+                      sentiment_score: payload.new.sentiment_score 
+                    }
+                  : item
+              )
+            );
+
+            // Show toast notification for update
+            toast({
+              title: "Update Received",
+              description: "A feedback entry has been updated.",
+            });
+          }
         }
       )
       .subscribe();
@@ -63,7 +77,7 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [currentPageIds, toast]);
 
   const handleOpenSentimentDialog = (feedback: Feedback) => {
     setSelectedFeedback(feedback);
@@ -99,6 +113,10 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
           setSelectedRows={setSelectedRows}
           openTagDialog={openTagDialog}
           openSentimentDialog={handleOpenSentimentDialog}
+          onPageChange={(pageData) => {
+            // Update current page IDs when page changes
+            setCurrentPageIds(new Set(pageData.map(item => item.id)));
+          }}
         />
       </CardContent>
 
