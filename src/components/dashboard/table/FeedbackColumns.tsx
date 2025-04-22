@@ -6,19 +6,23 @@ import { RatingStars } from './RatingStars';
 import { SentimentBadge } from './SentimentBadge';
 import { CategoryDisplay } from './CategoryDisplay';
 import { FeedbackRowActions } from './FeedbackRowActions';
+import { Button } from '@/components/ui/button';
+import { Pencil } from '@/components/ui/icons';
 
 interface CreateFeedbackColumnsProps {
   categories: { id: string; name: string }[];
   subcategories: { id: string; name: string }[];
   openTagDialog: (feedback: Feedback) => void;
   setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
+  openSentimentDialog: (feedback: Feedback) => void;
 }
 
 export function createFeedbackColumns({
   categories,
   subcategories,
   openTagDialog,
-  setSelectedRows
+  setSelectedRows,
+  openSentimentDialog,
 }: CreateFeedbackColumnsProps): ColumnDef<Feedback>[] {
   return [
     {
@@ -109,9 +113,22 @@ export function createFeedbackColumns({
       accessorKey: "sentiment",
       header: "Sentiment",
       cell: ({ row }) => {
-        const sentiment = row.getValue("sentiment") as string;
-        return <SentimentBadge sentiment={sentiment} />;
-      }
+        const feedback = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <SentimentBadge sentiment={feedback.sentiment} />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => openSentimentDialog(feedback)}
+              className="h-8 w-8 p-0"
+            >
+              <Pencil className="h-4 w-4" />
+              <span className="sr-only">Edit sentiment</span>
+            </Button>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "sentiment_score",

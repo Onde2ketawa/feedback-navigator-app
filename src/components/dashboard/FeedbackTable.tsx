@@ -12,6 +12,7 @@ interface FeedbackTableProps {
   selectedRows: string[];
   setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
   openTagDialog: (feedback: Feedback) => void;
+  openSentimentDialog: (feedback: Feedback) => void;
 }
 
 export const FeedbackTable: React.FC<FeedbackTableProps> = ({
@@ -21,19 +22,19 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   selectedRows,
   setSelectedRows,
   openTagDialog,
+  openSentimentDialog,
 }) => {
-  // Create columns with all the necessary props
   const columns = React.useMemo(
     () => createFeedbackColumns({
       categories,
       subcategories,
       openTagDialog,
       setSelectedRows,
+      openSentimentDialog,
     }),
-    [categories, subcategories, openTagDialog, setSelectedRows]
+    [categories, subcategories, openTagDialog, setSelectedRows, openSentimentDialog]
   );
   
-  // Apply responsive column visibility
   const visibleColumns = useResponsiveColumns(columns);
 
   return (
