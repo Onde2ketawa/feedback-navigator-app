@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { FeedbackTable } from '@/components/dashboard/FeedbackTable';
 import { Feedback } from '@/models/feedback';
@@ -23,8 +23,47 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
   setSelectedRows,
   openTagDialog,
 }) => {
+  const [localFeedbackData, setLocalFeedbackData] = useState<Feedback[]>(feedbackData);
   const [sentimentDialogOpen, setSentimentDialogOpen] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
+
+  // Update local state when props change
+  useEffect(() => {
+    setLocalFeedbackData(feedbackData);
+  }, [feedbackData]);
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'customer_feedback'
+        },
+        (payload) => {
+          console.log('Received real-time update:', payload);
+          setLocalFeedbackData(prevData => 
+            prevData.map(item => 
+              item.id === payload.new.id 
+                ? { 
+                    ...item, 
+                    sentiment: payload.new.sentiment,
+                    sentiment_score: payload.new.sentiment_score 
+                  }
+                : item
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleOpenSentimentDialog = (feedback: Feedback) => {
     setSelectedFeedback(feedback);
@@ -32,6 +71,15 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
   };
 
   const handleSaveSentiment = async (feedbackId: string, sentiment: string) => {
+    // Optimistic update
+    setLocalFeedbackData(prevData =>
+      prevData.map(item =>
+        item.id === feedbackId
+          ? { ...item, sentiment }
+          : item
+      )
+    );
+
     const { error } = await supabase
       .from('customer_feedback')
       .update({ sentiment })
@@ -44,7 +92,7 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
     <Card className="shadow-sm">
       <CardContent className="p-2 sm:p-4 md:p-6 overflow-x-auto">
         <FeedbackTable
-          data={feedbackData}
+          data={localFeedbackData}
           categories={categories}
           subcategories={subcategories}
           selectedRows={selectedRows}
