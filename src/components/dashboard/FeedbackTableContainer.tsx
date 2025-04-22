@@ -80,45 +80,26 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
   }, [currentPageIds, toast]);
 
   const handleOpenSentimentDialog = (feedback: Feedback) => {
-    console.log('Opening sentiment dialog for feedback:', feedback);
-    // Ensure we're setting the selected feedback first and then opening the dialog
     setSelectedFeedback(feedback);
     setSentimentDialogOpen(true);
   };
 
   const handleSaveSentiment = async (feedbackId: string, sentiment: string) => {
-    try {
-      // Optimistic update
-      setLocalFeedbackData(prevData =>
-        prevData.map(item =>
-          item.id === feedbackId
-            ? { ...item, sentiment }
-            : item
-        )
-      );
+    // Optimistic update
+    setLocalFeedbackData(prevData =>
+      prevData.map(item =>
+        item.id === feedbackId
+          ? { ...item, sentiment }
+          : item
+      )
+    );
 
-      const { error } = await supabase
-        .from('customer_feedback')
-        .update({ sentiment })
-        .eq('id', feedbackId);
+    const { error } = await supabase
+      .from('customer_feedback')
+      .update({ sentiment })
+      .eq('id', feedbackId);
 
-      if (error) {
-        console.error('Error updating sentiment:', error);
-        throw error;
-      }
-      
-      toast({
-        title: "Sentiment Updated",
-        description: "The sentiment has been successfully updated.",
-      });
-    } catch (error) {
-      console.error('Failed to update sentiment:', error);
-      toast({
-        title: "Update Failed",
-        description: "There was a problem updating the sentiment.",
-        variant: "destructive",
-      });
-    }
+    if (error) throw error;
   };
 
   return (

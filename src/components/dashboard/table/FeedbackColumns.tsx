@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
@@ -116,14 +115,6 @@ export function createFeedbackColumns({
         const feedback = row.original;
         const sentiment = feedback.sentiment || 'Neutral';
         
-        const handleSentimentEditClick = (e: React.MouseEvent) => {
-          e.stopPropagation();
-          e.preventDefault();
-          console.log('Sentiment edit button clicked for feedback:', feedback.id);
-          // Ensure this directly calls the openSentimentDialog function
-          openSentimentDialog(feedback);
-        };
-        
         return (
           <div className="flex items-center gap-2">
             <Badge 
@@ -137,9 +128,8 @@ export function createFeedbackColumns({
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleSentimentEditClick}
+              onClick={() => openSentimentDialog(feedback)}
               className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
-              type="button"
             >
               <Pencil className="h-4 w-4" />
               <span className="sr-only">Edit sentiment</span>
