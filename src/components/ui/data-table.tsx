@@ -21,6 +21,7 @@ interface DataTableProps<TData, TValue> {
   filtering?: boolean;
   pageCount?: number;
   onPaginationChange?: (pageIndex: number, pageSize: number) => void;
+  onPageChange?: (pageData: TData[]) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -30,6 +31,7 @@ export function DataTable<TData, TValue>({
   filtering = true,
   pageCount,
   onPaginationChange,
+  onPageChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -63,6 +65,14 @@ export function DataTable<TData, TValue>({
     table.getState().pagination.pageSize,
     onPaginationChange,
   ]);
+
+  // Add effect to call onPageChange with current page data
+  React.useEffect(() => {
+    if (onPageChange) {
+      const pageData = table.getRowModel().rows.map(row => row.original);
+      onPageChange(pageData);
+    }
+  }, [table.getRowModel().rows, onPageChange]);
 
   return (
     <div>
