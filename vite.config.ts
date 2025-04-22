@@ -4,10 +4,16 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 // Import conditionally to avoid errors if package is not fully resolved
 // This prevents the build from failing due to the peer dependency issue
-let componentTagger;
+// Define type for componentTagger function
+type ComponentTaggerFn = () => any;
+
+// Initialize with null function that returns null
+let componentTagger: ComponentTaggerFn | null = null;
+
 try {
   // Only attempt to load in development mode to prevent build errors
   if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const taggerModule = require("lovable-tagger");
     componentTagger = taggerModule.componentTagger;
   }
@@ -24,7 +30,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' && componentTagger && componentTagger(),
+    mode === 'development' && componentTagger ? componentTagger() : null,
   ].filter(Boolean),
   resolve: {
     alias: {
