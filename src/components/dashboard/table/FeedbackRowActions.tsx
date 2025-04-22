@@ -36,6 +36,10 @@ export const FeedbackRowActions: React.FC<FeedbackRowActionsProps> = ({
       <DropdownMenuContent align="end">
         <DropdownMenuItem 
           onClick={handleTagClick}
+          onSelect={(e) => {
+            // This prevents the dropdown from closing automatically
+            e.preventDefault();
+          }}
         >
           <Tag className="mr-2 h-4 w-4" />
           <span>Edit Tags</span>

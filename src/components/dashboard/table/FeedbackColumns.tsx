@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
@@ -116,8 +117,8 @@ export function createFeedbackColumns({
         const sentiment = feedback.sentiment || 'Neutral';
         
         const handleSentimentEditClick = (e: React.MouseEvent) => {
-          e.preventDefault();
           e.stopPropagation();
+          e.preventDefault();
           console.log('Sentiment edit button clicked for feedback:', feedback.id);
           openSentimentDialog(feedback);
         };
