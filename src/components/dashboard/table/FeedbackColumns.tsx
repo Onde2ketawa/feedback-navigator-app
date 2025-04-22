@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
@@ -6,6 +7,8 @@ import { RatingStars } from './RatingStars';
 import { Button } from '@/components/ui/button';
 import { Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { CategoryDisplay } from './CategoryDisplay';
+import { FeedbackRowActions } from './FeedbackRowActions';
 
 interface CreateFeedbackColumnsProps {
   categories: { id: string; name: string }[];
