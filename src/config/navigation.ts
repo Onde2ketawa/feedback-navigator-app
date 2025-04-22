@@ -11,63 +11,76 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  Home, // Added Home icon import
+  Home,
 } from 'lucide-react';
 
+// allowedRoles: missing means admin only, otherwise ['admin', 'user'] means both etc.
 export const sidebarNavItems = [
   {
-    href: "/", // Updated to root path
+    href: "/",
     title: "Home",
-    icon: Home, // Using Home icon
+    icon: Home,
+    allowedRoles: ['admin', 'user'],
   },
   {
     href: "/dashboard",
     title: "Dashboard",
     icon: LayoutDashboard,
-  },
-  {
-    href: "/rating-analytics",
-    title: "Rating Analytics",
-    icon: Star,
-  },
-  {
-    href: "/sentiment-analytics",
-    title: "Sentiment Analytics",
-    icon: MessageSquareText,
-  },
-  {
-    href: "/category-analytics",
-    title: "Category Analytics",
-    icon: Layers,
-  },
-  {
-    href: "/time-analytics",
-    title: "Time Analytics",
-    icon: Clock,
-  },
-  {
-    href: "/upload",
-    title: "Upload",
-    icon: Upload,
-  },
-  {
-    href: "/categories",
-    title: "Categories",
-    icon: Layers,
-  },
-  {
-    href: "/user-management",
-    title: "User Management",
-    icon: Users,
-  },
-  {
-    href: "/device-analytics",
-    title: "Device Analytics",
-    icon: Smartphone,
+    allowedRoles: ['admin', 'user'],
   },
   {
     href: "/feedback-analysis",
     title: "Feedback Analysis",
     icon: FileText,
+    allowedRoles: ['admin', 'user'],
+  },
+  {
+    href: "/rating-analytics",
+    title: "Rating Analytics",
+    icon: Star,
+    allowedRoles: ['admin'],
+  },
+  {
+    href: "/sentiment-analytics",
+    title: "Sentiment Analytics",
+    icon: MessageSquareText,
+    allowedRoles: ['admin'],
+  },
+  {
+    href: "/category-analytics",
+    title: "Category Analytics",
+    icon: Layers,
+    allowedRoles: ['admin'],
+  },
+  {
+    href: "/time-analytics",
+    title: "Time Analytics",
+    icon: Clock,
+    allowedRoles: ['admin'],
+  },
+  {
+    href: "/upload",
+    title: "Upload",
+    icon: Upload,
+    allowedRoles: ['admin'],
+  },
+  {
+    href: "/categories",
+    title: "Categories",
+    icon: Layers,
+    allowedRoles: ['admin'],
+  },
+  {
+    href: "/user-management",
+    title: "User Management",
+    icon: Users,
+    allowedRoles: ['admin'],
+  },
+  {
+    href: "/device-analytics",
+    title: "Device Analytics",
+    icon: Smartphone,
+    allowedRoles: ['admin'],
   },
 ];
+

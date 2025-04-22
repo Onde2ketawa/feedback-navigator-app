@@ -9,6 +9,7 @@ interface SidebarNavProps {
     href: string;
     title: string;
     icon: React.ElementType;
+    // allowedRoles?: string[]; // Not needed here; filtered before passing
   }[];
   isOpen: boolean;
 }
