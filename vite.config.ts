@@ -6,8 +6,11 @@ import path from "path";
 // This prevents the build from failing due to the peer dependency issue
 let componentTagger;
 try {
-  const taggerModule = require("lovable-tagger");
-  componentTagger = taggerModule.componentTagger;
+  // Only attempt to load in development mode to prevent build errors
+  if (process.env.NODE_ENV === 'development') {
+    const taggerModule = require("lovable-tagger");
+    componentTagger = taggerModule.componentTagger;
+  }
 } catch (e) {
   console.warn("Lovable tagger not available, skipping component tagging");
   componentTagger = () => null;
@@ -32,4 +35,11 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     exclude: ['lovable-tagger'],
   },
+  // Add special handling for peer dependencies
+  build: {
+    commonjsOptions: {
+      // This helps with some peer dependency issues
+      transformMixedEsModules: true,
+    },
+  }
 }));
