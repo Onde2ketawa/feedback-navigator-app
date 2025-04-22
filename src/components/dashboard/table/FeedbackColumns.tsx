@@ -3,11 +3,9 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
 import { Feedback } from '@/models/feedback';
 import { RatingStars } from './RatingStars';
-import { SentimentBadge } from './SentimentBadge';
-import { CategoryDisplay } from './CategoryDisplay';
-import { FeedbackRowActions } from './FeedbackRowActions';
 import { Button } from '@/components/ui/button';
-import { Pencil } from '@/components/ui/icons';
+import { Pencil } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface CreateFeedbackColumnsProps {
   categories: { id: string; name: string }[];
@@ -46,7 +44,6 @@ export function createFeedbackColumns({
           onChange={(e) => {
             row.toggleSelected(e.target.checked)
             
-            // Update selected rows
             const id = row.original.id;
             if (e.target.checked) {
               setSelectedRows(prev => [...prev, id]);
@@ -114,14 +111,23 @@ export function createFeedbackColumns({
       header: "Sentiment",
       cell: ({ row }) => {
         const feedback = row.original;
+        const sentiment = feedback.sentiment || 'Neutral';
+        
         return (
           <div className="flex items-center gap-2">
-            <SentimentBadge sentiment={feedback.sentiment} />
+            <Badge 
+              variant={
+                sentiment === 'Positive' ? 'success' : 
+                sentiment === 'Negative' ? 'destructive' : 'secondary'
+              }
+            >
+              {sentiment}
+            </Badge>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => openSentimentDialog(feedback)}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
             >
               <Pencil className="h-4 w-4" />
               <span className="sr-only">Edit sentiment</span>
