@@ -18,6 +18,8 @@ import {
 import { Loader2 } from 'lucide-react';
 import { Feedback } from '@/models/feedback';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface SentimentEditDialogProps {
   open: boolean;
@@ -37,15 +39,32 @@ export const SentimentEditDialog: React.FC<SentimentEditDialogProps> = ({
   );
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Update sentiment in the database
+      const { error } = await supabase
+        .from('customer_feedback')
+        .update({ 
+          sentiment: selectedSentiment,
+          last_analyzed_at: new Date().toISOString()
+        })
+        .eq('id', feedback.id);
+
+      if (error) throw error;
+
       await onSave(feedback.id, selectedSentiment);
+      
+      // Invalidate the feedback queries to trigger a refresh
+      await queryClient.invalidateQueries({ queryKey: ['feedback'] });
+      
       toast({
         title: "Success",
         description: "Sentiment updated successfully",
       });
+      
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to save sentiment:', error);
@@ -105,3 +124,4 @@ export const SentimentEditDialog: React.FC<SentimentEditDialogProps> = ({
     </Dialog>
   );
 };
+
