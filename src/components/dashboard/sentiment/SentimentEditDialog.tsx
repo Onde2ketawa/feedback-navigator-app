@@ -15,8 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Feedback } from '@/models/feedback';
 import { Loader2 } from 'lucide-react';
+import { Feedback } from '@/models/feedback';
+import { useToast } from '@/hooks/use-toast';
 
 interface SentimentEditDialogProps {
   open: boolean;
@@ -32,17 +33,27 @@ export const SentimentEditDialog: React.FC<SentimentEditDialogProps> = ({
   onSave,
 }) => {
   const [selectedSentiment, setSelectedSentiment] = useState<string>(
-    feedback.sentiment || 'neutral'
+    feedback.sentiment || 'Neutral'
   );
   const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
       await onSave(feedback.id, selectedSentiment);
+      toast({
+        title: "Success",
+        description: "Sentiment updated successfully",
+      });
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to save sentiment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update sentiment",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -73,9 +84,9 @@ export const SentimentEditDialog: React.FC<SentimentEditDialogProps> = ({
                 <SelectValue placeholder="Select sentiment" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="positive">Positive</SelectItem>
-                <SelectItem value="negative">Negative</SelectItem>
-                <SelectItem value="neutral">Neutral</SelectItem>
+                <SelectItem value="Positive">Positive</SelectItem>
+                <SelectItem value="Negative">Negative</SelectItem>
+                <SelectItem value="Neutral">Neutral</SelectItem>
               </SelectContent>
             </Select>
           </div>
