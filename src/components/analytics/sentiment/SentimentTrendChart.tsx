@@ -1,24 +1,7 @@
 
 import React, { useEffect } from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
+import { SentimentTrendLineChart } from './SentimentTrendLineChart';
+import { SentimentTrendTable } from './SentimentTrendTable';
 import { getMonthIdx } from '@/hooks/sentiment/sentimentMonthUtils';
 
 interface SentimentTrendMonthYearPoint {
@@ -56,11 +39,11 @@ export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => 
       console.log('Months per year:', monthsPerYear);
     }
   }, [data]);
-  
+
   // Check if we actually have data with sentiment values
   const hasData = data && data.length > 0 && 
     data.some(d => d.positive > 0 || d.neutral > 0 || d.negative > 0);
-  
+
   if (!hasData) {
     return (
       <div className="h-80 flex items-center justify-center text-muted-foreground">
@@ -68,10 +51,10 @@ export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => 
       </div>
     );
   }
-  
+
   const years = [...new Set(data.map(d => d.year))].sort();
   console.log('Years in data:', years);
-  
+
   const months = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -94,9 +77,9 @@ export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => 
     });
     return base;
   });
-  
+
   console.log('Chart data prepared with', chartData.length, 'entries');
-  
+
   const dataWithTotals = data.map(d => {
     const total = (Number(d.positive) || 0) + (Number(d.neutral) || 0) + (Number(d.negative) || 0);
     const positivePercentage = total > 0 ? ((Number(d.positive) / total) * 100).toFixed(1) : "0.0";
@@ -106,7 +89,7 @@ export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => 
       positivePercentage
     };
   });
-  
+
   const sortedTableData = [...dataWithTotals].sort((a, b) => {
     if (a.year !== b.year) {
       return parseInt(b.year) - parseInt(a.year);
@@ -118,86 +101,12 @@ export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => 
 
   return (
     <div>
-      <ChartContainer config={config} className="h-[400px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Legend />
-            {years.length > 0 ? years.map(year => (
-              <React.Fragment key={year}>
-                <Line
-                  type="monotone"
-                  dataKey={`${year}_positive`}
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  name={`${year} Positive`}
-                  activeDot={{ r: 6 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey={`${year}_neutral`}
-                  stroke="#facc15"
-                  strokeWidth={2}
-                  name={`${year} Neutral`}
-                />
-                <Line
-                  type="monotone"
-                  dataKey={`${year}_negative`}
-                  stroke="#f43f5e"
-                  strokeWidth={2}
-                  name={`${year} Negative`}
-                />
-              </React.Fragment>
-            )) : (
-              <Line
-                type="monotone"
-                dataKey="positive"
-                stroke="#10b981"
-                name="No data"
-                isAnimationActive={false}
-              />
-            )}
-          </LineChart>
-        </ResponsiveContainer>
-      </ChartContainer>
-
-      {sortedTableData.length > 0 ? (
-        <div className="overflow-x-auto mt-6">
-          <Table className="min-w-full">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Month</TableHead>
-                <TableHead>Year</TableHead>
-                <TableHead className="text-green-700">Positive</TableHead>
-                <TableHead className="text-yellow-700">Neutral</TableHead>
-                <TableHead className="text-red-700">Negative</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Positive %</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedTableData.map((d, idx) => (
-                <TableRow key={`${d.year}-${d.month}`} className={idx % 2 === 1 ? "bg-muted/30" : ""}>
-                  <TableCell>{d.month}</TableCell>
-                  <TableCell>{d.year}</TableCell>
-                  <TableCell className="text-green-700">{d.positive}</TableCell>
-                  <TableCell className="text-yellow-700">{d.neutral}</TableCell>
-                  <TableCell className="text-red-700">{d.negative}</TableCell>
-                  <TableCell>{d.total}</TableCell>
-                  <TableCell>{d.positivePercentage}%</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        <div className="mt-6 text-center text-muted-foreground">
-          No sentiment trend data available for table display
-        </div>
-      )}
+      <SentimentTrendLineChart
+        chartData={chartData}
+        years={years}
+        config={config}
+      />
+      <SentimentTrendTable tableData={sortedTableData} />
     </div>
   );
 };
