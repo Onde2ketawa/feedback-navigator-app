@@ -33,7 +33,7 @@ interface SentimentTrendChartProps {
   data: SentimentTrendMonthYearPoint[];
 }
 
-export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data = [] }) => {
+export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => {
   const config = {
     positive: { color: '#10b981', label: 'Positive' },
     neutral: { color: '#facc15', label: 'Neutral' },
@@ -49,7 +49,7 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data =
       const uniqueYears = [...new Set(data.map(d => d.year))].sort();
       console.log('Unique years in chart data:', uniqueYears);
       
-      const monthsPerYear: Record<string, string[]> = {};
+      const monthsPerYear = {};
       uniqueYears.forEach(year => {
         monthsPerYear[year] = [...new Set(data.filter(d => d.year === year).map(d => d.month))];
       });
@@ -57,7 +57,19 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data =
     }
   }, [data]);
   
-  const years = Array.from(new Set(data.map(d => d.year))).sort();
+  // Check if we actually have data with sentiment values
+  const hasData = data.length > 0 && 
+    data.some(d => d.positive > 0 || d.neutral > 0 || d.negative > 0);
+  
+  if (!hasData) {
+    return (
+      <div className="h-80 flex items-center justify-center text-muted-foreground">
+        No sentiment trend data available
+      </div>
+    );
+  }
+  
+  const years = [...new Set(data.map(d => d.year))].sort();
   console.log('Years in data:', years);
   
   const months = [
@@ -66,7 +78,7 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data =
   ];
 
   const chartData = months.map(month => {
-    const base: Record<string, any> = { month };
+    const base = { month };
     years.forEach(year => {
       const entriesForMonthYear = data.filter(d => d.month === month && d.year === year);
       if (entriesForMonthYear.length > 0) {
@@ -84,15 +96,7 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data =
   });
   
   console.log('Chart data prepared with', chartData.length, 'entries');
-
-  if (data.length === 0) {
-    return (
-      <div className="h-80 flex items-center justify-center text-muted-foreground">
-        No sentiment trend data available
-      </div>
-    );
-  }
-
+  
   const dataWithTotals = data.map(d => {
     const total = d.positive + d.neutral + d.negative;
     const positivePercentage = total > 0 ? ((d.positive / total) * 100).toFixed(1) : "0.0";
@@ -122,7 +126,7 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data =
             <YAxis />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Legend />
-            {years.map(year => (
+            {years.length > 0 ? years.map(year => (
               <React.Fragment key={year}>
                 <Line
                   type="monotone"
@@ -147,39 +151,53 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data =
                   name={`${year} Negative`}
                 />
               </React.Fragment>
-            ))}
+            )) : (
+              <Line
+                type="monotone"
+                dataKey="positive"
+                stroke="#10b981"
+                name="No data"
+                isAnimationActive={false}
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </ChartContainer>
 
-      <div className="overflow-x-auto mt-6">
-        <Table className="min-w-full">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Month</TableHead>
-              <TableHead>Year</TableHead>
-              <TableHead className="text-green-700">Positive</TableHead>
-              <TableHead className="text-yellow-700">Neutral</TableHead>
-              <TableHead className="text-red-700">Negative</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Positive %</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedTableData.map((d, idx) => (
-              <TableRow key={`${d.year}-${d.month}`} className={idx % 2 === 1 ? "bg-muted/30" : ""}>
-                <TableCell>{d.month}</TableCell>
-                <TableCell>{d.year}</TableCell>
-                <TableCell className="text-green-700">{d.positive}</TableCell>
-                <TableCell className="text-yellow-700">{d.neutral}</TableCell>
-                <TableCell className="text-red-700">{d.negative}</TableCell>
-                <TableCell>{d.total}</TableCell>
-                <TableCell>{d.positivePercentage}%</TableCell>
+      {sortedTableData.length > 0 ? (
+        <div className="overflow-x-auto mt-6">
+          <Table className="min-w-full">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Month</TableHead>
+                <TableHead>Year</TableHead>
+                <TableHead className="text-green-700">Positive</TableHead>
+                <TableHead className="text-yellow-700">Neutral</TableHead>
+                <TableHead className="text-red-700">Negative</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Positive %</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {sortedTableData.map((d, idx) => (
+                <TableRow key={`${d.year}-${d.month}`} className={idx % 2 === 1 ? "bg-muted/30" : ""}>
+                  <TableCell>{d.month}</TableCell>
+                  <TableCell>{d.year}</TableCell>
+                  <TableCell className="text-green-700">{d.positive}</TableCell>
+                  <TableCell className="text-yellow-700">{d.neutral}</TableCell>
+                  <TableCell className="text-red-700">{d.negative}</TableCell>
+                  <TableCell>{d.total}</TableCell>
+                  <TableCell>{d.positivePercentage}%</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <div className="mt-6 text-center text-muted-foreground">
+          No sentiment trend data available for table display
+        </div>
+      )}
     </div>
   );
 };
