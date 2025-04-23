@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -41,7 +41,9 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
   };
 
   // Log data for debugging
-  console.log('SentimentTrendChart received data:', data.length, 'data points');
+  useEffect(() => {
+    console.log('SentimentTrendChart received data:', data.length, 'data points');
+  }, [data]);
   
   // Get unique years sorted
   const years = Array.from(new Set(data.map(d => d.year))).sort();

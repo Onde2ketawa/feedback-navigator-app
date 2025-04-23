@@ -10,7 +10,7 @@ export const useSentimentTrendData = (channelFilter: string) => {
     try {
       console.log(`Fetching sentiment trend data for channel: ${channelFilter}`);
       
-      // Base query without date restrictions to show all available data
+      // Base query without any date restrictions
       let query = supabase
         .from('customer_feedback')
         .select('submit_date, sentiment')
@@ -28,7 +28,7 @@ export const useSentimentTrendData = (channelFilter: string) => {
           if (channelData) {
             console.log(`Found channel ID for ${channelFilter}:`, channelData.id);
             
-            // New query with channel filter but without date restrictions
+            // Apply channel filter but no date restrictions
             query = supabase
               .from('customer_feedback')
               .select('submit_date, sentiment')
@@ -51,19 +51,33 @@ export const useSentimentTrendData = (channelFilter: string) => {
       
       console.log(`Raw data count: ${data?.length || 0} records`);
       
-      // Log a sample of the data for debugging
+      // Log details about the retrieved data
       if (data && data.length > 0) {
-        console.log("Sample data:", data.slice(0, 3));
+        console.log("Sample data:", data.slice(0, 5));
         
-        // Check date range in the data
+        // Check and log the full date range in the data
         const dates = data.map(d => new Date(d.submit_date));
         const minDate = dates.length ? new Date(Math.min(...dates.map(d => d.getTime()))) : null;
         const maxDate = dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : null;
         
         console.log(`Date range in data: ${minDate?.toISOString()} to ${maxDate?.toISOString()}`);
+        
+        // Count records by year and month for debugging
+        const monthCounts: Record<string, number> = {};
+        data.forEach(d => {
+          if (d.submit_date) {
+            const date = new Date(d.submit_date);
+            const key = `${date.getFullYear()}-${date.getMonth() + 1}`;
+            monthCounts[key] = (monthCounts[key] || 0) + 1;
+          }
+        });
+        console.log("Records by year-month:", monthCounts);
       }
       
-      return processRawSentimentData(data || []);
+      // Process the data without any filtering
+      const processedData = processRawSentimentData(data || []);
+      console.log("Processed data:", processedData.length, "points");
+      return processedData;
     } catch (error) {
       console.error('Error fetching sentiment trend data:', error);
       return [];
