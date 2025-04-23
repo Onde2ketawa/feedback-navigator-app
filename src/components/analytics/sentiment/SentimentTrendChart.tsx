@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   LineChart,
@@ -10,6 +11,14 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
 
 interface SentimentTrendMonthYearPoint {
   month: string;
@@ -96,28 +105,37 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
       </ChartContainer>
 
       <div className="overflow-x-auto mt-6">
-        <table className="min-w-full border text-xs">
-          <thead>
-            <tr className="bg-muted">
-              <th className="border px-2 py-1">Month</th>
-              <th className="border px-2 py-1">Year</th>
-              <th className="border px-2 py-1 text-green-700">Positive</th>
-              <th className="border px-2 py-1 text-yellow-700">Neutral</th>
-              <th className="border px-2 py-1 text-red-700">Negative</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((d, idx) => (
-              <tr key={idx} className={idx % 2 === 1 ? "bg-muted/30" : ""}>
-                <td className="border px-2 py-1">{d.month}</td>
-                <td className="border px-2 py-1">{d.year}</td>
-                <td className="border px-2 py-1 text-green-700">{d.positive}</td>
-                <td className="border px-2 py-1 text-yellow-700">{d.neutral}</td>
-                <td className="border px-2 py-1 text-red-700">{d.negative}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table className="min-w-full">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Month</TableHead>
+              <TableHead>Year</TableHead>
+              <TableHead className="text-green-700">Positive</TableHead>
+              <TableHead className="text-yellow-700">Neutral</TableHead>
+              <TableHead className="text-red-700">Negative</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Positive %</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((d, idx) => {
+              const total = d.positive + d.neutral + d.negative;
+              const positivePercentage = total > 0 ? ((d.positive / total) * 100).toFixed(1) : "0.0";
+              
+              return (
+                <TableRow key={idx} className={idx % 2 === 1 ? "bg-muted/30" : ""}>
+                  <TableCell>{d.month}</TableCell>
+                  <TableCell>{d.year}</TableCell>
+                  <TableCell className="text-green-700">{d.positive}</TableCell>
+                  <TableCell className="text-yellow-700">{d.neutral}</TableCell>
+                  <TableCell className="text-red-700">{d.negative}</TableCell>
+                  <TableCell>{total}</TableCell>
+                  <TableCell>{positivePercentage}%</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

@@ -176,4 +176,3 @@ export const useSentimentTrendData = (channelFilter: string) => {
     fetchSentimentTrendData
   };
 };
-
