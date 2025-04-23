@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { FilterControls } from '@/components/analytics/FilterControls';
 import { YearOverYearTrendChart } from '@/components/analytics/YearOverYearTrendChart';
@@ -13,6 +14,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AverageRatingCard } from '@/components/analytics/rating/AverageRatingCard';
 import { useAverageRating } from '@/hooks/rating/useAverageRating';
 import { useChannelFilter } from '@/hooks/useChannelFilter';
+import { RatingTrendChart } from '@/components/analytics/rating/RatingTrendChart';
+import { YearFilter } from '@/components/analytics/YearFilter';
+import { useChannelComparisonData } from '@/hooks/rating/useChannelComparisonData';
+import { useFeedbackData } from '@/hooks/useFeedbackData';
 
 const RatingAnalytics: React.FC = () => {
   // Get channel filter from useChannelFilter hook
@@ -40,6 +45,22 @@ const RatingAnalytics: React.FC = () => {
     averageRating, 
     fetchAverageRating 
   } = useAverageRating(channelFilter, yearFilter, monthFilter);
+  
+  // Year comparison feature
+  const [selectedComparisonYears, setSelectedComparisonYears] = useState<string[]>(['2023', '2024']);
+  const availableYears = ['2020', '2021', '2022', '2023', '2024'];
+
+  // Get all feedback data for channel comparison chart
+  const { data: feedbackData } = useFeedbackData({ 
+    channel: null,
+    year: null,
+    month: null,
+    ratingMin: 1,
+    ratingMax: 5
+  });
+
+  // Process data for channel comparison chart
+  const channelComparisonData = useChannelComparisonData(feedbackData, selectedComparisonYears);
 
   React.useEffect(() => {
     fetchAverageRating();
@@ -68,17 +89,35 @@ const RatingAnalytics: React.FC = () => {
         </Button>
       </div>
       
-      <FilterControls
-        channelFilter={channelFilter}
-        setChannelFilter={setChannelFilter}
-        yearFilter={yearFilter}
-        setYearFilter={setYearFilter}
-        monthFilter={monthFilter}
-        setMonthFilter={setMonthFilter}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <FilterControls
+          channelFilter={channelFilter}
+          setChannelFilter={setChannelFilter}
+          yearFilter={yearFilter}
+          setYearFilter={setYearFilter}
+          monthFilter={monthFilter}
+          setMonthFilter={setMonthFilter}
+        />
+        
+        <YearFilter 
+          availableYears={availableYears}
+          selectedYears={selectedComparisonYears}
+          onChange={setSelectedComparisonYears}
+          maxSelections={3}
+        />
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <AverageRatingCard rating={averageRating} />
+      </div>
+
+      {/* Channel Comparison Chart */}
+      <div className="mb-6">
+        <RatingTrendChart 
+          data={channelComparisonData}
+          years={selectedComparisonYears}
+          channelFilter={channelFilter}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
