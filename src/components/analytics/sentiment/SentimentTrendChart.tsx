@@ -39,7 +39,7 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     negative: { color: '#f43f5e', label: 'Negative' }
   };
 
-  // Log data to help diagnose issues
+  // Log data for debugging
   console.log('SentimentTrendChart received data:', data.length, 'data points');
   
   // Get unique years sorted
@@ -51,7 +51,7 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
-  // Create chart data for all months, even if they don't have data
+  // Create full dataset with all months for each year
   const chartData = months.map(month => {
     const base: Record<string, any> = { month };
     years.forEach(year => {
@@ -62,6 +62,8 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     });
     return base;
   });
+  
+  console.log('Chart data prepared with', chartData.length, 'entries');
 
   if (data.length === 0) {
     return (
@@ -70,6 +72,27 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
       </div>
     );
   }
+
+  // Calculate totals for display in table
+  const dataWithTotals = data.map(d => {
+    const total = d.positive + d.neutral + d.negative;
+    const positivePercentage = total > 0 ? ((d.positive / total) * 100).toFixed(1) : "0.0";
+    return {
+      ...d,
+      total,
+      positivePercentage
+    };
+  });
+  
+  // Sort the table data by year and month (for consistent display)
+  const sortedTableData = [...dataWithTotals].sort((a, b) => {
+    if (a.year !== b.year) {
+      return parseInt(b.year) - parseInt(a.year); // Latest year first
+    }
+    const monthAIndex = months.indexOf(a.month);
+    const monthBIndex = months.indexOf(b.month);
+    return monthBIndex - monthAIndex; // Latest month first
+  });
 
   return (
     <div>
@@ -125,22 +148,17 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((d, idx) => {
-              const total = d.positive + d.neutral + d.negative;
-              const positivePercentage = total > 0 ? ((d.positive / total) * 100).toFixed(1) : "0.0";
-              
-              return (
-                <TableRow key={idx} className={idx % 2 === 1 ? "bg-muted/30" : ""}>
-                  <TableCell>{d.month}</TableCell>
-                  <TableCell>{d.year}</TableCell>
-                  <TableCell className="text-green-700">{d.positive}</TableCell>
-                  <TableCell className="text-yellow-700">{d.neutral}</TableCell>
-                  <TableCell className="text-red-700">{d.negative}</TableCell>
-                  <TableCell>{total}</TableCell>
-                  <TableCell>{positivePercentage}%</TableCell>
-                </TableRow>
-              );
-            })}
+            {sortedTableData.map((d, idx) => (
+              <TableRow key={`${d.year}-${d.month}`} className={idx % 2 === 1 ? "bg-muted/30" : ""}>
+                <TableCell>{d.month}</TableCell>
+                <TableCell>{d.year}</TableCell>
+                <TableCell className="text-green-700">{d.positive}</TableCell>
+                <TableCell className="text-yellow-700">{d.neutral}</TableCell>
+                <TableCell className="text-red-700">{d.negative}</TableCell>
+                <TableCell>{d.total}</TableCell>
+                <TableCell>{d.positivePercentage}%</TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { ChannelFilter } from '@/components/dashboard/filters/ChannelFilter';
 import { useSentimentAnalyticsData } from '@/hooks/sentiment/useSentimentAnalyticsData';
@@ -89,7 +88,6 @@ const SentimentAnalytics: React.FC = () => {
   const handleReanalyzeNeutral = async () => {
     setReanalyzeLoading(true);
     try {
-      // Call the Supabase Edge Function using the client library instead of raw fetch
       const { data, error } = await supabase.functions.invoke('reanalyze-neutral-feedback-with-bert', {
         method: 'POST',
         body: { batchSize: 500 }
@@ -121,6 +119,13 @@ const SentimentAnalytics: React.FC = () => {
       setReanalyzeLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    console.log('SentimentAnalytics: Trend data updated, count:', sentimentTrendData?.length || 0);
+    if (sentimentTrendData?.length > 0) {
+      console.log('First record:', sentimentTrendData[0], 'Last record:', sentimentTrendData[sentimentTrendData.length - 1]);
+    }
+  }, [sentimentTrendData]);
 
   return (
     <div className="animate-fade-in">
