@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
+import { getMonthIdx } from '@/hooks/sentiment/sentimentMonthUtils';
 
 interface SentimentTrendMonthYearPoint {
   month: string;

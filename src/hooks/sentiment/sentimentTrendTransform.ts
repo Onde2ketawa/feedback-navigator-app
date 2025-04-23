@@ -15,23 +15,37 @@ export interface SentimentTrendMonthYearPoint {
 export function processRawSentimentData(data: any[]): SentimentTrendMonthYearPoint[] {
   if (!data || data.length === 0) return [];
 
+  console.log("Processing raw data:", data.length, "items");
+  
   // Group by month and year
   const monthYearData: Record<string, Record<string, { positive: number; neutral: number; negative: number }>> = {};
 
+  // First, ensure every month-year combination is initialized
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const uniqueYears = new Set<string>();
+  
+  data.forEach(item => {
+    if (!item.submit_date) return;
+    const date = new Date(item.submit_date);
+    uniqueYears.add(date.getFullYear().toString());
+  });
+  
+  // Initialize all month-year combinations for years found in data
+  uniqueYears.forEach(year => {
+    monthYearData[year] = {};
+    MONTHS.forEach(month => {
+      monthYearData[year][month] = { positive: 0, neutral: 0, negative: 0 };
+    });
+  });
+
+  // Now count the actual data
   data.forEach(item => {
     if (!item.submit_date) return;
 
     const date = new Date(item.submit_date);
     const year = date.getFullYear().toString();
     const month = getMonthName(date.getMonth());
-
-    if (!monthYearData[year]) {
-      monthYearData[year] = {};
-    }
-
-    if (!monthYearData[year][month]) {
-      monthYearData[year][month] = { positive: 0, neutral: 0, negative: 0 };
-    }
 
     // Case-insensitive sentiment checking
     const sentiment = item.sentiment ? item.sentiment.toLowerCase() : 'neutral';
@@ -48,20 +62,24 @@ export function processRawSentimentData(data: any[]): SentimentTrendMonthYearPoi
   // Convert to array format required by the chart
   const result: SentimentTrendMonthYearPoint[] = [];
 
-  // Ensure all years and months in the data are processed
-  Object.keys(monthYearData).sort().forEach(year => {
+  // Add all months for all years with data
+  Object.keys(monthYearData).forEach(year => {
     Object.keys(monthYearData[year]).forEach(month => {
-      result.push({
-        month,
-        year,
-        positive: monthYearData[year][month].positive,
-        neutral: monthYearData[year][month].neutral,
-        negative: monthYearData[year][month].negative
-      });
+      const counts = monthYearData[year][month];
+      // Only add months that have data
+      if (counts.positive > 0 || counts.neutral > 0 || counts.negative > 0) {
+        result.push({
+          month,
+          year,
+          positive: counts.positive,
+          neutral: counts.neutral,
+          negative: counts.negative
+        });
+      }
     });
   });
 
-  // Sort by year and month for proper display
+  // Sort by year and month for proper chronological display
   result.sort((a, b) => {
     if (a.year !== b.year) {
       return parseInt(a.year) - parseInt(b.year);
@@ -69,5 +87,6 @@ export function processRawSentimentData(data: any[]): SentimentTrendMonthYearPoi
     return getMonthIdx(a.month) - getMonthIdx(b.month);
   });
 
+  console.log("Processed data:", result);
   return result;
 }
