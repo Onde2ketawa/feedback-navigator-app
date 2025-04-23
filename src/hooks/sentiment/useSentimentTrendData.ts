@@ -28,8 +28,11 @@ export const useSentimentTrendData = (channelFilter: string) => {
   
   const fetchSentimentTrendData = async (): Promise<SentimentTrendMonthYearPoint[]> => {
     try {
-      // Directly use a SQL query approach to match the manual query result structure
-      let query = supabase.rpc('get_sentiment_trend_data');
+      // Direct query approach
+      let query = supabase
+        .from('customer_feedback')
+        .select('submit_date, sentiment')
+        .order('submit_date');
       
       // Apply channel filter if needed
       if (channelFilter !== 'all') {
@@ -41,111 +44,28 @@ export const useSentimentTrendData = (channelFilter: string) => {
             .maybeSingle();
           
           if (channelData) {
-            query = supabase.rpc('get_sentiment_trend_data_by_channel', { 
-              channel_id_param: channelData.id 
-            });
+            query = supabase
+              .from('customer_feedback')
+              .select('submit_date, sentiment')
+              .eq('channel_id', channelData.id)
+              .order('submit_date');
           }
         } catch (err) {
-          // If channel lookup fails, try direct query approach
           console.error("Channel lookup failed:", err);
-          
-          // Fallback to raw SQL query approach
-          let { data, error } = await supabase
-            .from('customer_feedback')
-            .select('submit_date, sentiment')
-            .order('submit_date');
-          
-          if (channelFilter !== 'all') {
-            try {
-              const { data: channelData } = await supabase
-                .from('channel')
-                .select('id')
-                .eq('name', channelFilter)
-                .maybeSingle();
-              
-              if (channelData) {
-                const { data: filteredData, error: filteredError } = await supabase
-                  .from('customer_feedback')
-                  .select('submit_date, sentiment')
-                  .eq('channel_id', channelData.id)
-                  .order('submit_date');
-                
-                if (!filteredError) {
-                  data = filteredData;
-                }
-              }
-            } catch (e) {
-              console.error("Error in channel filtering fallback:", e);
-            }
-          }
-          
-          if (error) {
-            console.error("Error fetching data:", error);
-            return [];
-          }
-          
-          // Process data manually
-          return processRawSentimentData(data || []);
-        }
-      } else {
-        // If no channel filter or "all" is selected, use the default query
-        const { data, error } = await supabase
-          .from('customer_feedback')
-          .select('submit_date, sentiment')
-          .order('submit_date');
-        
-        if (error) {
-          console.error("Error fetching all sentiment data:", error);
           return [];
         }
-        
-        console.log(`Raw data count: ${data?.length || 0} records`);
-        return processRawSentimentData(data || []);
       }
-
-      // Execute RPC query if we got here (meaning no fallback)
+      
+      // Execute the query
       const { data, error } = await query;
       
       if (error) {
-        console.error("RPC query error:", error);
-        // Fallback to direct data processing
-        const { data: rawData, error: rawError } = await supabase
-          .from('customer_feedback')
-          .select('submit_date, sentiment')
-          .order('submit_date');
-        
-        if (rawError) {
-          console.error("Fallback query error:", rawError);
-          return [];
-        }
-        
-        return processRawSentimentData(rawData || []);
+        console.error("Error fetching data:", error);
+        return [];
       }
       
-      // Transform RPC result into expected format
-      if (data && data.length > 0) {
-        console.log("RPC data returned:", data.length, "records");
-        const result: SentimentTrendMonthYearPoint[] = data.map(item => ({
-          month: item.month_short,
-          year: item.year.toString(),
-          positive: item.positive_count || 0,
-          neutral: item.neutral_count || 0,
-          negative: item.negative_count || 0
-        }));
-        
-        // Sort by year and month
-        result.sort((a, b) => {
-          if (a.year !== b.year) {
-            return parseInt(a.year) - parseInt(b.year);
-          }
-          return getMonthIdx(a.month) - getMonthIdx(b.month);
-        });
-        
-        console.log('Transformed RPC data:', result);
-        return result;
-      }
-      
-      return [];
+      console.log(`Raw data count: ${data?.length || 0} records`);
+      return processRawSentimentData(data || []);
     } catch (error) {
       console.error('Error fetching sentiment trend data:', error);
       return [];
