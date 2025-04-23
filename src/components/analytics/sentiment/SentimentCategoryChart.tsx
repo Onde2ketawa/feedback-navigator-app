@@ -37,31 +37,33 @@ export const SentimentCategoryChart: React.FC<SentimentCategoryChartProps> = ({
 
   return (
     <ChartContainer config={config} className="h-[400px] w-full">
-      <BarChart
-        data={sortedData}
-        layout="vertical"
-        margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis 
-          type="number" 
-          domain={[-1, 1]} 
-          tickFormatter={(value) => value.toFixed(1)} 
-        />
-        <YAxis 
-          type="category" 
-          dataKey="name" 
-          width={70} 
-        />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Legend />
-        <Bar 
-          dataKey="sentiment_score" 
-          fill="#8b5cf6" 
-          background={{ fill: '#eee' }}
-          animationDuration={1000}
-        />
-      </BarChart>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={sortedData}
+          layout="vertical"
+          margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis 
+            type="number" 
+            domain={[-1, 1]} 
+            tickFormatter={(value) => value.toFixed(1)} 
+          />
+          <YAxis 
+            type="category" 
+            dataKey="name" 
+            width={70} 
+          />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Legend />
+          <Bar 
+            dataKey="sentiment_score" 
+            fill="#8b5cf6" 
+            background={{ fill: '#eee' }}
+            animationDuration={1000}
+          />
+        </BarChart>
+      </ResponsiveContainer>
     </ChartContainer>
   );
 };
