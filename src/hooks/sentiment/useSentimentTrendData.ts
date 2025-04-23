@@ -94,7 +94,12 @@ export const useSentimentTrendData = (channelFilter: string) => {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        return processSentimentTrendData(data, minDate, maxDate);
+        const processedData = processSentimentTrendData(data, minDate, maxDate);
+        
+        // Console log the processed sentiment trend data
+        console.log('Sentiment Trend Data:', processedData);
+        
+        return processedData;
       }
       return [];
     } catch (error) {
@@ -171,3 +176,4 @@ export const useSentimentTrendData = (channelFilter: string) => {
     fetchSentimentTrendData
   };
 };
+
