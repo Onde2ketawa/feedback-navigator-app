@@ -198,6 +198,18 @@ export type Database = {
           color: string
         }[]
       }
+      get_sentiment_trend_by_month: {
+        Args: { channel_name?: string }
+        Returns: {
+          month_short: string
+          month_num: number
+          year: number
+          positive_count: number
+          neutral_count: number
+          negative_count: number
+          total_count: number
+        }[]
+      }
       get_subcategory_distribution: {
         Args: {
           category_param: string

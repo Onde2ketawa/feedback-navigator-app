@@ -1,86 +1,48 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { processRawSentimentData, SentimentTrendMonthYearPoint } from './sentimentTrendTransform';
+import { SentimentTrendMonthYearPoint } from './sentimentTrendTransform';
 
 export const useSentimentTrendData = (channelFilter: string) => {
   const [sentimentTrendData, setSentimentTrendData] = useState<SentimentTrendMonthYearPoint[]>([]);
-  
+
   const fetchSentimentTrendData = async (): Promise<SentimentTrendMonthYearPoint[]> => {
     try {
-      console.log(`Fetching sentiment trend data for channel: ${channelFilter}`);
-      
-      // Base query with explicit ordering to ensure we get ALL data chronologically
-      let query = supabase
-        .from('customer_feedback')
-        .select('submit_date, sentiment')
-        .order('submit_date');
-      
-      // Apply channel filter if needed
-      if (channelFilter !== 'all') {
-        try {
-          const { data: channelData } = await supabase
-            .from('channel')
-            .select('id')
-            .eq('name', channelFilter)
-            .maybeSingle();
-          
-          if (channelData) {
-            console.log(`Found channel ID for ${channelFilter}:`, channelData.id);
-            
-            // Apply channel filter but NO date restrictions
-            query = supabase
-              .from('customer_feedback')
-              .select('submit_date, sentiment')
-              .eq('channel_id', channelData.id)
-              .order('submit_date');
-          }
-        } catch (err) {
-          console.error("Channel lookup failed:", err);
-          return [];
-        }
-      }
-      
-      // Execute the query
-      const { data, error } = await query;
-      
+      console.log(`[SentimentTrend] Fetching trend via RPC for channel:`, channelFilter);
+
+      // Call the new Supabase function directly. Pass NULL for 'all'.
+      const { data, error } = await supabase
+        .rpc('get_sentiment_trend_by_month', { channel_name: channelFilter === 'all' ? null : channelFilter });
+
       if (error) {
-        console.error("Error fetching data:", error);
+        console.error('[SentimentTrend] Error fetching data via RPC:', error);
         return [];
       }
-      
-      console.log(`Raw data count: ${data?.length || 0} records`);
-      
-      // Enhanced logging for debugging
-      if (data && data.length > 0) {
-        console.log("First few records:", data.slice(0, 3));
-        console.log("Last few records:", data.slice(-3));
-        
-        // Check and log the full date range in the data
-        const dates = data.map(d => new Date(d.submit_date));
-        const minDate = dates.length ? new Date(Math.min(...dates.map(d => d.getTime()))) : null;
-        const maxDate = dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : null;
-        
-        console.log(`Date range in data: ${minDate?.toISOString()} to ${maxDate?.toISOString()}`);
-        
-        // Count records by year and month for detailed debugging
-        const monthCounts: Record<string, number> = {};
-        data.forEach(d => {
-          if (d.submit_date) {
-            const date = new Date(d.submit_date);
-            const key = `${date.getFullYear()}-${date.getMonth() + 1}`;
-            monthCounts[key] = (monthCounts[key] || 0) + 1;
-          }
-        });
-        console.log("Records by year-month:", monthCounts);
-      }
-      
-      // Process the data without any filtering
-      const processedData = processRawSentimentData(data || []);
-      console.log("Processed trend data:", processedData);
-      return processedData;
+
+      console.log('[SentimentTrend] Raw RPC data:', data);
+
+      // Map SQL result to the trend point for chart/table
+      const mapped: SentimentTrendMonthYearPoint[] = (data || []).map((item: any) => ({
+        month: item.month_short,
+        year: item.year?.toString?.() || '',
+        positive: Number(item.positive_count || 0),
+        neutral: Number(item.neutral_count || 0),
+        negative: Number(item.negative_count || 0)
+      }));
+
+      // Sort by year/month ascending
+      mapped.sort((a, b) => {
+        if (a.year !== b.year) return parseInt(a.year) - parseInt(b.year);
+        const months = [
+          "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
+        ];
+        return months.indexOf(a.month) - months.indexOf(b.month);
+      });
+
+      console.log('[SentimentTrend] Processed data:', mapped);
+      return mapped;
     } catch (error) {
-      console.error('Error fetching sentiment trend data:', error);
+      console.error('[SentimentTrend] Error fetching sentiment trend data:', error);
       return [];
     }
   };
