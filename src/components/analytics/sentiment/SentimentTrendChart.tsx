@@ -40,9 +40,23 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     negative: { color: '#f43f5e', label: 'Negative' }
   };
 
-  // Log data for debugging
+  // Enhanced logging for debugging
   useEffect(() => {
     console.log('SentimentTrendChart received data:', data.length, 'data points');
+    if (data.length > 0) {
+      console.log('First data point:', data[0]);
+      console.log('Last data point:', data[data.length - 1]);
+      
+      // Log unique years and months for verification
+      const uniqueYears = [...new Set(data.map(d => d.year))].sort();
+      console.log('Unique years in chart data:', uniqueYears);
+      
+      const monthsPerYear: Record<string, string[]> = {};
+      uniqueYears.forEach(year => {
+        monthsPerYear[year] = [...new Set(data.filter(d => d.year === year).map(d => d.month))];
+      });
+      console.log('Months per year:', monthsPerYear);
+    }
   }, [data]);
   
   // Get unique years sorted
@@ -159,7 +173,7 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedTableData.filter(d => d.total > 0).map((d, idx) => (
+            {sortedTableData.map((d, idx) => (
               <TableRow key={`${d.year}-${d.month}`} className={idx % 2 === 1 ? "bg-muted/30" : ""}>
                 <TableCell>{d.month}</TableCell>
                 <TableCell>{d.year}</TableCell>

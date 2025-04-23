@@ -10,7 +10,7 @@ export const useSentimentTrendData = (channelFilter: string) => {
     try {
       console.log(`Fetching sentiment trend data for channel: ${channelFilter}`);
       
-      // Base query without any date restrictions
+      // Base query with explicit ordering to ensure we get ALL data chronologically
       let query = supabase
         .from('customer_feedback')
         .select('submit_date, sentiment')
@@ -28,7 +28,7 @@ export const useSentimentTrendData = (channelFilter: string) => {
           if (channelData) {
             console.log(`Found channel ID for ${channelFilter}:`, channelData.id);
             
-            // Apply channel filter but no date restrictions
+            // Apply channel filter but NO date restrictions
             query = supabase
               .from('customer_feedback')
               .select('submit_date, sentiment')
@@ -51,9 +51,10 @@ export const useSentimentTrendData = (channelFilter: string) => {
       
       console.log(`Raw data count: ${data?.length || 0} records`);
       
-      // Log details about the retrieved data
+      // Enhanced logging for debugging
       if (data && data.length > 0) {
-        console.log("Sample data:", data.slice(0, 5));
+        console.log("First few records:", data.slice(0, 3));
+        console.log("Last few records:", data.slice(-3));
         
         // Check and log the full date range in the data
         const dates = data.map(d => new Date(d.submit_date));
@@ -62,7 +63,7 @@ export const useSentimentTrendData = (channelFilter: string) => {
         
         console.log(`Date range in data: ${minDate?.toISOString()} to ${maxDate?.toISOString()}`);
         
-        // Count records by year and month for debugging
+        // Count records by year and month for detailed debugging
         const monthCounts: Record<string, number> = {};
         data.forEach(d => {
           if (d.submit_date) {
@@ -76,7 +77,7 @@ export const useSentimentTrendData = (channelFilter: string) => {
       
       // Process the data without any filtering
       const processedData = processRawSentimentData(data || []);
-      console.log("Processed data:", processedData.length, "points");
+      console.log("Processed trend data:", processedData);
       return processedData;
     } catch (error) {
       console.error('Error fetching sentiment trend data:', error);
