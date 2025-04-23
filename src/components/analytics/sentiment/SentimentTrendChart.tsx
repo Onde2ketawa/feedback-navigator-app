@@ -52,14 +52,22 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
-  // Create full dataset with all months for each year
+  // Prepare data for the chart by organizing it by month
   const chartData = months.map(month => {
     const base: Record<string, any> = { month };
     years.forEach(year => {
-      const found = data.find(d => d.month === month && d.year === year);
-      base[`${year}_positive`] = found ? found.positive : 0;
-      base[`${year}_neutral`] = found ? found.neutral : 0;
-      base[`${year}_negative`] = found ? found.negative : 0;
+      const entriesForMonthYear = data.filter(d => d.month === month && d.year === year);
+      if (entriesForMonthYear.length > 0) {
+        const entry = entriesForMonthYear[0];
+        base[`${year}_positive`] = entry.positive;
+        base[`${year}_neutral`] = entry.neutral;
+        base[`${year}_negative`] = entry.negative;
+      } else {
+        // If no data found for this month-year combination, set it to 0
+        base[`${year}_positive`] = 0;
+        base[`${year}_neutral`] = 0;
+        base[`${year}_negative`] = 0;
+      }
     });
     return base;
   });
@@ -149,7 +157,7 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedTableData.map((d, idx) => (
+            {sortedTableData.filter(d => d.total > 0).map((d, idx) => (
               <TableRow key={`${d.year}-${d.month}`} className={idx % 2 === 1 ? "bg-muted/30" : ""}>
                 <TableCell>{d.month}</TableCell>
                 <TableCell>{d.year}</TableCell>

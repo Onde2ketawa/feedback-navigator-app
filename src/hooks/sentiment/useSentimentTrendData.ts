@@ -10,17 +10,10 @@ export const useSentimentTrendData = (channelFilter: string) => {
     try {
       console.log(`Fetching sentiment trend data for channel: ${channelFilter}`);
       
-      // Set the date range to include all data from April 2024 to the current date
-      const startDate = new Date('2024-04-01');
-      const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 1); // Include current month
-      
-      // Base query with date range
+      // Base query without date restrictions to show all available data
       let query = supabase
         .from('customer_feedback')
         .select('submit_date, sentiment')
-        .gte('submit_date', startDate.toISOString())
-        .lte('submit_date', endDate.toISOString())
         .order('submit_date');
       
       // Apply channel filter if needed
@@ -35,13 +28,11 @@ export const useSentimentTrendData = (channelFilter: string) => {
           if (channelData) {
             console.log(`Found channel ID for ${channelFilter}:`, channelData.id);
             
-            // New query with channel filter
+            // New query with channel filter but without date restrictions
             query = supabase
               .from('customer_feedback')
               .select('submit_date, sentiment')
               .eq('channel_id', channelData.id)
-              .gte('submit_date', startDate.toISOString())
-              .lte('submit_date', endDate.toISOString())
               .order('submit_date');
           }
         } catch (err) {

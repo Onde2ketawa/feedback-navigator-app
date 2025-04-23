@@ -20,9 +20,7 @@ export function processRawSentimentData(data: any[]): SentimentTrendMonthYearPoi
   // Group by month and year
   const monthYearData: Record<string, Record<string, { positive: number; neutral: number; negative: number }>> = {};
 
-  // First, ensure every month-year combination is initialized
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
+  // First, process all data to find unique years
   const uniqueYears = new Set<string>();
   
   data.forEach(item => {
@@ -31,7 +29,9 @@ export function processRawSentimentData(data: any[]): SentimentTrendMonthYearPoi
     uniqueYears.add(date.getFullYear().toString());
   });
   
-  // Initialize all month-year combinations for years found in data
+  console.log("Unique years found in data:", Array.from(uniqueYears));
+  
+  // Initialize all possible month-year combinations
   uniqueYears.forEach(year => {
     monthYearData[year] = {};
     MONTHS.forEach(month => {
@@ -62,20 +62,18 @@ export function processRawSentimentData(data: any[]): SentimentTrendMonthYearPoi
   // Convert to array format required by the chart
   const result: SentimentTrendMonthYearPoint[] = [];
 
-  // Add all months for all years with data
+  // Add all months for all years
   Object.keys(monthYearData).forEach(year => {
-    Object.keys(monthYearData[year]).forEach(month => {
+    MONTHS.forEach(month => {
       const counts = monthYearData[year][month];
-      // Only add months that have data
-      if (counts.positive > 0 || counts.neutral > 0 || counts.negative > 0) {
-        result.push({
-          month,
-          year,
-          positive: counts.positive,
-          neutral: counts.neutral,
-          negative: counts.negative
-        });
-      }
+      // Include all months regardless of whether they have data
+      result.push({
+        month,
+        year,
+        positive: counts.positive,
+        neutral: counts.neutral,
+        negative: counts.negative
+      });
     });
   });
 
@@ -87,6 +85,9 @@ export function processRawSentimentData(data: any[]): SentimentTrendMonthYearPoi
     return getMonthIdx(a.month) - getMonthIdx(b.month);
   });
 
-  console.log("Processed data:", result);
+  console.log("Processed data points:", result.length);
+  console.log("First few processed data points:", result.slice(0, 5));
+  console.log("Last few processed data points:", result.slice(-5));
+  
   return result;
 }
