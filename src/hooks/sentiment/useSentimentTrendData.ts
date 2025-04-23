@@ -34,8 +34,9 @@ export const useSentimentTrendData = (channelFilter: string) => {
         .select(`
           submit_date,
           sentiment
-        `)
-        .order('submit_date', { ascending: true });
+        `);
+      
+      // Don't filter by date range - get all data to ensure we capture Apr 2024-Mar 2025
 
       if (channelFilter !== 'all') {
         try {
@@ -55,6 +56,9 @@ export const useSentimentTrendData = (channelFilter: string) => {
       }
 
       const { data, error } = await query;
+      
+      console.log('Raw sentiment data count:', data?.length || 0);
+      
       if (error) throw error;
       
       if (data && data.length > 0) {
@@ -67,7 +71,6 @@ export const useSentimentTrendData = (channelFilter: string) => {
           const date = new Date(item.submit_date);
           const year = date.getFullYear().toString();
           const month = getMonthName(date.getMonth());
-          const key = `${year}-${month}`;
           
           if (!monthYearData[year]) {
             monthYearData[year] = {};
@@ -77,9 +80,12 @@ export const useSentimentTrendData = (channelFilter: string) => {
             monthYearData[year][month] = { positive: 0, neutral: 0, negative: 0 };
           }
           
-          if (item.sentiment === 'positive') {
+          // Lowercase the sentiment value for case-insensitive comparison
+          const sentiment = item.sentiment ? item.sentiment.toLowerCase() : 'neutral';
+          
+          if (sentiment === 'positive') {
             monthYearData[year][month].positive++;
-          } else if (item.sentiment === 'negative') {
+          } else if (sentiment === 'negative') {
             monthYearData[year][month].negative++;
           } else {
             monthYearData[year][month].neutral++;
@@ -111,6 +117,10 @@ export const useSentimentTrendData = (channelFilter: string) => {
         });
         
         console.log('Processed Sentiment Trend Data:', result);
+        console.log('Data years range:', 
+          result.length > 0 ? 
+          `${result[0].month} ${result[0].year} to ${result[result.length-1].month} ${result[result.length-1].year}` : 
+          'No data');
         
         return result;
       }

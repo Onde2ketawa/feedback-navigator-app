@@ -39,12 +39,19 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     negative: { color: '#f43f5e', label: 'Negative' }
   };
 
+  // Log data to help diagnose issues
+  console.log('SentimentTrendChart received data:', data.length, 'data points');
+  
+  // Get unique years sorted
   const years = Array.from(new Set(data.map(d => d.year))).sort();
+  console.log('Years in data:', years);
+  
   const months = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
+  // Create chart data for all months, even if they don't have data
   const chartData = months.map(month => {
     const base: Record<string, any> = { month };
     years.forEach(year => {
