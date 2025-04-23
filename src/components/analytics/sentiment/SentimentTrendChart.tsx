@@ -30,7 +30,7 @@ interface SentimentTrendMonthYearPoint {
 }
 
 interface SentimentTrendChartProps {
-  data: SentimentTrendMonthYearPoint[];
+  data?: SentimentTrendMonthYearPoint[];
 }
 
 export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => {
@@ -41,15 +41,15 @@ export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => 
   };
 
   useEffect(() => {
-    console.log('SentimentTrendChart received data:', data.length, 'data points');
-    if (data.length > 0) {
+    console.log('SentimentTrendChart received data:', data?.length || 0, 'data points');
+    if (data && data.length > 0) {
       console.log('First data point:', data[0]);
       console.log('Last data point:', data[data.length - 1]);
       
       const uniqueYears = [...new Set(data.map(d => d.year))].sort();
       console.log('Unique years in chart data:', uniqueYears);
       
-      const monthsPerYear = {};
+      const monthsPerYear: Record<string, string[]> = {};
       uniqueYears.forEach(year => {
         monthsPerYear[year] = [...new Set(data.filter(d => d.year === year).map(d => d.month))];
       });
@@ -58,7 +58,7 @@ export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => 
   }, [data]);
   
   // Check if we actually have data with sentiment values
-  const hasData = data.length > 0 && 
+  const hasData = data && data.length > 0 && 
     data.some(d => d.positive > 0 || d.neutral > 0 || d.negative > 0);
   
   if (!hasData) {
@@ -78,14 +78,14 @@ export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => 
   ];
 
   const chartData = months.map(month => {
-    const base = { month };
+    const base: Record<string, any> = { month };
     years.forEach(year => {
       const entriesForMonthYear = data.filter(d => d.month === month && d.year === year);
       if (entriesForMonthYear.length > 0) {
         const entry = entriesForMonthYear[0];
-        base[`${year}_positive`] = entry.positive;
-        base[`${year}_neutral`] = entry.neutral;
-        base[`${year}_negative`] = entry.negative;
+        base[`${year}_positive`] = Number(entry.positive) || 0;
+        base[`${year}_neutral`] = Number(entry.neutral) || 0;
+        base[`${year}_negative`] = Number(entry.negative) || 0;
       } else {
         base[`${year}_positive`] = 0;
         base[`${year}_neutral`] = 0;
@@ -98,8 +98,8 @@ export const SentimentTrendChart = ({ data = [] }: SentimentTrendChartProps) => 
   console.log('Chart data prepared with', chartData.length, 'entries');
   
   const dataWithTotals = data.map(d => {
-    const total = d.positive + d.neutral + d.negative;
-    const positivePercentage = total > 0 ? ((d.positive / total) * 100).toFixed(1) : "0.0";
+    const total = (Number(d.positive) || 0) + (Number(d.neutral) || 0) + (Number(d.negative) || 0);
+    const positivePercentage = total > 0 ? ((Number(d.positive) / total) * 100).toFixed(1) : "0.0";
     return {
       ...d,
       total,
