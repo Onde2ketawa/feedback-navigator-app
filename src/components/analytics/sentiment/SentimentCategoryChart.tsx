@@ -17,8 +17,9 @@ interface SentimentCategoryChartProps {
   data: SentimentCategoryDataPoint[];
 }
 
-export const SentimentCategoryChart: React.FC<SentimentCategoryChartProps> = ({ data }) => {
-  // Create config from the data
+export const SentimentCategoryChart: React.FC<SentimentCategoryChartProps> = ({ 
+  data = [] 
+}) => {
   const config = {
     sentiment_score: { color: '#8b5cf6', label: 'Sentiment Score' },
   };

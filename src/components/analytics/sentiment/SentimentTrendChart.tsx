@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import {
   LineChart,
@@ -33,21 +32,19 @@ interface SentimentTrendChartProps {
   data: SentimentTrendMonthYearPoint[];
 }
 
-export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }) => {
+export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data = [] }) => {
   const config = {
     positive: { color: '#10b981', label: 'Positive' },
     neutral: { color: '#facc15', label: 'Neutral' },
     negative: { color: '#f43f5e', label: 'Negative' }
   };
 
-  // Enhanced logging for debugging
   useEffect(() => {
     console.log('SentimentTrendChart received data:', data.length, 'data points');
     if (data.length > 0) {
       console.log('First data point:', data[0]);
       console.log('Last data point:', data[data.length - 1]);
       
-      // Log unique years and months for verification
       const uniqueYears = [...new Set(data.map(d => d.year))].sort();
       console.log('Unique years in chart data:', uniqueYears);
       
@@ -59,7 +56,6 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     }
   }, [data]);
   
-  // Get unique years sorted
   const years = Array.from(new Set(data.map(d => d.year))).sort();
   console.log('Years in data:', years);
   
@@ -68,7 +64,6 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
-  // Prepare data for the chart by organizing it by month
   const chartData = months.map(month => {
     const base: Record<string, any> = { month };
     years.forEach(year => {
@@ -79,7 +74,6 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
         base[`${year}_neutral`] = entry.neutral;
         base[`${year}_negative`] = entry.negative;
       } else {
-        // If no data found for this month-year combination, set it to 0
         base[`${year}_positive`] = 0;
         base[`${year}_neutral`] = 0;
         base[`${year}_negative`] = 0;
@@ -98,7 +92,6 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     );
   }
 
-  // Calculate totals for display in table
   const dataWithTotals = data.map(d => {
     const total = d.positive + d.neutral + d.negative;
     const positivePercentage = total > 0 ? ((d.positive / total) * 100).toFixed(1) : "0.0";
@@ -109,14 +102,13 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     };
   });
   
-  // Sort the table data by year and month (for consistent display)
   const sortedTableData = [...dataWithTotals].sort((a, b) => {
     if (a.year !== b.year) {
-      return parseInt(b.year) - parseInt(a.year); // Latest year first
+      return parseInt(b.year) - parseInt(a.year);
     }
     const monthAIndex = months.indexOf(a.month);
     const monthBIndex = months.indexOf(b.month);
-    return monthBIndex - monthAIndex; // Latest month first
+    return monthBIndex - monthAIndex;
   });
 
   return (
