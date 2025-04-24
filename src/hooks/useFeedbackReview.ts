@@ -43,9 +43,7 @@ export function useFeedbackReview() {
           submit_time,
           feedback,
           category,
-          categories:category(name),
           sub_category,
-          subcategories:sub_category(name),
           device,
           app_version,
           language,
@@ -81,11 +79,45 @@ export function useFeedbackReview() {
 
       if (error) throw error;
       
-      return data.map(item => ({
-        ...item,
-        category_name: item.categories?.name || 'Uncategorized',
-        subcategory_name: item.subcategories?.name || 'None',
-      })) as FeedbackData[];
+      // Fetch category and subcategory names separately
+      const processedData = await Promise.all(data.map(async (item) => {
+        let categoryName = 'Uncategorized';
+        let subcategoryName = 'None';
+        
+        // Fetch category name if category exists
+        if (item.category) {
+          const { data: categoryData } = await supabase
+            .from('categories')
+            .select('name')
+            .eq('id', item.category)
+            .single();
+          
+          if (categoryData) {
+            categoryName = categoryData.name;
+          }
+        }
+        
+        // Fetch subcategory name if subcategory exists
+        if (item.sub_category) {
+          const { data: subcategoryData } = await supabase
+            .from('subcategories')
+            .select('name')
+            .eq('id', item.sub_category)
+            .single();
+          
+          if (subcategoryData) {
+            subcategoryName = subcategoryData.name;
+          }
+        }
+        
+        return {
+          ...item,
+          category_name: categoryName,
+          subcategory_name: subcategoryName,
+        };
+      }));
+      
+      return processedData as FeedbackData[];
     },
   });
 
