@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -14,11 +13,13 @@ interface YearFilterProps {
 }
 
 export const YearFilter = ({ 
-  availableYears, 
   selectedYears, 
   onChange, 
   maxSelections = 3 
 }: YearFilterProps) => {
+  // Hardcode available years to 2024-2025
+  const availableYears = ['2024', '2025'];
+
   const handleYearToggle = (year: string) => {
     if (selectedYears.includes(year)) {
       onChange(selectedYears.filter(y => y !== year));
