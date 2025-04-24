@@ -17,7 +17,7 @@ export const useChannelComparisonData = (years: string[]) => {
       
       // Direct SQL query to get accurate average ratings by year and channel
       const { data, error } = await supabase
-        .rpc<AnnualChannelRating[], { year_filters: string[] }>('get_annual_channel_ratings', { 
+        .rpc('get_annual_channel_ratings', { 
           year_filters: years 
         });
       
@@ -31,9 +31,12 @@ export const useChannelComparisonData = (years: string[]) => {
       // Convert to RatingTrendData format
       const result: RatingTrendData[] = [];
       
+      // Type assertion to help TypeScript understand the data structure
+      const typedData = data as AnnualChannelRating[];
+      
       // Process data by year
       for (const year of years) {
-        const yearData = data.filter(item => item.year.toString() === year);
+        const yearData = typedData.filter(item => item.year.toString() === year);
         const myHanaData = yearData.find(item => item.channel_name === 'MyHana');
         const lineBankData = yearData.find(item => item.channel_name === 'LINE Bank');
         
