@@ -23,6 +23,32 @@ export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChar
   const formatTooltipValue = (value: number) => {
     return value === 0 ? 'No data' : value.toFixed(2);
   };
+  
+  // Calculate averages for description display
+  const getAverages = () => {
+    if (data.length === 0) return { myHana: 0, lineBank: 0 };
+    
+    let myHanaSum = 0, myHanaCount = 0;
+    let lineBankSum = 0, lineBankCount = 0;
+    
+    data.forEach(item => {
+      if (item.myHana > 0) {
+        myHanaSum += item.myHana;
+        myHanaCount++;
+      }
+      if (item.lineBank > 0) {
+        lineBankSum += item.lineBank;
+        lineBankCount++;
+      }
+    });
+    
+    return {
+      myHana: myHanaCount > 0 ? Number((myHanaSum / myHanaCount).toFixed(2)) : 0,
+      lineBank: lineBankCount > 0 ? Number((lineBankSum / lineBankCount).toFixed(2)) : 0
+    };
+  };
+  
+  const averages = getAverages();
 
   return (
     <Card className="col-span-1 lg:col-span-2">
@@ -31,7 +57,7 @@ export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChar
         <CardDescription>
           {channelFilter !== 'all' ? 
             `Showing data for ${channelFilter} channel` : 
-            'Comparing MyHana and LINE Bank annual ratings'}
+            `Comparing MyHana (avg: ${averages.myHana}) and LINE Bank (avg: ${averages.lineBank}) annual ratings`}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -55,17 +81,18 @@ export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChar
             <Tooltip 
               formatter={(value: number, name: string) => [
                 formatTooltipValue(value),
-                name
+                name === 'myHana' ? 'MyHana' : 'LINE Bank'
               ]}
               labelFormatter={(label) => `Year: ${label}`}
             />
             <Legend 
               wrapperStyle={{ paddingTop: '10px' }}
+              formatter={(value) => value === 'myHana' ? 'MyHana' : 'LINE Bank'}
             />
             <Line
               type="monotone"
               dataKey="myHana"
-              name="MyHana"
+              name="myHana"
               stroke={colorPalette[0]}
               strokeWidth={2}
               dot={{ r: 4 }}
@@ -76,7 +103,7 @@ export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChar
             <Line
               type="monotone"
               dataKey="lineBank"
-              name="LINE Bank"
+              name="lineBank"
               stroke={colorPalette[1]}
               strokeWidth={2}
               strokeDasharray="5 5"
