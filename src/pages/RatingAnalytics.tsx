@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { FilterControls } from '@/components/analytics/FilterControls';
@@ -20,7 +19,6 @@ import { useChannelComparisonData } from '@/hooks/rating/useChannelComparisonDat
 import { RatingTrendData } from '@/hooks/rating/types';
 
 const RatingAnalytics: React.FC = () => {
-  // Get channel filter from useChannelFilter hook
   const {
     channelFilter,
     setChannelFilter,
@@ -46,21 +44,25 @@ const RatingAnalytics: React.FC = () => {
     fetchAverageRating 
   } = useAverageRating(channelFilter, yearFilter, monthFilter);
   
-  // Year comparison feature
   const [selectedComparisonYears, setSelectedComparisonYears] = useState<string[]>(['2024', '2025']);
   
-  // Get channel comparison data using the hook
   const fetchComparisonData = useChannelComparisonData(selectedComparisonYears);
   const [channelComparisonData, setChannelComparisonData] = useState<RatingTrendData[]>([]);
   const [isLoadingComparison, setIsLoadingComparison] = useState(false);
 
-  // Fetch comparison data when years change
   useEffect(() => {
     const getComparisonData = async () => {
       setIsLoadingComparison(true);
-      const data = await fetchComparisonData();
-      setChannelComparisonData(data);
-      setIsLoadingComparison(false);
+      try {
+        console.log('Fetching comparison data for years:', selectedComparisonYears);
+        const data = await fetchComparisonData();
+        console.log('Received comparison data:', data);
+        setChannelComparisonData(data);
+      } catch (error) {
+        console.error('Error fetching comparison data:', error);
+      } finally {
+        setIsLoadingComparison(false);
+      }
     };
     getComparisonData();
   }, [selectedComparisonYears, fetchComparisonData]);
@@ -68,6 +70,23 @@ const RatingAnalytics: React.FC = () => {
   React.useEffect(() => {
     fetchAverageRating();
   }, [channelFilter, yearFilter, monthFilter, fetchAverageRating]);
+  
+  const refreshAllData = () => {
+    refreshData();
+    fetchAverageRating();
+    const refreshComparisonData = async () => {
+      setIsLoadingComparison(true);
+      try {
+        const data = await fetchComparisonData();
+        setChannelComparisonData(data);
+      } catch (error) {
+        console.error('Error refreshing comparison data:', error);
+      } finally {
+        setIsLoadingComparison(false);
+      }
+    };
+    refreshComparisonData();
+  };
   
   return (
     <div className="animate-fade-in">
@@ -81,13 +100,10 @@ const RatingAnalytics: React.FC = () => {
           variant="outline" 
           size="sm" 
           className="flex items-center gap-1"
-          onClick={() => {
-            refreshData();
-            fetchAverageRating();
-          }}
-          disabled={isLoading}
+          onClick={refreshAllData}
+          disabled={isLoading || isLoadingComparison}
         >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 ${isLoading || isLoadingComparison ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
@@ -114,7 +130,6 @@ const RatingAnalytics: React.FC = () => {
         <AverageRatingCard rating={averageRating} />
       </div>
 
-      {/* Channel Comparison Chart */}
       <div className="mb-6">
         {isLoadingComparison ? (
           <Card>
@@ -128,6 +143,18 @@ const RatingAnalytics: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        ) : channelComparisonData.length === 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Annual Rating Comparison</CardTitle>
+              <CardDescription>No data available for the selected years</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80 flex items-center justify-center text-muted-foreground">
+                Try selecting different years or check if data exists
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <RatingTrendChart 
             data={channelComparisonData}
@@ -138,7 +165,6 @@ const RatingAnalytics: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* YoY Rating Trend */}
         {isLoading ? (
           <Card className="col-span-1 lg:col-span-2">
             <CardHeader>
@@ -159,21 +185,18 @@ const RatingAnalytics: React.FC = () => {
           />
         )}
         
-        {/* Monthly Rating Trend */}
         {isLoading ? (
           <Skeleton className="h-[400px] w-full" />
         ) : (
           <MonthlyRatingTrendChart data={monthlyRatingData} />
         )}
         
-        {/* Rating Distribution */}
         {isLoading ? (
           <Skeleton className="h-[400px] w-full" />
         ) : (
           <RatingDistributionChart data={ratingDistributionData} />
         )}
         
-        {/* Category Rating */}
         {isLoading ? (
           <Skeleton className="h-[400px] w-full" />
         ) : (

@@ -11,47 +11,23 @@ interface RatingTrendChartProps {
 }
 
 export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChartProps) => {
+  console.log('RatingTrendChart data:', data);
+  
   // Color palette for consistent channel colors
   const colorPalette = [
     '#3b82f6', // MyHana Blue
     '#10b981', // LINE Bank Green
   ];
 
-  // Generate unique keys for each channel
-  const generateLineElements = () => {
-    return [
-      <Line
-        key="myHana"
-        type="monotone"
-        dataKey="myHana"
-        name="MyHana"
-        stroke={colorPalette[0]}
-        strokeWidth={2}
-        dot={{ r: 4 }}
-        activeDot={{ r: 6 }}
-        animationDuration={500}
-        isAnimationActive={true}
-      />,
-      <Line
-        key="lineBank"
-        type="monotone"
-        dataKey="lineBank"
-        name="LINE Bank"
-        stroke={colorPalette[1]}
-        strokeWidth={2}
-        strokeDasharray="5 5"
-        dot={{ r: 4 }}
-        activeDot={{ r: 6 }}
-        animationDuration={500}
-        isAnimationActive={true}
-      />
-    ];
+  // Format tooltip values
+  const formatTooltipValue = (value: number) => {
+    return value === 0 ? 'No data' : value.toFixed(2);
   };
 
   return (
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader>
-        <CardTitle>Annual Rating Comparison (2024-2025)</CardTitle>
+        <CardTitle>Annual Rating Comparison ({years.join('-')})</CardTitle>
         <CardDescription>
           {channelFilter !== 'all' ? 
             `Showing data for ${channelFilter} channel` : 
@@ -78,15 +54,37 @@ export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChar
             />
             <Tooltip 
               formatter={(value: number, name: string) => [
-                `${value.toFixed(2)}`, 
-                value === 0 ? 'No data' : name
+                formatTooltipValue(value),
+                name
               ]}
               labelFormatter={(label) => `Year: ${label}`}
             />
             <Legend 
               wrapperStyle={{ paddingTop: '10px' }}
             />
-            {generateLineElements()}
+            <Line
+              type="monotone"
+              dataKey="myHana"
+              name="MyHana"
+              stroke={colorPalette[0]}
+              strokeWidth={2}
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
+              animationDuration={500}
+              isAnimationActive={true}
+            />
+            <Line
+              type="monotone"
+              dataKey="lineBank"
+              name="LINE Bank"
+              stroke={colorPalette[1]}
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
+              animationDuration={500}
+              isAnimationActive={true}
+            />
           </LineChart>
         </ResponsiveContainer>
       </CardContent>
