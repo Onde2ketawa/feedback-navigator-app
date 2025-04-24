@@ -15,18 +15,18 @@ interface RatingTrendChartProps {
 }
 
 export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChartProps) => {
+  // Filter to only show 2024-2025
+  const filteredYears = years.filter(year => ['2024', '2025'].includes(year));
+  
   // Color palette for consistent year colors
   const colorPalette = [
     '#3b82f6', // MyHana Blue
     '#10b981', // LINE Bank Green
-    '#f59e0b', // Gold
-    '#ef4444', // Red
-    '#8b5cf6', // Purple
   ];
 
   // Generate unique keys for each year-channel combination
   const generateLineElements = () => {
-    return years.flatMap((year, index) => [
+    return filteredYears.flatMap((year, index) => [
       <Line
         key={`myHana-${year}`}
         type="monotone"
@@ -58,7 +58,7 @@ export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChar
   return (
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader>
-        <CardTitle>Year-over-Year Rating Comparison</CardTitle>
+        <CardTitle>Year-over-Year Rating Comparison (2024-2025)</CardTitle>
         <CardDescription>
           {channelFilter !== 'all' ? 
             `Showing data for ${channelFilter} channel` : 
