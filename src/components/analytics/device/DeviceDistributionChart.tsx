@@ -1,9 +1,11 @@
+
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { DeviceDistribution } from '@/hooks/device/useDeviceAnalyticsData';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
+import { Table } from 'lucide-react';
 
 const COLORS = ['#8b5cf6', '#6366f1', '#ec4899', '#f43f5e', '#f97316', '#14b8a6'];
 
@@ -24,7 +26,7 @@ export function DeviceDistributionChart({ data }: DeviceDistributionChartProps) 
               className="w-3 h-3 rounded-full" 
               style={{ backgroundColor: COLORS[colorIndex] }}
             />
-            <span>{row.getValue("device")}</span>
+            <span className="font-medium">{row.getValue("device")}</span>
           </div>
         );
       },
@@ -32,14 +34,29 @@ export function DeviceDistributionChart({ data }: DeviceDistributionChartProps) 
     {
       accessorKey: "count",
       header: "Feedbacks",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <span>{row.getValue("count")}</span>
-          <Badge variant="secondary" className="text-xs">
-            {((row.getValue("count") as number) / data.reduce((sum, item) => sum + item.count, 0) * 100).toFixed(1)}%
-          </Badge>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const totalFeedbacks = data.reduce((sum, item) => sum + item.count, 0);
+        const percentage = ((row.getValue("count") as number) / totalFeedbacks * 100).toFixed(1);
+        return (
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{row.getValue("count")}</span>
+              <Badge variant="secondary" className="text-xs">
+                {percentage}%
+              </Badge>
+            </div>
+            <div className="w-24 bg-gray-100 rounded-full h-2">
+              <div 
+                className="h-2 rounded-full transition-all"
+                style={{ 
+                  width: `${percentage}%`,
+                  backgroundColor: COLORS[row.index % COLORS.length]
+                }}
+              />
+            </div>
+          </div>
+        );
+      },
     }
   ];
 
@@ -121,6 +138,12 @@ export function DeviceDistributionChart({ data }: DeviceDistributionChartProps) 
       </div>
 
       <div className="border rounded-lg">
+        <div className="p-4 border-b bg-gray-50">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Table className="w-4 h-4" />
+            <span>Device Distribution Details</span>
+          </div>
+        </div>
         <DataTable 
           columns={columns}
           data={data}
