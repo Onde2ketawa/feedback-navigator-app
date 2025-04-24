@@ -28,6 +28,11 @@ export const exportToExcel = (data: FeedbackData[]) => {
 };
 
 export const exportToPDF = (data: FeedbackData[]) => {
+  // Check if pdfMake is available
+  if (typeof window.pdfMake === 'undefined') {
+    throw new Error('PDF generation library is not loaded. Please check your internet connection and try again.');
+  }
+
   // Create the PDF content
   const content = data.map(item => ({
     text: [
@@ -62,6 +67,5 @@ export const exportToPDF = (data: FeedbackData[]) => {
   };
 
   // Create and download PDF using pdfMake
-  // @ts-ignore - pdfMake is loaded globally
   window.pdfMake.createPdf(documentDefinition).download('feedback_export.pdf');
 };
