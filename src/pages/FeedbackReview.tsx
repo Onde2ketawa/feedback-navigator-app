@@ -4,6 +4,7 @@ import { FeedbackFilters } from '@/components/feedback-review/FeedbackFilters';
 import { FeedbackTable } from '@/components/feedback-review/FeedbackTable';
 import { useFeedbackReview } from '@/hooks/useFeedbackReview';
 import type { SortField } from '@/hooks/useFeedbackReview';
+import { PageHeader } from '@/components/ui/page-header';
 
 const FeedbackReview = () => {
   const {
@@ -33,12 +34,19 @@ const FeedbackReview = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-6">Feedback Review</h1>
+    <div className="w-full max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <PageHeader 
+        title="Feedback Review"
+        description="Review and analyze customer feedback data"
+      />
       
       <div className="space-y-6">
         <FeedbackFilters

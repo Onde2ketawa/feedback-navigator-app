@@ -19,10 +19,14 @@ export function FeedbackTable({ data, sortField, sortOrder, onSort }: FeedbackTa
   );
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <DataTable columns={columns} data={data || []} />
-      </CardContent>
-    </Card>
+    <div className="overflow-hidden">
+      <Card className="border rounded-lg">
+        <CardContent className="p-1 sm:p-2 md:p-4 lg:p-6">
+          <div className="overflow-x-auto">
+            <DataTable columns={columns} data={data || []} />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
