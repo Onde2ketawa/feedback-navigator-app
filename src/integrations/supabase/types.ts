@@ -189,10 +189,6 @@ export type Database = {
           rating_count: number
         }[]
       }
-      get_auth_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       get_average_rating: {
         Args: { channel_id_param: string }
         Returns: {

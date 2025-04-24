@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 export interface FeedbackData {
   id: string;
@@ -24,7 +23,6 @@ export interface FeedbackData {
 export type SortField = keyof FeedbackData;
 
 export function useFeedbackReview() {
-  const { session, isAdmin } = useAuth();
   const [sortField, setSortField] = useState<SortField>('submit_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
@@ -33,13 +31,8 @@ export function useFeedbackReview() {
   const [ratingRange, setRatingRange] = useState<[number, number]>([1, 5]);
 
   const { data: feedbackData, isLoading } = useQuery({
-    queryKey: ['feedback-review', sortField, sortOrder, selectedChannel, selectedYear, selectedMonth, ratingRange, session?.user?.id],
+    queryKey: ['feedback-review', sortField, sortOrder, selectedChannel, selectedYear, selectedMonth, ratingRange],
     queryFn: async () => {
-      // If not authenticated, don't fetch any data
-      if (!session?.user) {
-        return [];
-      }
-
       let query = supabase
         .from('customer_feedback')
         .select(`
@@ -84,10 +77,7 @@ export function useFeedbackReview() {
 
       const { data, error } = await query;
 
-      if (error) {
-        console.error("Error fetching feedback data:", error);
-        throw error;
-      }
+      if (error) throw error;
       
       // Fetch category and subcategory names separately
       const processedData = await Promise.all(data.map(async (item) => {
@@ -129,7 +119,6 @@ export function useFeedbackReview() {
       
       return processedData as FeedbackData[];
     },
-    enabled: !!session?.user, // Only run the query if user is authenticated
   });
 
   return {
@@ -147,7 +136,5 @@ export function useFeedbackReview() {
     setSelectedMonth,
     ratingRange,
     setRatingRange,
-    isAuthenticated: !!session?.user,
-    isAdmin,
   };
 }
