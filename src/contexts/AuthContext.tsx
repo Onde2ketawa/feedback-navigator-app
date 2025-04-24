@@ -23,26 +23,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
+  // Function to check if user is admin
+  const checkUserRole = async (userId: string) => {
+    try {
+      console.log('Checking role for user:', userId);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return;
+      }
+      
+      const isUserAdmin = data?.role === 'admin';
+      console.log('User role data:', data, 'Is admin:', isUserAdmin);
+      setIsAdmin(isUserAdmin);
+    } catch (error) {
+      console.error('Failed to check user role:', error);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log('Auth state changed:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
 
         if (currentSession?.user) {
           // Defer Supabase calls to avoid deadlocks
-          setTimeout(async () => {
-            // Check if user is admin
-            const { data } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', currentSession.user.id)
-              .single();
-            
-            setIsAdmin(data?.role === 'admin' || false);
+          setTimeout(() => {
+            checkUserRole(currentSession.user.id);
           }, 0);
+        } else {
+          setIsAdmin(false); // Reset admin status when logged out
         }
       }
     );
@@ -54,15 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
 
       if (currentSession?.user) {
-        // Check if user is admin
-        supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', currentSession.user.id)
-          .single()
-          .then(({ data }) => {
-            setIsAdmin(data?.role === 'admin' || false);
-          });
+        // Check user role
+        checkUserRole(currentSession.user.id);
       }
     });
 
