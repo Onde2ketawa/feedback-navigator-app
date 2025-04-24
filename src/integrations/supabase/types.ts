@@ -223,6 +223,16 @@ export type Database = {
           color: string
         }[]
       }
+      get_yoy_rating_comparison: {
+        Args: { channel_name?: string }
+        Returns: {
+          month: string
+          month_num: number
+          year: number
+          avg_rating: number
+          rating_count: number
+        }[]
+      }
       recalculate_sentiment_scores: {
         Args: Record<PropertyKey, never>
         Returns: undefined

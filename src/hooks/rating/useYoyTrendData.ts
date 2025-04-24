@@ -11,17 +11,9 @@ export const useYoyTrendData = (channelFilter: string) => {
     try {
       console.log('Fetching YOY trend data with filters:', { channelFilter });
       
-      let query = supabase
-        .from('customer_feedback')
-        .select('submit_date, rating, channel_id');
-      
-      // Add channel filter if not 'all'
-      if (channelFilter !== 'all') {
-        // Direct filter on channel_id (assuming channelFilter is already the ID)
-        query = query.eq('channel_id', channelFilter);
-      }
-      
-      const { data, error } = await query;
+      let { data, error } = await supabase.rpc('get_yoy_rating_comparison', {
+        channel_name: channelFilter === 'all' ? null : channelFilter
+      });
       
       if (error) throw error;
 
@@ -65,42 +57,15 @@ export const useYoyTrendData = (channelFilter: string) => {
       [`${previousYear}_count`]: 0
     }));
 
-    // Process each feedback entry
+    // Process each rating entry
     data.forEach(item => {
-      if (!item.submit_date) return;
+      const monthIndex = months.indexOf(item.month);
+      const yearKey = item.year.toString();
+      const countKey = `${yearKey}_count`;
       
-      const date = new Date(item.submit_date);
-      const year = date.getFullYear();
-      const monthIndex = date.getMonth();
-      
-      // Only process data for current and previous year
-      if (year === currentYear || year === previousYear) {
-        const yearKey = year.toString();
-        const countKey = `${yearKey}_count`;
-        const monthData = monthlyData[monthIndex];
-        
-        // Add rating to the sum and increment count
-        const currentRating = monthData[yearKey] as number;
-        const currentCount = (monthData[countKey] as number) + 1;
-        
-        monthData[yearKey] = currentRating + Number(item.rating || 0);
-        monthData[countKey] = currentCount;
-      }
-    });
-
-    // Calculate averages for all months
-    monthlyData.forEach(monthData => {
-      const currentYearKey = currentYear.toString();
-      const previousYearKey = previousYear.toString();
-      const currentYearCount = monthData[`${currentYearKey}_count`] as number;
-      const previousYearCount = monthData[`${previousYearKey}_count`] as number;
-      
-      if (currentYearCount > 0) {
-        monthData[currentYearKey] = Number((monthData[currentYearKey] as number / currentYearCount).toFixed(1));
-      }
-      
-      if (previousYearCount > 0) {
-        monthData[previousYearKey] = Number((monthData[previousYearKey] as number / previousYearCount).toFixed(1));
+      if (monthlyData[monthIndex]) {
+        monthlyData[monthIndex][yearKey] = Number(item.avg_rating);
+        monthlyData[monthIndex][countKey] = Number(item.rating_count);
       }
     });
 
