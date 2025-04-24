@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { FileExcel, FilePdf } from 'lucide-react';
+import { FileSpreadsheet, FileText } from 'lucide-react';
 import { FeedbackData } from '@/hooks/useFeedbackReview';
 import { exportToExcel, exportToPDF } from '@/utils/export-utils';
 import { useToast } from '@/hooks/use-toast';
@@ -51,7 +51,7 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({ data }) => {
         onClick={() => handleExport('excel')}
         className="flex items-center gap-2"
       >
-        <FileExcel className="h-4 w-4" />
+        <FileSpreadsheet className="h-4 w-4" />
         Export to Excel
       </Button>
       <Button
@@ -59,7 +59,7 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({ data }) => {
         onClick={() => handleExport('pdf')}
         className="flex items-center gap-2"
       >
-        <FilePdf className="h-4 w-4" />
+        <FileText className="h-4 w-4" />
         Export to PDF
       </Button>
     </div>

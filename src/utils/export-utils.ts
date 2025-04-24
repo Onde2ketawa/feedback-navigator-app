@@ -61,6 +61,7 @@ export const exportToPDF = (data: FeedbackData[]) => {
     }
   };
 
-  // @ts-ignore
+  // Create and download PDF using pdfMake
+  // @ts-ignore - pdfMake is loaded globally
   window.pdfMake.createPdf(documentDefinition).download('feedback_export.pdf');
 };
