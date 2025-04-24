@@ -27,21 +27,32 @@ export const FeedbackDataWrapper: React.FC<FeedbackDataWrapperProps> = ({
   useEffect(() => {
     if (feedbackData && feedbackData.length === 0 && !isLoading && !error) {
       // Only show the toast if filters have been applied (not on initial load)
-      if (filter.channel || filter.year || filter.month) {
+      if (filter.channel || filter.year !== 'all' || filter.month !== 'all') {
         toast({
           title: "No Results Found",
-          description: "No feedback matches the selected filters. Try adjusting your criteria or adding test data.",
+          description: "No feedback matches the selected filters. Try adjusting your criteria.",
           variant: "default"
         });
       }
     }
   }, [feedbackData, isLoading, error, filter, toast]);
 
+  // Log component state for debugging
+  useEffect(() => {
+    console.log("FeedbackDataWrapper state:", { 
+      isLoading, 
+      hasError: !!error, 
+      dataCount: feedbackData?.length || 0,
+      filters: filter
+    });
+  }, [feedbackData, isLoading, error, filter]);
+
   if (isLoading) {
     return <LoadingState />;
   }
 
   if (error) {
+    console.error("Error in FeedbackDataWrapper:", error);
     return <ErrorState error={error as Error} />;
   }
   
