@@ -2,6 +2,7 @@
 import React from 'react';
 import { FeedbackFilters } from '@/components/feedback-review/FeedbackFilters';
 import { FeedbackTable } from '@/components/feedback-review/FeedbackTable';
+import { ExportButtons } from '@/components/feedback-review/ExportButtons';
 import { useFeedbackReview } from '@/hooks/useFeedbackReview';
 import type { SortField } from '@/hooks/useFeedbackReview';
 import { PageHeader } from '@/components/ui/page-header';
@@ -49,16 +50,19 @@ const FeedbackReview = () => {
       />
       
       <div className="space-y-6">
-        <FeedbackFilters
-          selectedChannel={selectedChannel}
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          ratingRange={ratingRange}
-          onChannelChange={setSelectedChannel}
-          onYearChange={setSelectedYear}
-          onMonthChange={setSelectedMonth}
-          onRatingChange={setRatingRange}
-        />
+        <div className="flex justify-between items-center">
+          <FeedbackFilters
+            selectedChannel={selectedChannel}
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
+            ratingRange={ratingRange}
+            onChannelChange={setSelectedChannel}
+            onYearChange={setSelectedYear}
+            onMonthChange={setSelectedMonth}
+            onRatingChange={setRatingRange}
+          />
+          <ExportButtons data={feedbackData || []} />
+        </div>
 
         <FeedbackTable
           data={feedbackData || []}
