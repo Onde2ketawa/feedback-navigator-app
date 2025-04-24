@@ -11,7 +11,9 @@ export interface FeedbackData {
   submit_time: string;
   feedback: string;
   category: string | null;
+  category_name: string | null;
   sub_category: string | null;
+  subcategory_name: string | null;
   device: string;
   app_version: string;
   language: string;
@@ -41,7 +43,9 @@ export function useFeedbackReview() {
           submit_time,
           feedback,
           category,
+          categories:category(name),
           sub_category,
+          subcategories:sub_category(name),
           device,
           app_version,
           language,
@@ -76,7 +80,12 @@ export function useFeedbackReview() {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as FeedbackData[];
+      
+      return data.map(item => ({
+        ...item,
+        category_name: item.categories?.name || 'Uncategorized',
+        subcategory_name: item.subcategories?.name || 'None',
+      })) as FeedbackData[];
     },
   });
 

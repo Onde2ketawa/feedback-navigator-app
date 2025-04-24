@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
@@ -136,6 +135,9 @@ export function createFeedbackColumns({
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
+      cell: ({ row }) => {
+        return <span>{row.original.category_name}</span>;
+      },
     },
     {
       accessorKey: 'sub_category',
@@ -148,6 +150,9 @@ export function createFeedbackColumns({
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
+      cell: ({ row }) => {
+        return <span>{row.original.subcategory_name}</span>;
+      },
     },
   ];
 }
