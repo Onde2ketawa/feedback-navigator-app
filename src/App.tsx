@@ -20,6 +20,7 @@ import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 import DeviceAnalytics from './pages/DeviceAnalytics';
 import FeedbackAnalysis from './pages/FeedbackAnalysis';
+import FeedbackReview from './pages/FeedbackReview';
 
 // Auth Context & Protection
 import { AuthProvider } from './contexts/AuthContext';
@@ -50,6 +51,13 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <Dashboard />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/feedback-review" element={
+              <ProtectedRoute requireAdmin>
+                <MainLayout>
+                  <FeedbackReview />
                 </MainLayout>
               </ProtectedRoute>
             } />

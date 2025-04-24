@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Star,
@@ -8,8 +7,6 @@ import {
   Users,
   Clock,
   Smartphone,
-  ChevronLeft,
-  ChevronRight,
   FileText,
   Home,
 } from 'lucide-react';
@@ -33,6 +30,12 @@ export const sidebarNavItems = [
     title: "Feedback Analysis",
     icon: FileText,
     allowedRoles: ['admin', 'user'],
+  },
+  {
+    href: "/feedback-review",
+    title: "Feedback Review",
+    icon: MessageSquareText,
+    allowedRoles: ['admin'],
   },
   {
     href: "/rating-analytics",
@@ -83,4 +86,3 @@ export const sidebarNavItems = [
     allowedRoles: ['admin'],
   },
 ];
-
