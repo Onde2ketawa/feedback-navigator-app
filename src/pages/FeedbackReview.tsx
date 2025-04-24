@@ -6,13 +6,10 @@ import { DataTable } from '@/components/ui/data-table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FilterContainer } from '@/components/dashboard/filters/FilterContainer';
+import { ChannelFilter } from '@/components/dashboard/filters/ChannelFilter';
+import { TimeFilter } from '@/components/dashboard/filters/TimeFilter';
+import { RatingFilter } from '@/components/dashboard/filters/RatingFilter';
 
 interface FeedbackData {
   id: string;
@@ -32,11 +29,15 @@ interface FeedbackData {
 const FeedbackReview = () => {
   const [sortField, setSortField] = useState<keyof FeedbackData>('submit_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectedChannel, setSelectedChannel] = useState<string>('all');
+  const [selectedYear, setSelectedYear] = useState<string>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [ratingRange, setRatingRange] = useState<[number, number]>([1, 5]);
 
   const { data: feedbackData, isLoading } = useQuery({
-    queryKey: ['feedback-review', sortField, sortOrder],
+    queryKey: ['feedback-review', sortField, sortOrder, selectedChannel, selectedYear, selectedMonth, ratingRange],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('customer_feedback')
         .select(`
           id,
@@ -51,8 +52,35 @@ const FeedbackReview = () => {
           app_version,
           language,
           sentiment
-        `)
+        `);
+
+      // Apply filters
+      if (selectedChannel !== 'all') {
+        query = query.eq('channel_id', selectedChannel);
+      }
+
+      if (selectedYear !== 'all') {
+        const startDate = `${selectedYear}-01-01`;
+        const endDate = `${parseInt(selectedYear) + 1}-01-01`;
+        query = query.gte('submit_date', startDate).lt('submit_date', endDate);
+      }
+
+      if (selectedMonth !== 'all' && selectedYear !== 'all') {
+        const month = parseInt(selectedMonth);
+        const year = parseInt(selectedYear);
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0);
+        query = query
+          .gte('submit_date', startDate.toISOString().split('T')[0])
+          .lte('submit_date', endDate.toISOString().split('T')[0]);
+      }
+
+      query = query
+        .gte('rating', ratingRange[0])
+        .lte('rating', ratingRange[1])
         .order(sortField === 'channel' ? 'channel(name)' : sortField, { ascending: sortOrder === 'asc' });
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as FeedbackData[];
@@ -234,11 +262,33 @@ const FeedbackReview = () => {
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-2xl font-bold mb-6">Feedback Review</h1>
-      <Card>
-        <CardContent className="p-6">
-          <DataTable columns={columns} data={feedbackData || []} />
-        </CardContent>
-      </Card>
+      
+      <div className="space-y-6">
+        <FilterContainer>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <ChannelFilter
+              selectedChannel={selectedChannel}
+              onChannelChange={setSelectedChannel}
+            />
+            <TimeFilter
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+              onYearChange={setSelectedYear}
+              onMonthChange={setSelectedMonth}
+            />
+            <RatingFilter
+              ratingRange={ratingRange}
+              onRatingRangeChange={setRatingRange}
+            />
+          </div>
+        </FilterContainer>
+
+        <Card>
+          <CardContent className="p-6">
+            <DataTable columns={columns} data={feedbackData || []} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
