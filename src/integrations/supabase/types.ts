@@ -198,6 +198,13 @@ export type Database = {
           color: string
         }[]
       }
+      get_myhana_rating_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avg_rating: number
+          rating_count: number
+        }[]
+      }
       get_sentiment_trend_by_month: {
         Args: { channel_name?: string }
         Returns: {
