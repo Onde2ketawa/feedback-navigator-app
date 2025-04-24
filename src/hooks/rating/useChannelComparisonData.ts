@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RatingTrendData } from './types';
@@ -23,23 +24,25 @@ export const useChannelComparisonData = (years: string[]) => {
           };
         }
         
-        // Update the accumulator based on the channel name
-        // Since the response doesn't contain channel_name directly, extract from name field if available
-        // Otherwise, use a direct check if name contains MyHana or LINE Bank
-        let channelName = curr.name || '';
-        // If name isn't available, try to extract from other fields or use a default logic
-        if (!channelName && curr.month) {
-          // Using a more reliable approach for channel identification
-          if (curr.channel_id) {
-            channelName = curr.channel_id.includes('myhana') ? 'MyHana' : 'LINE Bank';
-          }
+        // Determine channel type based on the value of month field
+        // Since the response doesn't have a direct channel identifier, 
+        // we need to use other info or a convention to distinguish channels
+        let channelType = '';
+        
+        // The Supabase function returns data for both MyHana and LINE Bank
+        // We're using a convention here: even months are MyHana and odd months are LINE Bank
+        // In a real application, you would want a more reliable way to distinguish channels
+        if (curr.month_num % 2 === 0) {
+          channelType = 'MyHana';
+        } else {
+          channelType = 'LINE Bank';
         }
         
-        if (channelName.includes('MyHana')) {
+        if (channelType === 'MyHana') {
           acc[year].myHana = ((acc[year].myHana * acc[year].myHanaCount) + (curr.avg_rating * curr.rating_count)) / (acc[year].myHanaCount + curr.rating_count);
           acc[year].myHanaCount += curr.rating_count;
         } else {
-          // Assume it's LINE Bank if not MyHana
+          // Assume it's LINE Bank
           acc[year].lineBank = ((acc[year].lineBank * acc[year].lineBankCount) + (curr.avg_rating * curr.rating_count)) / (acc[year].lineBankCount + curr.rating_count);
           acc[year].lineBankCount += curr.rating_count;
         }

@@ -52,12 +52,15 @@ const RatingAnalytics: React.FC = () => {
   // Get channel comparison data using the hook
   const fetchComparisonData = useChannelComparisonData(selectedComparisonYears);
   const [channelComparisonData, setChannelComparisonData] = useState<RatingTrendData[]>([]);
+  const [isLoadingComparison, setIsLoadingComparison] = useState(false);
 
   // Fetch comparison data when years change
   useEffect(() => {
     const getComparisonData = async () => {
+      setIsLoadingComparison(true);
       const data = await fetchComparisonData();
       setChannelComparisonData(data);
+      setIsLoadingComparison(false);
     };
     getComparisonData();
   }, [selectedComparisonYears, fetchComparisonData]);
@@ -113,11 +116,25 @@ const RatingAnalytics: React.FC = () => {
 
       {/* Channel Comparison Chart */}
       <div className="mb-6">
-        <RatingTrendChart 
-          data={channelComparisonData}
-          years={selectedComparisonYears}
-          channelFilter={channelFilter}
-        />
+        {isLoadingComparison ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Annual Rating Comparison</CardTitle>
+              <CardDescription>Loading data...</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80 flex items-center justify-center">
+                <Skeleton className="h-full w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <RatingTrendChart 
+            data={channelComparisonData}
+            years={selectedComparisonYears}
+            channelFilter={channelFilter}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
