@@ -1,10 +1,12 @@
+
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { DeviceDistribution } from '@/hooks/device/useDeviceAnalyticsData';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { Table } from 'lucide-react';
+import { Table, ArrowUpDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const COLORS = ['#8b5cf6', '#6366f1', '#ec4899', '#f43f5e', '#f97316', '#14b8a6'];
 
@@ -32,7 +34,18 @@ export function DeviceDistributionChart({ data }: DeviceDistributionChartProps) 
     },
     {
       accessorKey: "count",
-      header: "Feedbacks",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            className="-ml-4"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Feedbacks
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
       cell: ({ row }) => {
         const totalFeedbacks = data.reduce((sum, item) => sum + item.count, 0);
         const percentage = ((row.getValue("count") as number) / totalFeedbacks * 100).toFixed(1);
@@ -56,6 +69,7 @@ export function DeviceDistributionChart({ data }: DeviceDistributionChartProps) 
           </div>
         );
       },
+      sortingFn: "basic",
     }
   ];
 
