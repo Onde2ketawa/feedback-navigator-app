@@ -17,7 +17,7 @@ export const useChannelComparisonData = (years: string[]) => {
       
       // Direct SQL query to get accurate average ratings by year and channel
       const { data, error } = await supabase
-        .rpc<AnnualChannelRating>('get_annual_channel_ratings', { 
+        .rpc<AnnualChannelRating[], { year_filters: string[] }>('get_annual_channel_ratings', { 
           year_filters: years 
         });
       
