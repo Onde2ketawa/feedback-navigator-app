@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface RatingTrendData {
-  month: string;
+  year: string;
   [key: string]: string | number; // Dynamic year-channel keys
 }
 
@@ -15,24 +15,21 @@ interface RatingTrendChartProps {
 }
 
 export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChartProps) => {
-  // Filter to only show 2024-2025
-  const filteredYears = years.filter(year => ['2024', '2025'].includes(year));
-  
-  // Color palette for consistent year colors
+  // Color palette for consistent channel colors
   const colorPalette = [
     '#3b82f6', // MyHana Blue
     '#10b981', // LINE Bank Green
   ];
 
-  // Generate unique keys for each year-channel combination
+  // Generate unique keys for each channel
   const generateLineElements = () => {
-    return filteredYears.flatMap((year, index) => [
+    return [
       <Line
-        key={`myHana-${year}`}
+        key="myHana"
         type="monotone"
-        dataKey={`myHana-${year}`}
-        name={`MyHana ${year}`}
-        stroke={colorPalette[index % colorPalette.length]}
+        dataKey="myHana"
+        name="MyHana"
+        stroke={colorPalette[0]}
         strokeWidth={2}
         dot={{ r: 4 }}
         activeDot={{ r: 6 }}
@@ -40,11 +37,11 @@ export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChar
         isAnimationActive={true}
       />,
       <Line
-        key={`lineBank-${year}`}
+        key="lineBank"
         type="monotone"
-        dataKey={`lineBank-${year}`}
-        name={`LINE Bank ${year}`}
-        stroke={colorPalette[(index + 1) % colorPalette.length]}
+        dataKey="lineBank"
+        name="LINE Bank"
+        stroke={colorPalette[1]}
         strokeWidth={2}
         strokeDasharray="5 5"
         dot={{ r: 4 }}
@@ -52,17 +49,17 @@ export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChar
         animationDuration={500}
         isAnimationActive={true}
       />
-    ]);
+    ];
   };
 
   return (
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader>
-        <CardTitle>Year-over-Year Rating Comparison (2024-2025)</CardTitle>
+        <CardTitle>Annual Rating Comparison (2024-2025)</CardTitle>
         <CardDescription>
           {channelFilter !== 'all' ? 
             `Showing data for ${channelFilter} channel` : 
-            'Comparing MyHana and LINE Bank ratings by month'}
+            'Comparing MyHana and LINE Bank annual ratings'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -73,7 +70,7 @@ export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChar
           >
             <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
             <XAxis 
-              dataKey="month" 
+              dataKey="year" 
               tick={{ fill: '#888' }}
               tickMargin={10}
             />
@@ -88,7 +85,7 @@ export const RatingTrendChart = ({ data, years, channelFilter }: RatingTrendChar
                 `${value.toFixed(2)}`, 
                 value === 0 ? 'No data' : name
               ]}
-              labelFormatter={(label) => `Month: ${label}`}
+              labelFormatter={(label) => `Year: ${label}`}
             />
             <Legend 
               wrapperStyle={{ paddingTop: '10px' }}

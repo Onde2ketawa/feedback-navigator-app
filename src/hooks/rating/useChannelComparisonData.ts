@@ -1,91 +1,50 @@
 
-import { useMemo } from 'react';
-import { Feedback } from '@/models/feedback';
+import { useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-interface ChannelRatingsByMonth {
-  month: string;
-  [key: string]: string | number; // Dynamic keys for year-channel combinations
-}
-
-export function useChannelComparisonData(
-  feedbackData: Feedback[] | undefined,
-  selectedYears: string[]
-) {
-  return useMemo(() => {
-    if (!feedbackData || feedbackData.length === 0 || selectedYears.length === 0) {
-      return [];
-    }
-
-    const monthlyData: Record<string, any> = {};
-    const monthNames = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-
-    // Initialize structure
-    for (let i = 0; i < 12; i++) {
-      const month = monthNames[i];
-      monthlyData[month] = { month };
+export const useChannelComparisonData = (years: string[]) => {
+  const processData = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_yoy_rating_comparison');
       
-      selectedYears.forEach(year => {
-        monthlyData[month][`myHana-${year}`] = 0;
-        monthlyData[month][`lineBank-${year}`] = 0;
-      });
-    }
+      if (error) throw error;
 
-    // Process feedback data
-    feedbackData.forEach(item => {
-      // Extract month name and year from submitDate (YYYY-MM-DD)
-      if (!item.submitDate) return;
-      
-      const date = new Date(item.submitDate);
-      const monthIndex = date.getMonth();
-      const monthName = monthNames[monthIndex];
-      const year = date.getFullYear().toString();
-      
-      // Skip if not in selected years
-      if (!selectedYears.includes(year)) return;
-      
-      // Separate by channel
-      if (item.channel === "MyHana") {
-        if (!monthlyData[monthName][`myHana-${year}`]) {
-          monthlyData[monthName][`myHana-${year}`] = { sum: item.rating, count: 1 };
-        } else if (typeof monthlyData[monthName][`myHana-${year}`] === 'object') {
-          monthlyData[monthName][`myHana-${year}`].sum += item.rating;
-          monthlyData[monthName][`myHana-${year}`].count += 1;
-        } else {
-          monthlyData[monthName][`myHana-${year}`] = { sum: item.rating, count: 1 };
-        }
-      }
-      else if (item.channel === "LINE Bank") {
-        if (!monthlyData[monthName][`lineBank-${year}`]) {
-          monthlyData[monthName][`lineBank-${year}`] = { sum: item.rating, count: 1 };
-        } else if (typeof monthlyData[monthName][`lineBank-${year}`] === 'object') {
-          monthlyData[monthName][`lineBank-${year}`].sum += item.rating;
-          monthlyData[monthName][`lineBank-${year}`].count += 1;
-        } else {
-          monthlyData[monthName][`lineBank-${year}`] = { sum: item.rating, count: 1 };
-        }
-      }
-    });
-
-    // Calculate averages
-    monthNames.forEach(month => {
-      selectedYears.forEach(year => {
-        // MyHana average
-        if (typeof monthlyData[month][`myHana-${year}`] === 'object') {
-          const { sum, count } = monthlyData[month][`myHana-${year}`];
-          monthlyData[month][`myHana-${year}`] = count > 0 ? sum / count : 0;
+      // Group and aggregate by year for each channel
+      const yearlyData = data.reduce((acc: { [key: string]: any }, curr) => {
+        const year = curr.year.toString();
+        
+        if (!acc[year]) {
+          acc[year] = {
+            year,
+            myHana: 0,
+            lineBank: 0,
+            myHanaCount: 0,
+            lineBankCount: 0,
+          };
         }
         
-        // LINE Bank average
-        if (typeof monthlyData[month][`lineBank-${year}`] === 'object') {
-          const { sum, count } = monthlyData[month][`lineBank-${year}`];
-          monthlyData[month][`lineBank-${year}`] = count > 0 ? sum / count : 0;
+        // Update the accumulator based on the channel
+        if (curr.channel === 'MyHana') {
+          acc[year].myHana = ((acc[year].myHana * acc[year].myHanaCount) + (curr.avg_rating * curr.rating_count)) / (acc[year].myHanaCount + curr.rating_count);
+          acc[year].myHanaCount += curr.rating_count;
+        } else if (curr.channel === 'LINE Bank') {
+          acc[year].lineBank = ((acc[year].lineBank * acc[year].lineBankCount) + (curr.avg_rating * curr.rating_count)) / (acc[year].lineBankCount + curr.rating_count);
+          acc[year].lineBankCount += curr.rating_count;
         }
-      });
-    });
+        
+        return acc;
+      }, {});
 
-    return monthNames.map(month => monthlyData[month]) as ChannelRatingsByMonth[];
-  }, [feedbackData, selectedYears]);
-}
+      // Convert to array and sort by year
+      return Object.values(yearlyData)
+        .filter((item: any) => years.includes(item.year))
+        .sort((a: any, b: any) => a.year.localeCompare(b.year));
+
+    } catch (error) {
+      console.error('Error fetching yearly comparison data:', error);
+      return [];
+    }
+  }, [years]);
+
+  return processData;
+};
