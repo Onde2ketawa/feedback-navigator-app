@@ -1,12 +1,11 @@
 
 import React from 'react';
-import { FilterContainer } from '@/components/dashboard/filters/FilterContainer';
 import { ChannelFilter } from '@/components/dashboard/filters/ChannelFilter';
 import { TimeFilter } from '@/components/dashboard/filters/TimeFilter';
 import { RatingFilter } from '@/components/dashboard/filters/RatingFilter';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 import { Card } from '@/components/ui/card';
-import { ChevronDown, Filter } from 'lucide-react';
+import { ChevronDown, Filter, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -48,27 +47,34 @@ export function FeedbackFilters({
   }, [selectedYear, fetchMonthsForYear]);
 
   return (
-    <Card className="p-4 shadow-md border border-gray-200 dark:border-gray-700">
+    <Card className="p-4 shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:shadow-md">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Filter className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-semibold">Filter Feedback</h3>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 dark:bg-primary/5">
+              <SlidersHorizontal className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Filter Feedback</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Customize your feedback view</p>
+            </div>
           </div>
           <CollapsibleTrigger asChild>
             <Button 
               variant="ghost" 
               size="sm"
-              className="hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} />
+              <ChevronDown 
+                className={`h-4 w-4 transition-transform duration-300 ease-in-out ${isOpen ? 'transform rotate-180' : ''}`} 
+              />
             </Button>
           </CollapsibleTrigger>
         </div>
 
         <CollapsibleContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <div className="space-y-4">
+            <div className="space-y-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
               <ChannelFilter
                 selectedChannel={selectedChannel}
                 onChannelChange={onChannelChange}
@@ -77,7 +83,7 @@ export function FeedbackFilters({
               />
             </div>
 
-            <div className="space-y-4 md:col-span-2 lg:col-span-1">
+            <div className="space-y-4 md:col-span-2 lg:col-span-1 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
               <TimeFilter
                 selectedYear={selectedYear}
                 selectedMonth={selectedMonth}
@@ -89,7 +95,7 @@ export function FeedbackFilters({
               />
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
               <RatingFilter
                 ratingRange={ratingRange}
                 onRatingChange={onRatingChange}
