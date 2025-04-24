@@ -1,9 +1,9 @@
+
 import React from 'react';
 import { DataTable } from '@/components/ui/data-table';
-import { Button } from '@/components/ui/button';
-import { ArrowUpDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { FeedbackData, SortField } from '@/hooks/useFeedbackReview';
+import { createFeedbackColumns } from './table/FeedbackColumns';
 
 interface FeedbackTableProps {
   data: FeedbackData[];
@@ -13,140 +13,10 @@ interface FeedbackTableProps {
 }
 
 export function FeedbackTable({ data, sortField, sortOrder, onSort }: FeedbackTableProps) {
-  const columns = [
-    {
-      accessorKey: "channel.name",
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('channel')}
-        >
-          Channel
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: 'rating',
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('rating')}
-        >
-          Rating
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: 'feedback',
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('feedback')}
-        >
-          Feedback
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: 'device',
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('device')}
-        >
-          Device
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: 'app_version',
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('app_version')}
-        >
-          App Version
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: 'language',
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('language')}
-        >
-          Language
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: 'submit_date',
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('submit_date')}
-        >
-          Submit Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: 'submit_time',
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('submit_time')}
-        >
-          Submit Time
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: 'sentiment',
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('sentiment')}
-        >
-          Sentiment
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: 'category',
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('category')}
-        >
-          Category
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: 'sub_category',
-      header: () => (
-        <Button
-          variant="ghost"
-          onClick={() => onSort('sub_category')}
-        >
-          Sub Category
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-  ];
+  const columns = React.useMemo(
+    () => createFeedbackColumns({ sortField, sortOrder, onSort }),
+    [sortField, sortOrder, onSort]
+  );
 
   return (
     <Card>
