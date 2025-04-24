@@ -26,43 +26,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
+        console.log("Auth state changed:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
 
         if (currentSession?.user) {
-          // Defer Supabase calls to avoid deadlocks
-          setTimeout(async () => {
-            // Check if user is admin
-            const { data } = await supabase
+          try {
+            // Use a direct query to get the role from the profiles table
+            const { data, error } = await supabase
               .from('profiles')
               .select('role')
               .eq('id', currentSession.user.id)
               .single();
             
-            setIsAdmin(data?.role === 'admin' || false);
-          }, 0);
+            if (error) {
+              console.error("Error fetching user role:", error);
+              setIsAdmin(false);
+            } else {
+              console.log("User role from profiles:", data?.role);
+              setIsAdmin(data?.role === 'admin');
+            }
+          } catch (error) {
+            console.error("Error checking admin status:", error);
+            setIsAdmin(false);
+          }
+        } else {
+          setIsAdmin(false);
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setIsLoading(false);
 
       if (currentSession?.user) {
-        // Check if user is admin
-        supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', currentSession.user.id)
-          .single()
-          .then(({ data }) => {
-            setIsAdmin(data?.role === 'admin' || false);
-          });
+        try {
+          // Use a direct query to get the role from the profiles table
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', currentSession.user.id)
+            .single();
+          
+          if (error) {
+            console.error("Error fetching user role:", error);
+            setIsAdmin(false);
+          } else {
+            console.log("User role from profiles:", data?.role);
+            setIsAdmin(data?.role === 'admin');
+          }
+        } catch (error) {
+          console.error("Error checking admin status:", error);
+          setIsAdmin(false);
+        }
       }
     });
 
