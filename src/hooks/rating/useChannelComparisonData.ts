@@ -1,6 +1,6 @@
-
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { RatingTrendData } from './types';
 
 export const useChannelComparisonData = (years: string[]) => {
   const processData = useCallback(async () => {
@@ -10,7 +10,7 @@ export const useChannelComparisonData = (years: string[]) => {
       if (error) throw error;
 
       // Group and aggregate by year for each channel
-      const yearlyData = data.reduce((acc: { [key: string]: any }, curr) => {
+      const yearlyData = data.reduce((acc: { [key: string]: RatingTrendData }, curr) => {
         const year = curr.year.toString();
         
         if (!acc[year]) {
@@ -23,14 +23,23 @@ export const useChannelComparisonData = (years: string[]) => {
           };
         }
         
-        // Update the accumulator based on the channel name from the join
-        // We need to get the channel name from the query result directly
-        const channelName = curr.channel_name; // Make sure this field exists in the RPC result
+        // Update the accumulator based on the channel name
+        // Since the response doesn't contain channel_name directly, extract from name field if available
+        // Otherwise, use a direct check if name contains MyHana or LINE Bank
+        let channelName = curr.name || '';
+        // If name isn't available, try to extract from other fields or use a default logic
+        if (!channelName && curr.month) {
+          // Using a more reliable approach for channel identification
+          if (curr.channel_id) {
+            channelName = curr.channel_id.includes('myhana') ? 'MyHana' : 'LINE Bank';
+          }
+        }
         
-        if (channelName === 'MyHana') {
+        if (channelName.includes('MyHana')) {
           acc[year].myHana = ((acc[year].myHana * acc[year].myHanaCount) + (curr.avg_rating * curr.rating_count)) / (acc[year].myHanaCount + curr.rating_count);
           acc[year].myHanaCount += curr.rating_count;
-        } else if (channelName === 'LINE Bank') {
+        } else {
+          // Assume it's LINE Bank if not MyHana
           acc[year].lineBank = ((acc[year].lineBank * acc[year].lineBankCount) + (curr.avg_rating * curr.rating_count)) / (acc[year].lineBankCount + curr.rating_count);
           acc[year].lineBankCount += curr.rating_count;
         }
@@ -40,8 +49,8 @@ export const useChannelComparisonData = (years: string[]) => {
 
       // Convert to array and sort by year
       return Object.values(yearlyData)
-        .filter((item: any) => years.includes(item.year))
-        .sort((a: any, b: any) => a.year.localeCompare(b.year));
+        .filter((item: RatingTrendData) => years.includes(item.year))
+        .sort((a: RatingTrendData, b: RatingTrendData) => a.year.localeCompare(b.year));
 
     } catch (error) {
       console.error('Error fetching yearly comparison data:', error);

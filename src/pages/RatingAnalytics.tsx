@@ -100,6 +100,7 @@ const RatingAnalytics: React.FC = () => {
         />
         
         <YearFilter 
+          availableYears={['2024', '2025']}
           selectedYears={selectedComparisonYears}
           onChange={setSelectedComparisonYears}
           maxSelections={2}

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -6,19 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 
 interface YearFilterProps {
-  availableYears: string[];
+  availableYears?: string[];
   selectedYears: string[];
   onChange: (years: string[]) => void;
   maxSelections?: number;
 }
 
 export const YearFilter = ({ 
+  availableYears,
   selectedYears, 
   onChange, 
   maxSelections = 3 
 }: YearFilterProps) => {
-  // Hardcode available years to 2024-2025
-  const availableYears = ['2024', '2025'];
+  // Hardcode available years to 2024-2025 if not provided
+  const yearOptions = availableYears || ['2024', '2025'];
 
   const handleYearToggle = (year: string) => {
     if (selectedYears.includes(year)) {
@@ -44,7 +46,7 @@ export const YearFilter = ({
         <div className="space-y-4">
           <Label>Compare Years (max {maxSelections})</Label>
           <div className="grid grid-cols-2 gap-2">
-            {availableYears.map((year) => (
+            {yearOptions.map((year) => (
               <div key={year} className="flex items-center space-x-2">
                 <Checkbox
                   id={`year-${year}`}

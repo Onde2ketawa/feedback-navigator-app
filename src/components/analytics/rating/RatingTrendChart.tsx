@@ -2,11 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
-interface RatingTrendData {
-  year: string;
-  [key: string]: string | number; // Dynamic year-channel keys
-}
+import { RatingTrendData } from '@/hooks/rating/types';
 
 interface RatingTrendChartProps {
   data: RatingTrendData[];
