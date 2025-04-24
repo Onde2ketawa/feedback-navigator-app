@@ -1,3 +1,4 @@
+
 // Define interfaces for the data structures
 export interface YoyTrendDataPoint {
   name: string;
@@ -24,4 +25,13 @@ export interface FilterState {
   channelFilter: string;
   yearFilter: string;
   monthFilter: string;
+}
+
+// New interfaces for the RatingTrendChart
+export interface RatingTrendData {
+  year: string;
+  myHana: number;
+  lineBank: number;
+  myHanaCount?: number;
+  lineBankCount?: number;
 }

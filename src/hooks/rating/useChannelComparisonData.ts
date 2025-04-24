@@ -23,11 +23,14 @@ export const useChannelComparisonData = (years: string[]) => {
           };
         }
         
-        // Update the accumulator based on the channel
-        if (curr.channel === 'MyHana') {
+        // Update the accumulator based on the channel name from the join
+        // We need to get the channel name from the query result directly
+        const channelName = curr.channel_name; // Make sure this field exists in the RPC result
+        
+        if (channelName === 'MyHana') {
           acc[year].myHana = ((acc[year].myHana * acc[year].myHanaCount) + (curr.avg_rating * curr.rating_count)) / (acc[year].myHanaCount + curr.rating_count);
           acc[year].myHanaCount += curr.rating_count;
-        } else if (curr.channel === 'LINE Bank') {
+        } else if (channelName === 'LINE Bank') {
           acc[year].lineBank = ((acc[year].lineBank * acc[year].lineBankCount) + (curr.avg_rating * curr.rating_count)) / (acc[year].lineBankCount + curr.rating_count);
           acc[year].lineBankCount += curr.rating_count;
         }

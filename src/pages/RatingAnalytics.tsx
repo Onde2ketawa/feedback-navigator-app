@@ -17,7 +17,7 @@ import { useChannelFilter } from '@/hooks/useChannelFilter';
 import { RatingTrendChart } from '@/components/analytics/rating/RatingTrendChart';
 import { YearFilter } from '@/components/analytics/YearFilter';
 import { useChannelComparisonData } from '@/hooks/rating/useChannelComparisonData';
-import { useFeedbackData } from '@/hooks/useFeedbackData';
+import { RatingTrendData } from '@/hooks/rating/types';
 
 const RatingAnalytics: React.FC = () => {
   // Get channel filter from useChannelFilter hook
@@ -47,20 +47,20 @@ const RatingAnalytics: React.FC = () => {
   } = useAverageRating(channelFilter, yearFilter, monthFilter);
   
   // Year comparison feature
-  const [selectedComparisonYears, setSelectedComparisonYears] = useState<string[]>(['2023', '2024']);
-  const availableYears = ['2020', '2021', '2022', '2023', '2024'];
+  const [selectedComparisonYears, setSelectedComparisonYears] = useState<string[]>(['2024', '2025']);
+  
+  // Get channel comparison data using the hook
+  const fetchComparisonData = useChannelComparisonData(selectedComparisonYears);
+  const [channelComparisonData, setChannelComparisonData] = useState<RatingTrendData[]>([]);
 
-  // Get all feedback data for channel comparison chart
-  const { data: feedbackData } = useFeedbackData({ 
-    channel: null,
-    year: null,
-    month: null,
-    ratingMin: 1,
-    ratingMax: 5
-  });
-
-  // Process data for channel comparison chart
-  const channelComparisonData = useChannelComparisonData(feedbackData, selectedComparisonYears);
+  // Fetch comparison data when years change
+  useEffect(() => {
+    const getComparisonData = async () => {
+      const data = await fetchComparisonData();
+      setChannelComparisonData(data);
+    };
+    getComparisonData();
+  }, [selectedComparisonYears, fetchComparisonData]);
 
   React.useEffect(() => {
     fetchAverageRating();
@@ -100,10 +100,9 @@ const RatingAnalytics: React.FC = () => {
         />
         
         <YearFilter 
-          availableYears={availableYears}
           selectedYears={selectedComparisonYears}
           onChange={setSelectedComparisonYears}
-          maxSelections={3}
+          maxSelections={2}
         />
       </div>
       
