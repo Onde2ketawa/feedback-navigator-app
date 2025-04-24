@@ -180,6 +180,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_annual_channel_ratings: {
+        Args: { year_filters?: string[] }
+        Returns: {
+          year: number
+          channel_name: string
+          avg_rating: number
+          rating_count: number
+        }[]
+      }
       get_average_rating: {
         Args: { channel_id_param: string }
         Returns: {
