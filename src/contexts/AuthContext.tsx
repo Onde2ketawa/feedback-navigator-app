@@ -23,22 +23,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
-  // Function to check if user is admin
+  // Function to check if user is admin using direct table selection
+  // This avoids RLS policy recursion issues
   const checkUserRole = async (userId: string) => {
     try {
       console.log('Checking role for user:', userId);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
+      
+      // Use direct SQL query to avoid RLS policy recursion
+      const { data, error } = await supabase.rpc('get_user_role', { user_id: userId });
       
       if (error) {
         console.error('Error fetching user role:', error);
         return;
       }
       
-      const isUserAdmin = data?.role === 'admin';
+      const isUserAdmin = data === 'admin';
       console.log('User role data:', data, 'Is admin:', isUserAdmin);
       setIsAdmin(isUserAdmin);
     } catch (error) {
