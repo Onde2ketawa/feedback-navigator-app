@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Checking role for user:', userId);
       
       // Use direct SQL query to avoid RLS policy recursion
-      const { data, error } = await supabase.rpc('get_user_role', { user_id: userId });
+      const { data, error } = await supabase.rpc('get_auth_user_role');
       
       if (error) {
         console.error('Error fetching user role:', error);
