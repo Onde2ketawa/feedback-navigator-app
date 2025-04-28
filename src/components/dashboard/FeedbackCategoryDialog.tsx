@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import CategorySelector from '@/components/CategorySelector';
 import { CategoryType, SubcategoryType } from '@/hooks/categories/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface FeedbackCategoryDialogProps {
   isOpen: boolean;
@@ -31,12 +32,38 @@ export const FeedbackCategoryDialog: React.FC<FeedbackCategoryDialogProps> = ({
   categories,
   subcategories,
 }) => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   console.log('FeedbackCategoryDialog render:', { 
     isOpen, 
     selectedFeedback, 
     categoriesCount: categories.length,
     subcategoriesCount: subcategories.length
   });
+
+  const handleSave = async (category: string, subcategory: string) => {
+    if (!selectedFeedback?.id) return;
+
+    try {
+      setIsSubmitting(true);
+      await onSave(selectedFeedback.id, category, subcategory);
+      toast({
+        title: "Success",
+        description: "Category updated successfully",
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error saving category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update category",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -52,17 +79,7 @@ export const FeedbackCategoryDialog: React.FC<FeedbackCategoryDialogProps> = ({
             <CategorySelector
               initialCategory={selectedFeedback.category}
               initialSubcategory={selectedFeedback.subcategory}
-              onSave={(category, subcategory) => {
-                console.log('Category selector onSave called with:', { 
-                  feedbackId: selectedFeedback.id, 
-                  category, 
-                  subcategory 
-                });
-                
-                if (selectedFeedback.id) {
-                  onSave(selectedFeedback.id, category, subcategory);
-                }
-              }}
+              onSave={handleSave}
               categories={categories}
               subcategories={subcategories}
             />

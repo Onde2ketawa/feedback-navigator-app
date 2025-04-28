@@ -5,6 +5,7 @@ import { FeedbackTable } from '@/components/dashboard/FeedbackTable';
 import { Feedback } from '@/models/feedback';
 import { SentimentEditDialog } from './sentiment/SentimentEditDialog';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface FeedbackTableContainerProps {
   feedbackData: Feedback[];
@@ -26,6 +27,7 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
   const [localFeedbackData, setLocalFeedbackData] = useState<Feedback[]>(feedbackData);
   const [sentimentDialogOpen, setSentimentDialogOpen] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
+  const { toast } = useToast();
 
   // Update local state when props change
   useEffect(() => {
@@ -50,6 +52,8 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
               item.id === payload.new.id 
                 ? { 
                     ...item, 
+                    category: payload.new.category,
+                    sub_category: payload.new.sub_category,
                     sentiment: payload.new.sentiment,
                     sentiment_score: payload.new.sentiment_score 
                   }
@@ -71,21 +75,28 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
   };
 
   const handleSaveSentiment = async (feedbackId: string, sentiment: string) => {
-    // Optimistic update
-    setLocalFeedbackData(prevData =>
-      prevData.map(item =>
-        item.id === feedbackId
-          ? { ...item, sentiment }
-          : item
-      )
-    );
+    try {
+      const { error } = await supabase
+        .from('customer_feedback')
+        .update({ sentiment })
+        .eq('id', feedbackId);
 
-    const { error } = await supabase
-      .from('customer_feedback')
-      .update({ sentiment })
-      .eq('id', feedbackId);
+      if (error) throw error;
 
-    if (error) throw error;
+      toast({
+        title: "Success",
+        description: "Sentiment updated successfully",
+      });
+
+      setSentimentDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating sentiment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update sentiment",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
