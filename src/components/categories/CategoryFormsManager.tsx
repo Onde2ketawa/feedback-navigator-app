@@ -14,8 +14,8 @@ interface CategoryFormsManagerProps {
   setIsEditSubcategoryOpen: (isOpen: boolean) => void;
   handleAddCategory: (categoryName: string) => void;
   handleEditCategory: (categoryName: string) => void;
-  handleAddSubcategory: () => void;
-  handleEditSubcategory: () => void;
+  handleAddSubcategory: (subcategoryName: string) => void;
+  handleEditSubcategory: (subcategoryName: string) => void;
   newSubcategoryName: string;
   setNewSubcategoryName: (name: string) => void;
   editSubcategoryName: string;
@@ -52,39 +52,13 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
   addSubcategoryMutation,
   editSubcategoryMutation
 }) => {
-  // Direct handler for adding categories - no need for setTimeout
-  const handleAddCategorySubmit = (name: string) => {
-    handleAddCategory(name);
-  };
-  
-  // Direct handler for editing categories - no need for setTimeout
-  const handleEditCategorySubmit = (name: string) => {
-    handleEditCategory(name);
-  };
-  
-  // Handler for adding subcategories - set state first then call the handler
-  const handleAddSubcategorySubmit = (name: string) => {
-    setNewSubcategoryName(name);
-    setTimeout(() => {
-      handleAddSubcategory();
-    }, 0);
-  };
-  
-  // Handler for editing subcategories - set state first then call the handler
-  const handleEditSubcategorySubmit = (name: string) => {
-    setEditSubcategoryName(name);
-    setTimeout(() => {
-      handleEditSubcategory();
-    }, 0);
-  };
-  
   return (
     <>
       {/* Add Category Form */}
       <CategoryForm
         isOpen={isAddCategoryOpen}
         onClose={() => setIsAddCategoryOpen(false)}
-        onSubmit={handleAddCategorySubmit}
+        onSubmit={handleAddCategory}
         title="Add Category"
         description="Create a new category for grouping feedback."
         submitLabel="Add Category"
@@ -95,7 +69,7 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
       <CategoryForm
         isOpen={isEditCategoryOpen}
         onClose={() => setIsEditCategoryOpen(false)}
-        onSubmit={handleEditCategorySubmit}
+        onSubmit={handleEditCategory}
         title="Edit Category"
         description="Update the category name."
         initialValue={selectedCategory?.name || ''}
@@ -107,7 +81,7 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
       <CategoryForm
         isOpen={isAddSubcategoryOpen}
         onClose={() => setIsAddSubcategoryOpen(false)}
-        onSubmit={handleAddSubcategorySubmit}
+        onSubmit={handleAddSubcategory}
         title="Add Subcategory"
         description={selectedCategory ? `Add a subcategory to "${selectedCategory.name}".` : "Add a subcategory"}
         submitLabel="Add Subcategory"
@@ -118,7 +92,7 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
       <CategoryForm
         isOpen={isEditSubcategoryOpen}
         onClose={() => setIsEditSubcategoryOpen(false)}
-        onSubmit={handleEditSubcategorySubmit}
+        onSubmit={handleEditSubcategory}
         title="Edit Subcategory"
         description="Update the subcategory name."
         initialValue={selectedSubcategory?.name || ''}

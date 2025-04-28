@@ -68,10 +68,10 @@ export const useCategoryHandlers = (
   };
   
   // Subcategory handlers with improved validation and debug logging
-  const handleAddSubcategory = () => {
+  const handleAddSubcategory = (subcategoryName: string) => {
     console.log("handleAddSubcategory called with:", { 
       selectedCategory, 
-      newSubcategoryName 
+      subcategoryName 
     });
     
     if (!selectedCategory) {
@@ -84,7 +84,7 @@ export const useCategoryHandlers = (
     }
     
     // Validate subcategory name with more detailed feedback
-    if (!newSubcategoryName) {
+    if (!subcategoryName) {
       toast({
         title: "Invalid input",
         description: "Subcategory name is missing",
@@ -93,7 +93,7 @@ export const useCategoryHandlers = (
       return;
     }
     
-    const trimmedName = newSubcategoryName.trim();
+    const trimmedName = subcategoryName.trim();
     if (trimmedName === '') {
       toast({
         title: "Invalid input",
@@ -115,10 +115,10 @@ export const useCategoryHandlers = (
     });
   };
   
-  const handleEditSubcategory = () => {
+  const handleEditSubcategory = (subcategoryName: string) => {
     console.log("handleEditSubcategory called with:", { 
       selectedSubcategory, 
-      editSubcategoryName 
+      subcategoryName 
     });
     
     if (!selectedSubcategory) {
@@ -131,7 +131,7 @@ export const useCategoryHandlers = (
     }
     
     // Validate subcategory name with more detailed feedback
-    if (!editSubcategoryName) {
+    if (!subcategoryName) {
       toast({
         title: "Invalid input",
         description: "Subcategory name is missing",
@@ -140,7 +140,7 @@ export const useCategoryHandlers = (
       return;
     }
     
-    const trimmedName = editSubcategoryName.trim();
+    const trimmedName = subcategoryName.trim();
     if (trimmedName === '') {
       toast({
         title: "Invalid input",
