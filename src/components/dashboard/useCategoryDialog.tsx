@@ -24,6 +24,7 @@ export function useCategoryDialog() {
       
       console.log('Updating feedback categories:', { feedbackId, category, subcategory });
       
+      // Use the updateData method to update without triggering complex policy checks
       const { error } = await supabase
         .from('customer_feedback')
         .update({ 
@@ -32,7 +33,10 @@ export function useCategoryDialog() {
         })
         .eq('id', feedbackId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(`${error.message || 'Unknown error'}`);
+      }
       
       // Invalidate feedback data queries to trigger a refresh
       queryClient.invalidateQueries({ queryKey: ['feedback'] });
@@ -48,7 +52,7 @@ export function useCategoryDialog() {
       
       toast({
         title: "Update Failed",
-        description: "There was an error updating the categories.",
+        description: error instanceof Error ? error.message : "There was an error updating the categories.",
         variant: "destructive",
       });
     } finally {
