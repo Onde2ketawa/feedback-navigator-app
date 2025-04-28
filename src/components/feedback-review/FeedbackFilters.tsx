@@ -5,7 +5,7 @@ import { TimeFilter } from '@/components/dashboard/filters/TimeFilter';
 import { RatingFilter } from '@/components/dashboard/filters/RatingFilter';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 import { Card } from '@/components/ui/card';
-import { ChevronDown, Filter, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
