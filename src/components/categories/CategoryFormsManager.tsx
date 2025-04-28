@@ -52,31 +52,27 @@ const CategoryFormsManager: React.FC<CategoryFormsManagerProps> = ({
   addSubcategoryMutation,
   editSubcategoryMutation
 }) => {
-  // Category handlers with direct validation
+  // Direct handler for adding categories - no need for setTimeout
   const handleAddCategorySubmit = (name: string) => {
     handleAddCategory(name);
   };
   
+  // Direct handler for editing categories - no need for setTimeout
   const handleEditCategorySubmit = (name: string) => {
     handleEditCategory(name);
   };
   
-  // Subcategory handlers with state updates and improved timing
+  // Handler for adding subcategories - set state first then call the handler
   const handleAddSubcategorySubmit = (name: string) => {
-    // Set the state first
     setNewSubcategoryName(name);
-    
-    // Use setTimeout to ensure React has completed the state update
     setTimeout(() => {
       handleAddSubcategory();
     }, 0);
   };
   
+  // Handler for editing subcategories - set state first then call the handler
   const handleEditSubcategorySubmit = (name: string) => {
-    // Set the state first
     setEditSubcategoryName(name);
-    
-    // Use setTimeout to ensure React has completed the state update
     setTimeout(() => {
       handleEditSubcategory();
     }, 0);
