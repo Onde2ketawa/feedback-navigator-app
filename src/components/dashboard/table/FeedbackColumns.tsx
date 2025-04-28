@@ -118,9 +118,11 @@ export function createFeedbackColumns({
         return (
           <div className="flex items-center gap-2">
             <Badge 
-              variant={
-                sentiment === 'Positive' ? 'success' : 
-                sentiment === 'Negative' ? 'destructive' : 'secondary'
+              variant="outline"
+              className={
+                sentiment.toLowerCase() === 'positive' ? 'bg-green-500 text-white' :
+                sentiment.toLowerCase() === 'negative' ? 'bg-red-500 text-white' :
+                'bg-white text-gray-900 border-gray-200'
               }
             >
               {sentiment}
