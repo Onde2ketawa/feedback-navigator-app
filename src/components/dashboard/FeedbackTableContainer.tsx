@@ -76,10 +76,11 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
 
   const handleSaveSentiment = async (feedbackId: string, sentiment: string) => {
     try {
-      const { error } = await supabase
-        .from('customer_feedback')
-        .update({ sentiment })
-        .eq('id', feedbackId);
+      // Use the RPC function instead of direct table update
+      const { error } = await supabase.rpc('update_feedback_sentiment', {
+        feedback_id: feedbackId,
+        sentiment_value: sentiment.toLowerCase()
+      });
 
       if (error) throw error;
 
