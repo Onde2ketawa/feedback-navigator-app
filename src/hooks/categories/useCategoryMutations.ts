@@ -9,17 +9,17 @@ export const useCategoryMutations = () => {
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
   
-  // Add category mutation
+  // Add category mutation using RPC instead of direct insert
   const addCategoryMutation = useMutation({
     mutationFn: async (categoryName: string) => {
       if (!isAdmin) {
         throw new Error("You don't have permission to add categories.");
       }
       
+      // Call the database function to add a category
       const { data, error } = await supabase
-        .from('categories')
-        .insert([{ name: categoryName }])
-        .select();
+        .rpc('add_category', { name_value: categoryName })
+        .single();
         
       if (error) throw error;
       return data;
@@ -42,7 +42,7 @@ export const useCategoryMutations = () => {
     }
   });
   
-  // Edit category mutation
+  // Edit category mutation using RPC
   const editCategoryMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
       if (!isAdmin) {
@@ -50,10 +50,7 @@ export const useCategoryMutations = () => {
       }
       
       const { data, error } = await supabase
-        .from('categories')
-        .update({ name })
-        .eq('id', id)
-        .select();
+        .rpc('edit_category', { category_id: id, name_value: name });
         
       if (error) throw error;
       return data;
@@ -76,7 +73,7 @@ export const useCategoryMutations = () => {
     }
   });
   
-  // Delete category mutation
+  // Delete category mutation using RPC
   const deleteCategoryMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!isAdmin) {
@@ -84,9 +81,7 @@ export const useCategoryMutations = () => {
       }
       
       const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('id', id);
+        .rpc('delete_category', { category_id: id });
         
       if (error) throw error;
     },
