@@ -16,10 +16,10 @@ export const useCategoryMutations = () => {
         throw new Error("You don't have permission to add categories.");
       }
       
-      // Call the database function to add a category
-      const { data, error } = await supabase
-        .rpc('add_category', { name_value: categoryName })
-        .single();
+      const { data, error } = await supabase.rpc(
+        'add_category' as any,  // Type assertion needed due to Supabase types
+        { name_value: categoryName }
+      );
         
       if (error) throw error;
       return data;
@@ -49,11 +49,12 @@ export const useCategoryMutations = () => {
         throw new Error("You don't have permission to edit categories.");
       }
       
-      const { data, error } = await supabase
-        .rpc('edit_category', { category_id: id, name_value: name });
+      const { error } = await supabase.rpc(
+        'edit_category' as any,  // Type assertion needed due to Supabase types
+        { category_id: id, name_value: name }
+      );
         
       if (error) throw error;
-      return data;
     },
     onSuccess: (_, { name }) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -80,8 +81,10 @@ export const useCategoryMutations = () => {
         throw new Error("You don't have permission to delete categories.");
       }
       
-      const { error } = await supabase
-        .rpc('delete_category', { category_id: id });
+      const { error } = await supabase.rpc(
+        'delete_category' as any,  // Type assertion needed due to Supabase types
+        { category_id: id }
+      );
         
       if (error) throw error;
     },

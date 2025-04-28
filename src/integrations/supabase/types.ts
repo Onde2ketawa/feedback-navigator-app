@@ -180,12 +180,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_category: {
+        Args: { name_value: string }
+        Returns: string
+      }
       add_subcategory: {
         Args: { category_id_value: string; name_value: string }
         Returns: string
       }
+      delete_category: {
+        Args: { category_id: string }
+        Returns: undefined
+      }
       delete_subcategory: {
         Args: { subcategory_id: string }
+        Returns: undefined
+      }
+      edit_category: {
+        Args: { category_id: string; name_value: string }
         Returns: undefined
       }
       edit_subcategory: {
