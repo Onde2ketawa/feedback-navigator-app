@@ -265,6 +265,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_feedback_sentiment: {
+        Args: {
+          feedback_id: string
+          sentiment_value: string
+          sentiment_score_value?: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

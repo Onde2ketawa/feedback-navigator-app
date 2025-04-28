@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,14 +43,11 @@ export const SentimentEditDialog: React.FC<SentimentEditDialogProps> = ({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Update sentiment in the database
-      const { error } = await supabase
-        .from('customer_feedback')
-        .update({ 
-          sentiment: selectedSentiment,
-          last_analyzed_at: new Date().toISOString()
-        })
-        .eq('id', feedback.id);
+      // Call the database function to update sentiment
+      const { error } = await supabase.rpc('update_feedback_sentiment', {
+        feedback_id: feedback.id,
+        sentiment_value: selectedSentiment.toLowerCase()
+      });
 
       if (error) throw error;
 
@@ -124,4 +120,3 @@ export const SentimentEditDialog: React.FC<SentimentEditDialogProps> = ({
     </Dialog>
   );
 };
-
