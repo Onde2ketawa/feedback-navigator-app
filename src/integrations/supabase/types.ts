@@ -257,6 +257,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      update_feedback_categories: {
+        Args: {
+          feedback_id: string
+          category_value: string
+          subcategory_value: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
