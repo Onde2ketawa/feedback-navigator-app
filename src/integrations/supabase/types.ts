@@ -180,6 +180,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_subcategory: {
+        Args: { category_id_value: string; name_value: string }
+        Returns: string
+      }
+      delete_subcategory: {
+        Args: { subcategory_id: string }
+        Returns: undefined
+      }
+      edit_subcategory: {
+        Args: { subcategory_id: string; name_value: string }
+        Returns: undefined
+      }
       get_annual_channel_ratings: {
         Args: { year_filters?: string[] }
         Returns: {

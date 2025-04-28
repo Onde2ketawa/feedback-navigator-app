@@ -9,7 +9,7 @@ export const useSubcategoryMutations = () => {
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
   
-  // Add subcategory mutation
+  // Add subcategory mutation using RPC function
   const addSubcategoryMutation = useMutation({
     mutationFn: async ({ categoryId, name }: { categoryId: string; name: string }) => {
       if (!isAdmin) {
@@ -17,12 +17,10 @@ export const useSubcategoryMutations = () => {
       }
       
       const { data, error } = await supabase
-        .from('subcategories')
-        .insert([{ 
-          category_id: categoryId, 
-          name 
-        }])
-        .select();
+        .rpc('add_subcategory', {
+          category_id_value: categoryId,
+          name_value: name
+        });
         
       if (error) throw error;
       return data;
@@ -45,21 +43,20 @@ export const useSubcategoryMutations = () => {
     }
   });
   
-  // Edit subcategory mutation
+  // Edit subcategory mutation using RPC function
   const editSubcategoryMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
       if (!isAdmin) {
         throw new Error("You don't have permission to edit subcategories.");
       }
       
-      const { data, error } = await supabase
-        .from('subcategories')
-        .update({ name })
-        .eq('id', id)
-        .select();
+      const { error } = await supabase
+        .rpc('edit_subcategory', {
+          subcategory_id: id,
+          name_value: name
+        });
         
       if (error) throw error;
-      return data;
     },
     onSuccess: (_, { name }) => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
@@ -79,7 +76,7 @@ export const useSubcategoryMutations = () => {
     }
   });
   
-  // Delete subcategory mutation
+  // Delete subcategory mutation using RPC function
   const deleteSubcategoryMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!isAdmin) {
@@ -87,9 +84,9 @@ export const useSubcategoryMutations = () => {
       }
       
       const { error } = await supabase
-        .from('subcategories')
-        .delete()
-        .eq('id', id);
+        .rpc('delete_subcategory', {
+          subcategory_id: id
+        });
         
       if (error) throw error;
     },
