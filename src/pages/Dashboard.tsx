@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { FeedbackCategoryDialog } from '@/components/dashboard/FeedbackCategoryDialog';
@@ -14,7 +15,7 @@ const Dashboard: React.FC = () => {
   
   const [filter, setFilter] = useState<FeedbackFilter>({
     channel: null,
-    year: null,  // Changed from '2024' to null to default to 'all'
+    year: null,
     month: null,
     ratingMin: 1,
     ratingMax: 5
@@ -26,7 +27,8 @@ const Dashboard: React.FC = () => {
     isDialogOpen, 
     setIsDialogOpen, 
     handleCategoryChange, 
-    openTagDialog 
+    openTagDialog,
+    isSubmitting 
   } = useCategoryDialog();
   
   const { categories, subcategories, isLoading: categoriesLoading } = useCategoryQueries();
@@ -77,6 +79,7 @@ const Dashboard: React.FC = () => {
         onSave={handleCategoryChange}
         categories={categories || []}
         subcategories={subcategories || []}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

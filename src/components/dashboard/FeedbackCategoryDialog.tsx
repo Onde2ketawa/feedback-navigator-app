@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dialog';
 import CategorySelector from '@/components/CategorySelector';
 import { CategoryType, SubcategoryType } from '@/hooks/categories/types';
-import { useToast } from '@/hooks/use-toast';
 
 interface FeedbackCategoryDialogProps {
   isOpen: boolean;
@@ -22,6 +21,7 @@ interface FeedbackCategoryDialogProps {
   onSave: (feedbackId: string, category: string, subcategory: string) => void;
   categories: CategoryType[];
   subcategories: SubcategoryType[];
+  isSubmitting?: boolean;
 }
 
 export const FeedbackCategoryDialog: React.FC<FeedbackCategoryDialogProps> = ({
@@ -31,42 +31,17 @@ export const FeedbackCategoryDialog: React.FC<FeedbackCategoryDialogProps> = ({
   onSave,
   categories,
   subcategories,
+  isSubmitting = false,
 }) => {
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   console.log('FeedbackCategoryDialog render:', { 
     isOpen, 
     selectedFeedback, 
     categoriesCount: categories.length,
     subcategoriesCount: subcategories.length
   });
-
-  const handleSave = async (category: string, subcategory: string) => {
-    if (!selectedFeedback?.id) return;
-
-    try {
-      setIsSubmitting(true);
-      await onSave(selectedFeedback.id, category, subcategory);
-      toast({
-        title: "Success",
-        description: "Category updated successfully",
-      });
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error saving category:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update category",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
   
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={isSubmitting ? undefined : onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Category Tags</DialogTitle>
@@ -79,9 +54,10 @@ export const FeedbackCategoryDialog: React.FC<FeedbackCategoryDialogProps> = ({
             <CategorySelector
               initialCategory={selectedFeedback.category}
               initialSubcategory={selectedFeedback.subcategory}
-              onSave={handleSave}
+              onSave={(category, subcategory) => onSave(selectedFeedback.id, category, subcategory)}
               categories={categories}
               subcategories={subcategories}
+              isSubmitting={isSubmitting}
             />
           )}
         </div>

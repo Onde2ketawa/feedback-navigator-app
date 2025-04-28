@@ -8,11 +8,16 @@ import { useQueryClient } from '@tanstack/react-query';
 export function useCategoryDialog() {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const handleCategoryChange = async (feedbackId: string, category: string, subcategory: string) => {
+    if (isSubmitting) return;
+    
     try {
+      setIsSubmitting(true);
+      
       if (!feedbackId) {
         throw new Error('Feedback ID is required');
       }
@@ -36,14 +41,18 @@ export function useCategoryDialog() {
         title: "Categories Updated",
         description: "Feedback categories have been updated successfully.",
       });
+      
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Error updating categories:', error);
+      
       toast({
         title: "Update Failed",
         description: "There was an error updating the categories.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -57,6 +66,7 @@ export function useCategoryDialog() {
     isDialogOpen,
     setIsDialogOpen,
     handleCategoryChange,
-    openTagDialog
+    openTagDialog,
+    isSubmitting
   };
 }

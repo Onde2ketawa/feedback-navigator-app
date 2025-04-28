@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 interface CategorySelectorProps {
   initialCategory?: string;
@@ -16,6 +16,7 @@ interface CategorySelectorProps {
   onSave: (category: string, subcategory: string) => void;
   categories: { id: string; name: string }[];
   subcategories: { id: string; category_id: string; name: string }[];
+  isSubmitting?: boolean;
 }
 
 const CategorySelector: React.FC<CategorySelectorProps> = ({
@@ -24,11 +25,17 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   onSave,
   categories,
   subcategories,
+  isSubmitting = false,
 }) => {
   const [category, setCategory] = useState(initialCategory);
   const [subcategory, setSubcategory] = useState(initialSubcategory);
   const [availableSubcategories, setAvailableSubcategories] = useState<{ id: string; name: string }[]>([]);
-  const { toast } = useToast();
+
+  // Reset states when initial values change (dialog reopens)
+  useEffect(() => {
+    setCategory(initialCategory);
+    setSubcategory(initialSubcategory);
+  }, [initialCategory, initialSubcategory]);
 
   // Filter subcategories when category changes
   useEffect(() => {
@@ -49,25 +56,12 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
 
   const handleSave = () => {
     console.log('Saving category:', category, 'subcategory:', subcategory);
-    try {
-      onSave(category || '', subcategory || '');
-      toast({
-        title: "Tag selection saved",
-        description: "Your category selection has been saved.",
-      });
-    } catch (error) {
-      console.error('Error saving tags:', error);
-      toast({
-        title: "Error saving tags",
-        description: "There was a problem saving your category selection.",
-        variant: "destructive",
-      });
-    }
+    onSave(category || '', subcategory || '');
   };
 
   return (
     <div className="space-y-4">
-      <Select value={category} onValueChange={setCategory}>
+      <Select value={category} onValueChange={setCategory} disabled={isSubmitting}>
         <SelectTrigger>
           <SelectValue placeholder="Select category" />
         </SelectTrigger>
@@ -83,7 +77,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
       <Select
         value={subcategory}
         onValueChange={setSubcategory}
-        disabled={!category || availableSubcategories.length === 0}
+        disabled={!category || availableSubcategories.length === 0 || isSubmitting}
       >
         <SelectTrigger>
           <SelectValue placeholder="Select subcategory" />
@@ -99,8 +93,10 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
 
       <Button 
         onClick={handleSave}
-        disabled={!category}
+        disabled={!category || isSubmitting}
+        className="w-full"
       >
+        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Save Tags
       </Button>
     </div>
