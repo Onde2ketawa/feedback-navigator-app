@@ -24,9 +24,9 @@ export function usePlayStoreScraper() {
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
       
       const mockData: PlayStoreData = {
-        appName: "Line Bank",
-        rating: 4.2,
-        ratingCount: "125,000",
+        appName: "LINE Bank",
+        rating: 3.1,
+        ratingCount: "26.4K",
         developer: "PT Bank KEB Hana Indonesia",
         description: "Mobile banking application for digital banking services",
         lastUpdated: "December 2024"
