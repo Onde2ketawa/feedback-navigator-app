@@ -58,7 +58,7 @@ const Dashboard: React.FC = () => {
         filter={filter}
       >
         <div className="space-y-4 sm:space-y-6">
-          <DashboardStats />
+          <DashboardStats filter={filter} />
           
           <DashboardContent
             feedbackData={feedbackData || []}

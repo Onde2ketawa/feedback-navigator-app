@@ -6,12 +6,17 @@ import { useFeedbackStats } from '@/hooks/useFeedbackStats';
 import { Loader2, AlertCircle, PieChart } from 'lucide-react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
+import { FeedbackFilter } from '@/hooks/useFeedbackData';
 
 // Register the required chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-export function DashboardStats() {
-  const { data: stats, isLoading, error } = useFeedbackStats();
+interface DashboardStatsProps {
+  filter?: FeedbackFilter;
+}
+
+export function DashboardStats({ filter }: DashboardStatsProps) {
+  const { data: stats, isLoading, error } = useFeedbackStats(filter);
   
   if (isLoading) {
     return (
@@ -92,27 +97,31 @@ export function DashboardStats() {
           <CardTitle className="text-sm font-medium">Feedback by Channel</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center">
-          <div className="w-full aspect-square max-w-[200px]">
-            <Doughnut 
-              data={channelChartData} 
-              options={{
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                  legend: { 
-                    position: 'bottom',
-                    display: true,
-                    align: 'center',
-                    labels: {
-                      boxWidth: 12,
-                      padding: 15,
-                      usePointStyle: true,
-                    }
-                  },
-                }
-              }}
-            />
-          </div>
+          {stats.channelDistribution.length > 0 ? (
+            <div className="w-full aspect-square max-w-[200px]">
+              <Doughnut 
+                data={channelChartData} 
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: true,
+                  plugins: {
+                    legend: { 
+                      position: 'bottom',
+                      display: true,
+                      align: 'center',
+                      labels: {
+                        boxWidth: 12,
+                        padding: 15,
+                        usePointStyle: true,
+                      }
+                    },
+                  }
+                }}
+              />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No data available</p>
+          )}
         </CardContent>
       </Card>
     </div>
