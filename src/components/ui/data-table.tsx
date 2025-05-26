@@ -20,6 +20,7 @@ interface DataTableProps<TData, TValue> {
   pagination?: boolean;
   filtering?: boolean;
   pageCount?: number;
+  totalRecords?: number;
   onPaginationChange?: (pageIndex: number, pageSize: number) => void;
 }
 
@@ -29,6 +30,7 @@ export function DataTable<TData, TValue>({
   pagination = true,
   filtering = true,
   pageCount,
+  totalRecords,
   onPaginationChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -67,7 +69,7 @@ export function DataTable<TData, TValue>({
   return (
     <div>
       <DataTableContent table={table} columns={columns} />
-      {pagination && <DataTablePagination table={table} />}
+      {pagination && <DataTablePagination table={table} totalRecords={totalRecords} />}
     </div>
   );
 }

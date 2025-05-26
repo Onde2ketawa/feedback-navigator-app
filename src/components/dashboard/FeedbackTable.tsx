@@ -4,6 +4,8 @@ import { DataTable } from '@/components/ui/data-table';
 import { Feedback } from '@/models/feedback';
 import { createFeedbackColumns } from './table/FeedbackColumns';
 import { useResponsiveColumns } from './table/useResponsiveColumns';
+import { useFeedbackStats } from '@/hooks/useFeedbackStats';
+import { FeedbackFilter } from '@/hooks/useFeedbackData';
 
 interface FeedbackTableProps {
   data: Feedback[];
@@ -13,6 +15,7 @@ interface FeedbackTableProps {
   setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
   openTagDialog: (feedback: Feedback) => void;
   openSentimentDialog: (feedback: Feedback) => void;
+  filter?: FeedbackFilter;
 }
 
 export const FeedbackTable: React.FC<FeedbackTableProps> = ({
@@ -23,7 +26,10 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   setSelectedRows,
   openTagDialog,
   openSentimentDialog,
+  filter,
 }) => {
+  const { data: stats } = useFeedbackStats(filter);
+  
   const columns = React.useMemo(
     () => createFeedbackColumns({
       categories,
@@ -40,7 +46,11 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   return (
     <div className="overflow-x-auto -mx-4 sm:mx-0">
       <div className="min-w-full inline-block align-middle px-4 sm:px-0">
-        <DataTable columns={visibleColumns} data={data} />
+        <DataTable 
+          columns={visibleColumns} 
+          data={data} 
+          totalRecords={stats?.totalFeedback}
+        />
       </div>
     </div>
   );

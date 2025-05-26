@@ -6,6 +6,7 @@ import { Feedback } from '@/models/feedback';
 import { SentimentEditDialog } from './sentiment/SentimentEditDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { FeedbackFilter } from '@/hooks/useFeedbackData';
 
 interface FeedbackTableContainerProps {
   feedbackData: Feedback[];
@@ -14,6 +15,7 @@ interface FeedbackTableContainerProps {
   selectedRows: string[];
   setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
   openTagDialog: (feedback: Feedback) => void;
+  filter?: FeedbackFilter;
 }
 
 export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
@@ -23,6 +25,7 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
   selectedRows,
   setSelectedRows,
   openTagDialog,
+  filter,
 }) => {
   const [localFeedbackData, setLocalFeedbackData] = useState<Feedback[]>(feedbackData);
   const [sentimentDialogOpen, setSentimentDialogOpen] = useState(false);
@@ -111,6 +114,7 @@ export const FeedbackTableContainer: React.FC<FeedbackTableContainerProps> = ({
           setSelectedRows={setSelectedRows}
           openTagDialog={openTagDialog}
           openSentimentDialog={handleOpenSentimentDialog}
+          filter={filter}
         />
       </CardContent>
 

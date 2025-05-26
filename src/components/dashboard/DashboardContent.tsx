@@ -13,6 +13,7 @@ interface DashboardContentProps {
   onFilterChange: (filters: FeedbackFilter) => void;
   categories: { id: string; name: string }[];
   subcategories: { id: string; name: string }[];
+  filter?: FeedbackFilter;
 }
 
 export function DashboardContent({
@@ -22,7 +23,8 @@ export function DashboardContent({
   openTagDialog,
   onFilterChange,
   categories,
-  subcategories
+  subcategories,
+  filter
 }: DashboardContentProps) {
   return (
     <div className="grid grid-cols-1 gap-4 lg:gap-6">
@@ -37,6 +39,7 @@ export function DashboardContent({
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
           openTagDialog={openTagDialog}
+          filter={filter}
         />
       </div>
     </div>

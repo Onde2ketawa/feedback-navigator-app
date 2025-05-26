@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { FeedbackCategoryDialog } from '@/components/dashboard/FeedbackCategoryDialog';
@@ -74,6 +73,7 @@ const Dashboard: React.FC = () => {
             onFilterChange={handleFilterChange}
             categories={categories || []}
             subcategories={subcategories || []}
+            filter={filter}
           />
         </div>
       </FeedbackDataWrapper>
