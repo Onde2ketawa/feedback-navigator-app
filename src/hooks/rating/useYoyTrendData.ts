@@ -17,20 +17,22 @@ export const useYoyTrendData = (channelFilter: string) => {
       
       if (error) throw error;
 
-      // Improved null and array checks
-      if (!data || !Array.isArray(data)) {
-        console.log('No data returned from database function');
+      // Type the data properly and handle null/undefined cases
+      const validData: any[] = data || [];
+      
+      if (!Array.isArray(validData)) {
+        console.log('Data is not an array, using empty data');
         return generateEmptyYoyData();
       }
 
-      console.log('Raw YOY data count:', data.length);
-      console.log('Sample raw data:', data.slice(0, 3));
+      console.log('Raw YOY data count:', validData.length);
+      console.log('Sample raw data:', validData.slice(0, 3));
       
-      if (data.length === 0) {
+      if (validData.length === 0) {
         return generateEmptyYoyData();
       }
       
-      return processYoyTrendData(data);
+      return processYoyTrendData(validData);
     } catch (error) {
       console.error('Error fetching YoY trend data:', error);
       return generateEmptyYoyData();
