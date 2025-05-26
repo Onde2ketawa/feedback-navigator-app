@@ -1,6 +1,5 @@
-
 import { analyzeMultilingualSentiment } from "@/utils/sentiment/multilingual-sentiment";
-import { analyzeSentiment } from "@/utils/sentiment/keyword-sentiment";
+import { analyzeSentiment } from "@/utils/sentiment-analysis";
 
 interface FeedbackItem {
   id: string;
@@ -54,7 +53,7 @@ export async function analyzeBertFeedbackBatch(
             modelUsed: 'FallbackRating'
           };
         } else {
-          const fallbackResult = analyzeSentiment(item.feedback);
+          const fallbackResult = analyzeSentiment(item.feedback, 0.3, item.rating);
           result = {
             ...fallbackResult,
             language: 'unknown',
