@@ -1,24 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { PageHeader } from '@/components/ui/page-header';
-import { FilterControls } from '@/components/analytics/FilterControls';
-import { YearOverYearTrendChart } from '@/components/analytics/YearOverYearTrendChart';
-import { MonthlyRatingTrendChart } from '@/components/analytics/MonthlyRatingTrendChart';
-import { RatingDistributionChart } from '@/components/analytics/RatingDistributionChart';
 import { useRatingAnalyticsData } from '@/hooks/rating/useRatingAnalyticsData';
-import { CategoryRatingBarChart } from '@/components/analytics/category/CategoryRatingBarChart';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { AverageRatingCard } from '@/components/analytics/rating/AverageRatingCard';
 import { useAverageRating } from '@/hooks/rating/useAverageRating';
 import { useChannelFilter } from '@/hooks/useChannelFilter';
-import { RatingTrendChart } from '@/components/analytics/rating/RatingTrendChart';
-import { YearFilter } from '@/components/analytics/YearFilter';
 import { useChannelComparisonData } from '@/hooks/rating/useChannelComparisonData';
 import { RatingTrendData } from '@/hooks/rating/types';
-import { PlayStoreRatingCard } from '@/components/dashboard/PlayStoreRatingCard';
+import { RatingAnalyticsHeader } from '@/components/analytics/rating/RatingAnalyticsHeader';
+import { RatingAnalyticsFilters } from '@/components/analytics/rating/RatingAnalyticsFilters';
+import { RatingCardsGrid } from '@/components/analytics/rating/RatingCardsGrid';
+import { ComparisonChartSection } from '@/components/analytics/rating/ComparisonChartSection';
+import { AnalyticsChartsGrid } from '@/components/analytics/rating/AnalyticsChartsGrid';
 
 const RatingAnalytics: React.FC = () => {
   const {
@@ -92,130 +83,42 @@ const RatingAnalytics: React.FC = () => {
   
   return (
     <div className="animate-fade-in">
-      <div className="flex justify-between items-center">
-        <PageHeader 
-          title="Rating Analytics" 
-          description="Analyze rating trends and distributions over time"
-        />
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-1"
-          onClick={refreshAllData}
-          disabled={isLoading || isLoadingComparison}
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading || isLoadingComparison ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
+      <RatingAnalyticsHeader 
+        onRefresh={refreshAllData}
+        isLoading={isLoading || isLoadingComparison}
+      />
       
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <FilterControls
-          channelFilter={channelFilter}
-          setChannelFilter={setChannelFilter}
-          yearFilter={yearFilter}
-          setYearFilter={setYearFilter}
-          monthFilter={monthFilter}
-          setMonthFilter={setMonthFilter}
-        />
-        
-        <YearFilter 
-          availableYears={['2024', '2025']}
-          selectedYears={selectedComparisonYears}
-          onChange={setSelectedComparisonYears}
-          maxSelections={2}
-        />
-      </div>
+      <RatingAnalyticsFilters
+        channelFilter={channelFilter}
+        setChannelFilter={setChannelFilter}
+        yearFilter={yearFilter}
+        setYearFilter={setYearFilter}
+        monthFilter={monthFilter}
+        setMonthFilter={setMonthFilter}
+        selectedComparisonYears={selectedComparisonYears}
+        setSelectedComparisonYears={setSelectedComparisonYears}
+      />
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <AverageRatingCard rating={averageRating} />
-        <PlayStoreRatingCard />
-      </div>
+      <RatingCardsGrid averageRating={averageRating} />
 
       <div className="mb-6">
-        {isLoadingComparison ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Annual Rating Comparison</CardTitle>
-              <CardDescription>Loading data...</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80 flex items-center justify-center">
-                <Skeleton className="h-full w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        ) : channelComparisonData.length === 0 ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Annual Rating Comparison</CardTitle>
-              <CardDescription>No data available for the selected years</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80 flex items-center justify-center text-muted-foreground">
-                Try selecting different years or check if data exists
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <RatingTrendChart 
-            data={channelComparisonData}
-            years={selectedComparisonYears}
-            channelFilter={channelFilter}
-          />
-        )}
+        <ComparisonChartSection
+          isLoading={isLoadingComparison}
+          channelComparisonData={channelComparisonData}
+          selectedComparisonYears={selectedComparisonYears}
+          channelFilter={channelFilter}
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {isLoading ? (
-          <Card className="col-span-1 lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Year-over-Year Rating Trend</CardTitle>
-              <CardDescription>Loading data...</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80 flex items-center justify-center">
-                <Skeleton className="h-full w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <YearOverYearTrendChart 
-            data={yoyTrendData} 
-            channelFilter={channelFilter} 
-            yearFilter={yearFilter} 
-          />
-        )}
-        
-        {isLoading ? (
-          <Skeleton className="h-[400px] w-full" />
-        ) : (
-          <MonthlyRatingTrendChart data={monthlyRatingData} />
-        )}
-        
-        {isLoading ? (
-          <Skeleton className="h-[400px] w-full" />
-        ) : (
-          <RatingDistributionChart data={ratingDistributionData} />
-        )}
-        
-        {isLoading ? (
-          <Skeleton className="h-[400px] w-full" />
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Category Ratings</CardTitle>
-              <CardDescription>
-                Average rating by category
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CategoryRatingBarChart categoryRatings={categoryRatingData} />
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      <AnalyticsChartsGrid
+        isLoading={isLoading}
+        yoyTrendData={yoyTrendData}
+        monthlyRatingData={monthlyRatingData}
+        ratingDistributionData={ratingDistributionData}
+        categoryRatingData={categoryRatingData}
+        channelFilter={channelFilter}
+        yearFilter={yearFilter}
+      />
     </div>
   );
 };
