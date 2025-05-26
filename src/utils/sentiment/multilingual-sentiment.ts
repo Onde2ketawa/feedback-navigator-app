@@ -36,13 +36,13 @@ export async function analyzeMultilingualSentiment(
 
   try {
     // Detect language
-    const language = await detectLanguage(text);
+    const language = detectLanguage(text);
     
     let result;
     let modelUsed;
     
     // Choose appropriate sentiment analyzer based on language
-    if (language === 'id' || language === 'ms') {
+    if (language === 'id') {
       result = await analyzeIndonesianSentiment(text);
       modelUsed = 'IndobertModel';
     } else if (language === 'en') {

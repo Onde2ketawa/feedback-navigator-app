@@ -5,7 +5,7 @@ import { Sentiment, positiveKeywords, negativeKeywords, neutralKeywords } from "
  * Indonesian-specific sentiment analysis using keywords.
  * Focuses on Indonesian words and patterns for better accuracy.
  */
-export function analyzeSentiment(
+export function analyzeIndonesianSentiment(
   text: string,
   threshold = 0.3
 ): { sentiment: Sentiment; sentiment_score: number } {
