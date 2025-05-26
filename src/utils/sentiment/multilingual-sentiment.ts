@@ -14,7 +14,7 @@ export async function analyzeMultilingualSentiment(
   text: string, 
   rating?: number
 ): Promise<MultilingualSentimentResult> {
-  // Handle empty feedback - use rating as proxy
+  // Handle empty feedback - immediately use rating as proxy without any other analysis
   if (!text || text.trim() === '') {
     if (rating !== undefined && rating !== null) {
       const ratingResult = getRatingBasedSentiment(rating);

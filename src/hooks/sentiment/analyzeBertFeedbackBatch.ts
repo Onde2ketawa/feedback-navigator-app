@@ -4,7 +4,7 @@ import { analyzeSentiment } from "@/utils/sentiment-analysis";
 interface FeedbackItem {
   id: string;
   feedback: string;
-  rating?: number; // Add rating field
+  rating?: number;
 }
 
 export interface BertAnalysisResult {
@@ -34,25 +34,29 @@ export async function analyzeBertFeedbackBatch(
 
   for (const item of feedbackBatch) {
     try {
-      // Check if feedback is empty and rating is available
+      // Check if feedback is empty
       const hasEmptyFeedback = !item.feedback || item.feedback.trim() === '';
       
       let result;
-      try {
-        // Pass rating to multilingual sentiment analysis for proxy functionality
-        result = await analyzeMultilingualSentiment(item.feedback, item.rating);
-      } catch (err) {
-        console.error(`Error with multilingual analysis for ${item.id}:`, err);
-        // Fall back to basic keyword analysis with rating proxy
-        if (hasEmptyFeedback && item.rating !== undefined) {
-          // Use rating-based sentiment for empty feedback
-          const ratingBasedResult = getRatingBasedSentiment(item.rating);
-          result = {
-            ...ratingBasedResult,
-            language: 'unknown',
-            modelUsed: 'FallbackRating'
-          };
-        } else {
+      
+      if (hasEmptyFeedback && item.rating !== undefined) {
+        // Immediately use rating proxy for empty feedback
+        result = await analyzeMultilingualSentiment('', item.rating);
+      } else if (hasEmptyFeedback) {
+        // No feedback and no rating - default neutral
+        result = {
+          sentiment: 'neutral',
+          sentiment_score: 0,
+          language: 'unknown',
+          modelUsed: 'Default'
+        };
+      } else {
+        // Normal sentiment analysis for non-empty feedback
+        try {
+          result = await analyzeMultilingualSentiment(item.feedback, item.rating);
+        } catch (err) {
+          console.error(`Error with multilingual analysis for ${item.id}:`, err);
+          // Fall back to basic keyword analysis
           const fallbackResult = analyzeSentiment(item.feedback, 0.3, item.rating);
           result = {
             ...fallbackResult,

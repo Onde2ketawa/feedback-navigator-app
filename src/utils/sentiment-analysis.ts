@@ -2,7 +2,7 @@
 export type Sentiment = 'positive' | 'neutral' | 'negative';
 
 export function analyzeSentiment(text: string | null | undefined, threshold = 0.3, rating?: number): { sentiment: Sentiment; sentiment_score: number } {
-  // If text is empty or null, use rating as proxy for sentiment
+  // If text is empty or null, immediately use rating as proxy for sentiment
   if (!text || text.trim() === '') {
     if (rating !== undefined && rating !== null) {
       return getRatingBasedSentiment(rating);
