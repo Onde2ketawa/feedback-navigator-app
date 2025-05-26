@@ -1,4 +1,3 @@
-
 // Enhanced sentiment analysis logic using keywords
 
 import { positiveKeywords, negativeKeywords, neutralKeywords } from "./keywords.ts";
@@ -7,11 +6,17 @@ import { positiveKeywords, negativeKeywords, neutralKeywords } from "./keywords.
  * Analyzes text sentiment based on keyword matching
  * @param text The text to analyze
  * @param threshold The threshold for determining sentiment (default 0.2)
+ * @param rating Optional rating to use as proxy when text is empty
  * @returns Object containing sentiment and score
  */
-export function analyzeWithKeywords(text: string, threshold = 0.2) {
-  // Handle empty or null text
-  if (!text) return { sentiment: "neutral", score: 0 };
+export function analyzeWithKeywords(text: string, threshold = 0.2, rating?: number) {
+  // Handle empty or null text - use rating as proxy
+  if (!text || text.trim() === '') {
+    if (rating !== undefined && rating !== null) {
+      return getRatingBasedSentiment(rating);
+    }
+    return { sentiment: "neutral", score: 0 };
+  }
   
   const lowercasedText = text.toLowerCase();
   
@@ -49,4 +54,30 @@ export function analyzeWithKeywords(text: string, threshold = 0.2) {
   }
   
   return { sentiment, score };
+}
+
+/**
+ * Convert rating to sentiment when feedback text is empty
+ * rating ≥ 4 = positive
+ * rating = 3 = neutral  
+ * rating ≤ 2 = negative
+ */
+function getRatingBasedSentiment(rating: number) {
+  // Normalize rating to 1-5 scale if needed
+  const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
+  
+  if (normalizedRating >= 4) {
+    // Positive sentiment: rating 4-5
+    // Score between 0.3 and 0.7
+    const score = 0.3 + (normalizedRating - 4) * 0.4; // 4->0.3, 5->0.7
+    return { sentiment: "positive", score };
+  } else if (normalizedRating === 3) {
+    // Neutral sentiment: rating 3
+    return { sentiment: "neutral", score: 0 };
+  } else {
+    // Negative sentiment: rating 1-2
+    // Score between -0.7 and -0.3
+    const score = -0.7 + (normalizedRating - 1) * 0.4; // 1->-0.7, 2->-0.3
+    return { sentiment: "negative", score };
+  }
 }
