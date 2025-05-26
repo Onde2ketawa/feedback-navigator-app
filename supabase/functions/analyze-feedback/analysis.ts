@@ -7,11 +7,11 @@ import { positiveKeywords, negativeKeywords, neutralKeywords } from "./keywords.
  * Analyzes text sentiment based on keyword matching
  * @param text The text to analyze
  * @param threshold The threshold for determining sentiment (default 0.2)
- * @param rating Optional rating to use as proxy when text is empty
+ * @param rating Optional rating - only used if text is empty
  * @returns Object containing sentiment and score
  */
 export function analyzeWithKeywords(text: string, threshold = 0.2, rating?: number) {
-  // Handle empty or null text - use rating as proxy
+  // Handle empty or null text - use rating as proxy ONLY for empty text
   if (!text || text.trim() === '') {
     if (rating !== undefined && rating !== null) {
       console.log(`Using rating ${rating} as sentiment proxy for empty feedback`);
@@ -54,6 +54,8 @@ export function analyzeWithKeywords(text: string, threshold = 0.2, rating?: numb
   } else if (score < -threshold) {
     sentiment = "negative";
   }
+  
+  console.log(`Keyword analysis: text="${text.substring(0, 50)}", pos=${positiveCount}, neg=${negativeCount}, score=${score}, sentiment=${sentiment}`);
   
   return { sentiment, score };
 }

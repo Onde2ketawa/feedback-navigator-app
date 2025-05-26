@@ -32,6 +32,15 @@ export async function processFeedbackRecord(
   
   if (hasEmptyFeedback) {
     console.log(`Processing record ${record.id} with empty feedback, rating: ${record.rating}`);
+    // For empty feedback, ALWAYS use rating proxy regardless of other options
+    if (record.rating !== undefined && record.rating !== null) {
+      const ratingResult = getRatingBasedSentiment(record.rating);
+      console.log(`Used rating ${record.rating} as proxy: sentiment=${ratingResult.sentiment}, score=${ratingResult.score}`);
+      return ratingResult;
+    } else {
+      console.log(`No rating available for empty feedback, defaulting to neutral`);
+      return { sentiment: "neutral", score: 0 };
+    }
   } else {
     console.log(`Analyzing feedback ID ${record.id}: "${record.feedback.substring(0, 50)}..."`);
   }
@@ -40,25 +49,20 @@ export async function processFeedbackRecord(
   let score = 0;
   
   if (options.useKeywordAnalysis) {
-    // Use the keyword-based analysis with rating proxy
+    // Use the keyword-based analysis for non-empty feedback
     const threshold = options.sentimentOptions?.threshold || 0.3;
-    const result = analyzeWithKeywords(record.feedback, threshold, record.rating);
+    const result = analyzeWithKeywords(record.feedback, threshold);
     sentiment = result.sentiment;
     score = result.score;
     
-    console.log(`Analysis for ${record.id}: sentiment=${sentiment}, score=${score}${hasEmptyFeedback ? ' (from rating)' : ''}`);
+    console.log(`Keyword analysis for ${record.id}: sentiment=${sentiment}, score=${score}`);
   } else {
-    // Fall back to OpenAI analysis or rating proxy for empty feedback
-    if (hasEmptyFeedback && record.rating !== undefined && record.rating !== null) {
-      const ratingResult = getRatingBasedSentiment(record.rating);
-      sentiment = ratingResult.sentiment;
-      score = ratingResult.score;
-      console.log(`Used rating ${record.rating} as proxy: sentiment=${sentiment}, score=${score}`);
-    } else if (!hasEmptyFeedback) {
-      const aiResult = await analyzeWithOpenAI(record.feedback);
-      sentiment = aiResult.sentiment;
-      score = aiResult.score;
-    }
+    // Fall back to OpenAI analysis for non-empty feedback
+    const aiResult = await analyzeWithOpenAI(record.feedback);
+    sentiment = aiResult.sentiment;
+    score = aiResult.score;
+    
+    console.log(`OpenAI analysis for ${record.id}: sentiment=${sentiment}, score=${score}`);
   }
 
   return { sentiment, score };
