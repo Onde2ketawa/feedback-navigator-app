@@ -57,7 +57,7 @@ export function useFeedbackStats(filter?: FeedbackFilter) {
       if (countError) throw countError;
       
       // Get all filtered data for calculations
-      const { data: allData, error: dataError } = await baseQuery.select('rating, category, submit_date, channel_id');
+      const { data: allData, error: dataError } = await baseQuery.select('id, rating, category, submit_date, channel_id');
       
       if (dataError) throw dataError;
       
@@ -78,22 +78,28 @@ export function useFeedbackStats(filter?: FeedbackFilter) {
       ).length;
       
       // Get channel distribution from filtered data
-      const { data: channelData, error: channelError } = await supabase
-        .from('customer_feedback')
-        .select(`
-          channel:channel_id(name)
-        `)
-        .in('id', allData.map(item => item.id) || []);
+      const feedbackIds = allData.map(item => item.id);
       
-      if (channelError) throw channelError;
+      let channelDistribution: { name: string; count: number }[] = [];
       
-      const channelCounts: Record<string, number> = {};
-      channelData.forEach(item => {
-        const channelName = item.channel?.name || 'Unknown';
-        channelCounts[channelName] = (channelCounts[channelName] || 0) + 1;
-      });
-      
-      const channelDistribution = Object.entries(channelCounts).map(([name, count]) => ({ name, count }));
+      if (feedbackIds.length > 0) {
+        const { data: channelData, error: channelError } = await supabase
+          .from('customer_feedback')
+          .select(`
+            channel:channel_id(name)
+          `)
+          .in('id', feedbackIds);
+        
+        if (channelError) throw channelError;
+        
+        const channelCounts: Record<string, number> = {};
+        channelData.forEach(item => {
+          const channelName = item.channel?.name || 'Unknown';
+          channelCounts[channelName] = (channelCounts[channelName] || 0) + 1;
+        });
+        
+        channelDistribution = Object.entries(channelCounts).map(([name, count]) => ({ name, count }));
+      }
       
       // Get rating distribution from filtered data
       const ratingCounts: Record<number, number> = {};
@@ -111,6 +117,7 @@ export function useFeedbackStats(filter?: FeedbackFilter) {
         averageRating,
         uncategorizedCount,
         recentFeedbackCount,
+        channelDistribution,
         ratingDistribution
       };
     }
