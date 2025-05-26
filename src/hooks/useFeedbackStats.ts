@@ -50,7 +50,7 @@ export function useFeedbackStats(filter?: FeedbackFilter) {
         baseQuery = baseQuery.gte('rating', filter.ratingMin).lte('rating', filter.ratingMax);
       }
       
-      // Get total feedback count with filters applied
+      // Get total feedback count with filters applied - fix the select syntax
       const { count: totalFeedback, error: countError } = await baseQuery
         .select('*', { count: 'exact', head: true });
       
