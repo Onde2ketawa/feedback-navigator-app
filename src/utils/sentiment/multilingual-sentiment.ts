@@ -1,3 +1,4 @@
+
 import { detectLanguage } from './language-detector';
 import { analyzeSentiment as analyzeIndonesianSentiment } from './indonesian-sentiment';
 import { analyzeSentiment as analyzeEnglishSentiment } from './english-sentiment';
@@ -5,7 +6,7 @@ import { analyzeSentiment as analyzeEnglishSentiment } from './english-sentiment
 export async function analyzeMultilingualSentiment(
   text: string, 
   rating?: number
-): Promise<{ sentiment: string; sentiment_score: number; modelUsed: string }> {
+): Promise<{ sentiment: string; sentiment_score: number; language: string; modelUsed: string }> {
   try {
     // If text is empty or null, use rating as proxy for sentiment
     if (!text || text.trim() === '') {
@@ -14,11 +15,12 @@ export async function analyzeMultilingualSentiment(
         return {
           sentiment: result.sentiment,
           sentiment_score: result.sentiment_score,
+          language: 'unknown',
           modelUsed: 'rating-proxy'
         };
       }
       // Fallback to neutral if no text and no rating
-      return { sentiment: 'neutral', sentiment_score: 0, modelUsed: 'default-neutral' };
+      return { sentiment: 'neutral', sentiment_score: 0, language: 'unknown', modelUsed: 'default-neutral' };
     }
 
     const detectedLanguage = detectLanguage(text);
@@ -39,6 +41,7 @@ export async function analyzeMultilingualSentiment(
     return {
       sentiment: result.sentiment,
       sentiment_score: result.sentiment_score,
+      language: detectedLanguage,
       modelUsed
     };
   } catch (error) {
@@ -50,12 +53,13 @@ export async function analyzeMultilingualSentiment(
       return {
         sentiment: result.sentiment,
         sentiment_score: result.sentiment_score,
+        language: 'unknown',
         modelUsed: 'rating-fallback'
       };
     }
     
     // Final fallback
-    return { sentiment: 'neutral', sentiment_score: 0, modelUsed: 'error-fallback' };
+    return { sentiment: 'neutral', sentiment_score: 0, language: 'unknown', modelUsed: 'error-fallback' };
   }
 }
 

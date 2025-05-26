@@ -5,6 +5,7 @@ import { analyzeSentiment } from "@/utils/sentiment/keyword-sentiment";
 interface FeedbackItem {
   id: string;
   feedback: string;
+  rating?: number; // Add rating field
 }
 
 export interface BertAnalysisResult {
@@ -34,21 +35,32 @@ export async function analyzeBertFeedbackBatch(
 
   for (const item of feedbackBatch) {
     try {
-      if (!item.feedback) continue;
-
+      // Check if feedback is empty and rating is available
+      const hasEmptyFeedback = !item.feedback || item.feedback.trim() === '';
+      
       let result;
       try {
-        // Try to use multilingual sentiment analysis first (which may attempt to use BERT)
-        result = await analyzeMultilingualSentiment(item.feedback);
+        // Pass rating to multilingual sentiment analysis for proxy functionality
+        result = await analyzeMultilingualSentiment(item.feedback, item.rating);
       } catch (err) {
         console.error(`Error with multilingual analysis for ${item.id}:`, err);
-        // Fall back to basic keyword analysis if multilingual fails
-        const fallbackResult = analyzeSentiment(item.feedback);
-        result = {
-          ...fallbackResult,
-          language: 'unknown',
-          modelUsed: 'FallbackKeywords'
-        };
+        // Fall back to basic keyword analysis with rating proxy
+        if (hasEmptyFeedback && item.rating !== undefined) {
+          // Use rating-based sentiment for empty feedback
+          const ratingBasedResult = getRatingBasedSentiment(item.rating);
+          result = {
+            ...ratingBasedResult,
+            language: 'unknown',
+            modelUsed: 'FallbackRating'
+          };
+        } else {
+          const fallbackResult = analyzeSentiment(item.feedback);
+          result = {
+            ...fallbackResult,
+            language: 'unknown',
+            modelUsed: 'FallbackKeywords'
+          };
+        }
       }
 
       updates.push({
@@ -83,4 +95,21 @@ export async function analyzeBertFeedbackBatch(
   }
 
   return { updates, languageStats, modelStats, processed, errors };
+}
+
+/**
+ * Helper function for rating-based sentiment (duplicate of multilingual-sentiment for fallback)
+ */
+function getRatingBasedSentiment(rating: number): { sentiment: string; sentiment_score: number } {
+  const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
+  
+  if (normalizedRating >= 4) {
+    const score = 0.3 + (normalizedRating - 4) * 0.4;
+    return { sentiment: 'positive', sentiment_score: score };
+  } else if (normalizedRating === 3) {
+    return { sentiment: 'neutral', sentiment_score: 0 };
+  } else {
+    const score = -0.7 + (normalizedRating - 1) * 0.4;
+    return { sentiment: 'negative', sentiment_score: score };
+  }
 }

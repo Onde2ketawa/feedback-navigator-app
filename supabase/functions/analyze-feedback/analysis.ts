@@ -1,3 +1,4 @@
+
 // Enhanced sentiment analysis logic using keywords
 
 import { positiveKeywords, negativeKeywords, neutralKeywords } from "./keywords.ts";
@@ -13,6 +14,7 @@ export function analyzeWithKeywords(text: string, threshold = 0.2, rating?: numb
   // Handle empty or null text - use rating as proxy
   if (!text || text.trim() === '') {
     if (rating !== undefined && rating !== null) {
+      console.log(`Using rating ${rating} as sentiment proxy for empty feedback`);
       return getRatingBasedSentiment(rating);
     }
     return { sentiment: "neutral", score: 0 };
