@@ -205,12 +205,10 @@ export type Database = {
         Returns: undefined
       }
       get_annual_channel_ratings: {
-        Args: { year_filters?: string[] }
+        Args: Record<PropertyKey, never> | { year_filters?: string[] }
         Returns: {
-          year: number
-          channel_name: string
-          avg_rating: number
-          rating_count: number
+          channel_id: number
+          rating: number
         }[]
       }
       get_auth_user_role: {
@@ -218,10 +216,8 @@ export type Database = {
         Returns: string
       }
       get_average_rating: {
-        Args: { channel_id_param: string }
-        Returns: {
-          average_rating: number
-        }[]
+        Args: Record<PropertyKey, never> | { channel_id_param: string }
+        Returns: number
       }
       get_category_distribution: {
         Args: {
@@ -243,15 +239,10 @@ export type Database = {
         }[]
       }
       get_sentiment_trend_by_month: {
-        Args: { channel_name?: string }
+        Args: Record<PropertyKey, never> | { channel_name?: string }
         Returns: {
-          month_short: string
-          month_num: number
-          year: number
-          positive_count: number
-          neutral_count: number
-          negative_count: number
-          total_count: number
+          month: string
+          sentiment_score: number
         }[]
       }
       get_subcategory_distribution: {
@@ -268,14 +259,8 @@ export type Database = {
         }[]
       }
       get_yoy_rating_comparison: {
-        Args: { channel_name?: string }
-        Returns: {
-          month: string
-          month_num: number
-          year: number
-          avg_rating: number
-          rating_count: number
-        }[]
+        Args: Record<PropertyKey, never> | { channel_name?: string }
+        Returns: undefined
       }
       recalculate_sentiment_scores: {
         Args: Record<PropertyKey, never>
