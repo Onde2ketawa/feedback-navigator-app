@@ -28,26 +28,40 @@ export const useChannelComparisonData = (years: string[]) => {
 
       console.log('Raw data from database function:', data);
       
-      // Convert to RatingTrendData format
-      const result: RatingTrendData[] = [];
-      
-      // Handle the actual database return type and convert to expected format
       if (!data || !Array.isArray(data)) {
         console.log('No data returned from database function');
         return [];
       }
       
-      // Create mock data structure since the database function might not return expected format
-      // Process data by year
-      for (const year of years) {
+      // Process the data into the expected format
+      const result: RatingTrendData[] = [];
+      
+      // Group data by year
+      const dataByYear: { [key: string]: AnnualChannelRating[] } = {};
+      
+      data.forEach((item: AnnualChannelRating) => {
+        const yearKey = item.year.toString();
+        if (!dataByYear[yearKey]) {
+          dataByYear[yearKey] = [];
+        }
+        dataByYear[yearKey].push(item);
+      });
+      
+      // Convert to RatingTrendData format
+      years.forEach(year => {
+        const yearData = dataByYear[year] || [];
+        
+        const myHanaData = yearData.find(item => item.channel_name === 'MyHana');
+        const lineBankData = yearData.find(item => item.channel_name === 'LINE Bank');
+        
         result.push({
           year,
-          myHana: 0, // Will be populated from actual data if available
-          lineBank: 0, // Will be populated from actual data if available
-          myHanaCount: 0,
-          lineBankCount: 0
+          myHana: myHanaData ? Number(myHanaData.avg_rating) : 0,
+          lineBank: lineBankData ? Number(lineBankData.avg_rating) : 0,
+          myHanaCount: myHanaData ? Number(myHanaData.rating_count) : 0,
+          lineBankCount: lineBankData ? Number(lineBankData.rating_count) : 0
         });
-      }
+      });
 
       console.log('Processed comparison data:', result);
       return result;
