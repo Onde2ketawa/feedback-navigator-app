@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -17,7 +18,7 @@ export const useAverageRating = (
         
         if (error) throw error;
         
-        if (data && data.length > 0) {
+        if (data && Array.isArray(data) && data.length > 0) {
           setAverageRating(data[0].avg_rating || 0);
           setRatingCount(data[0].rating_count || 0);
         } else {
@@ -39,7 +40,7 @@ export const useAverageRating = (
         
         if (error) throw error;
         
-        if (data && data.length > 0) {
+        if (data && Array.isArray(data) && data.length > 0) {
           setAverageRating(data[0].average_rating || 0);
         } else {
           setAverageRating(0);

@@ -17,10 +17,12 @@ export const useYoyTrendData = (channelFilter: string) => {
       
       if (error) throw error;
 
-      console.log('Raw YOY data count:', data?.length);
-      console.log('Sample raw data:', data?.slice(0, 3));
+      console.log('Raw YOY data count:', data?.length || 0);
+      console.log('Sample raw data:', data?.slice(0, 3) || []);
       
-      if (!data) return generateEmptyYoyData();
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        return generateEmptyYoyData();
+      }
       
       return processYoyTrendData(data);
     } catch (error) {
