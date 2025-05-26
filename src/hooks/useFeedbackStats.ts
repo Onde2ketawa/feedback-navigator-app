@@ -52,7 +52,7 @@ export function useFeedbackStats(filter?: FeedbackFilter) {
       
       // Get total feedback count with filters applied - fix the select syntax
       const { count: totalFeedback, error: countError } = await baseQuery
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact' });
       
       if (countError) throw countError;
       
