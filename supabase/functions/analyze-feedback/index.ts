@@ -1,16 +1,10 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { analyzeWithKeywords } from "./analysis.ts";
-
-// CORS headers for Edge Functions
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
+import { corsHeaders, supabaseUrl } from "./config.ts";
+import { fetchFeedbackBatch, updateFeedbackSentiment } from "./database.ts";
+import { processFeedbackRecord } from "./sentiment-processor.ts";
+import type { AnalysisOptions, ProcessingResult } from "./types.ts";
 
 console.log("Edge function starting up with Supabase URL:", supabaseUrl);
 
@@ -21,162 +15,28 @@ serve(async (req) => {
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error("OPENAI_API_KEY is not set in environment variables");
-    }
+    const options: AnalysisOptions = await req.json().catch(() => ({
+      batchSize: 10,
+      delay: 0.2,
+      useKeywordAnalysis: true,
+      sentimentOptions: {}
+    }));
 
-    const { batchSize = 10, delay = 0.2, useKeywordAnalysis = true, sentimentOptions = {} } = await req.json().catch(() => ({}));
-    console.log(`Processing batch of ${batchSize} with ${delay}s delay between requests. Use keywords: ${useKeywordAnalysis}`);
+    console.log(`Processing batch of ${options.batchSize} with ${options.delay}s delay between requests. Use keywords: ${options.useKeywordAnalysis}`);
     
     let processed = 0;
     let errors = 0;
 
-    // Fetch records to process (not-yet-analyzed or null sentiment) - include rating for proxy
-    const feedbackRes = await fetch(
-      `${supabaseUrl}/rest/v1/customer_feedback?select=id,feedback,rating&or=(sentiment.is.null,sentiment.eq.unknown)&limit=${batchSize}`,
-      {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-      }
-    );
-
-    if (!feedbackRes.ok) {
-      throw new Error(`Failed to fetch feedback: ${feedbackRes.status} ${await feedbackRes.text()}`);
-    }
-
-    const feedbackList = await feedbackRes.json();
+    // Fetch records to process
+    const feedbackList = await fetchFeedbackBatch(options.batchSize || 10);
     console.log(`Found ${feedbackList.length} feedback items to analyze`);
 
     for (const record of feedbackList) {
       try {
-        const hasEmptyFeedback = !record.feedback || typeof record.feedback !== 'string' || record.feedback.trim() === '';
-        
-        if (hasEmptyFeedback) {
-          console.log(`Processing record ${record.id} with empty feedback, rating: ${record.rating}`);
-        } else {
-          console.log(`Analyzing feedback ID ${record.id}: "${record.feedback.substring(0, 50)}..."`);
-        }
-
-        let sentiment = "neutral";
-        let score = 0;
-        
-        if (useKeywordAnalysis) {
-          // Use the keyword-based analysis with rating proxy
-          const threshold = sentimentOptions.threshold || 0.3;
-          const result = analyzeWithKeywords(record.feedback, threshold, record.rating);
-          sentiment = result.sentiment;
-          score = result.score;
-          
-          console.log(`Analysis for ${record.id}: sentiment=${sentiment}, score=${score}${hasEmptyFeedback ? ' (from rating)' : ''}`);
-        } else {
-          // Fall back to OpenAI analysis or rating proxy for empty feedback
-          if (hasEmptyFeedback && record.rating !== undefined && record.rating !== null) {
-            const ratingResult = getRatingBasedSentiment(record.rating);
-            sentiment = ratingResult.sentiment;
-            score = ratingResult.score;
-            console.log(`Used rating ${record.rating} as proxy: sentiment=${sentiment}, score=${score}`);
-          } else if (!hasEmptyFeedback) {
-            // ... keep existing code (OpenAI API logic)
-            const prompt = [
-              {
-                role: "system",
-                content:
-                  'Analyze the sentiment of this customer feedback. Respond ONLY with a JSON object containing "sentiment" (positive/neutral/negative) and "score" (-1 to 1). Example: {"sentiment": "positive", "score": 0.8}',
-              },
-              {
-                role: "user",
-                content: record.feedback,
-              },
-            ];
-            const body = {
-              model: "gpt-4o-mini",
-              messages: prompt,
-              temperature: 0.2,
-              max_tokens: 50,
-            };
-
-            const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${openAIApiKey}`,
-              },
-              body: JSON.stringify(body),
-            });
-            
-            if (!aiRes.ok) {
-              console.error(`OpenAI API error: ${aiRes.status} ${await aiRes.text()}`);
-              throw new Error(`OpenAI API returned ${aiRes.status}`);
-            }
-
-            const aiJson = await aiRes.json();
-            console.log(`Got OpenAI response for ID ${record.id}`);
-
-            // ... keep existing code (OpenAI response parsing logic)
-            const content = aiJson.choices?.[0]?.message?.content ?? "";
-            console.log(`Raw content from OpenAI: "${content}"`);
-            
-            try {
-              let jsonText = content;
-              
-              const jsonMatch = content.match(/```(?:json)?(.*?)```/s);
-              if (jsonMatch && jsonMatch[1]) {
-                jsonText = jsonMatch[1].trim();
-              }
-              
-              const jsonStartPos = jsonText.indexOf('{');
-              const jsonEndPos = jsonText.lastIndexOf('}');
-              
-              if (jsonStartPos !== -1 && jsonEndPos !== -1 && jsonEndPos > jsonStartPos) {
-                jsonText = jsonText.substring(jsonStartPos, jsonEndPos + 1);
-              }
-              
-              console.log(`Extracted JSON: ${jsonText}`);
-              const jsonResp = JSON.parse(jsonText);
-              
-              if (
-                ["positive", "neutral", "negative"].includes(jsonResp.sentiment) &&
-                typeof jsonResp.score === "number"
-              ) {
-                sentiment = jsonResp.sentiment;
-                score = Math.max(-1, Math.min(1, Number(jsonResp.score)));
-                console.log(`Parsed sentiment: ${sentiment}, score: ${score}`);
-              } else {
-                console.log(`Invalid sentiment data in response: ${JSON.stringify(jsonResp)}`);
-              }
-            } catch (parseError) {
-              console.error(`Failed to parse OpenAI response: ${parseError.message}`, content);
-              errors++;
-              continue;
-            }
-          }
-        }
+        const { sentiment, score } = await processFeedbackRecord(record, options);
 
         // Update the feedback record with new sentiment & score
-        const updateRes = await fetch(
-          `${supabaseUrl}/rest/v1/customer_feedback?id=eq.${record.id}`,
-          {
-            method: "PATCH",
-            headers: {
-              apikey: supabaseKey,
-              Authorization: `Bearer ${supabaseKey}`,
-              "Content-Type": "application/json",
-              Prefer: "return=minimal",
-            },
-            body: JSON.stringify({
-              sentiment,
-              sentiment_score: score,
-              last_analyzed_at: new Date().toISOString(),
-            }),
-          }
-        );
-        
-        if (!updateRes.ok) {
-          console.error(`Failed to update record ${record.id}: ${updateRes.status} ${await updateRes.text()}`);
-          throw new Error(`Database update failed with status ${updateRes.status}`);
-        }
+        await updateFeedbackSentiment(record.id, sentiment, score);
         
         console.log(`Successfully updated feedback ID ${record.id} with sentiment: ${sentiment}, score: ${score}`);
         processed++;
@@ -187,15 +47,17 @@ serve(async (req) => {
       }
 
       // Rate limit
-      await new Promise((resolve) => setTimeout(resolve, delay * 1000));
+      await new Promise((resolve) => setTimeout(resolve, (options.delay || 0.2) * 1000));
     }
 
+    const result: ProcessingResult = {
+      done: feedbackList.length < (options.batchSize || 10),
+      processed,
+      errors,
+    };
+
     return new Response(
-      JSON.stringify({
-        done: feedbackList.length < batchSize,
-        processed,
-        errors,
-      }),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
@@ -206,20 +68,3 @@ serve(async (req) => {
     );
   }
 });
-
-/**
- * Helper function for rating-based sentiment
- */
-function getRatingBasedSentiment(rating: number): { sentiment: string; score: number } {
-  const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
-  
-  if (normalizedRating >= 4) {
-    const score = 0.3 + (normalizedRating - 4) * 0.4;
-    return { sentiment: "positive", score };
-  } else if (normalizedRating === 3) {
-    return { sentiment: "neutral", score: 0 };
-  } else {
-    const score = -0.7 + (normalizedRating - 1) * 0.4;
-    return { sentiment: "negative", score };
-  }
-}
