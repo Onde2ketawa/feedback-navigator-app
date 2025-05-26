@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRatingAnalyticsData } from '@/hooks/rating/useRatingAnalyticsData';
-import { useAverageRating } from '@/hooks/rating/useAverageRating';
 import { useChannelFilter } from '@/hooks/useChannelFilter';
 import { useChannelComparisonData } from '@/hooks/rating/useChannelComparisonData';
 import { RatingTrendData } from '@/hooks/rating/types';
@@ -31,11 +30,6 @@ const RatingAnalytics: React.FC = () => {
     categoryRatingData,
     refreshData
   } = useRatingAnalyticsData();
-
-  const { 
-    averageRating, 
-    fetchAverageRating 
-  } = useAverageRating(channelFilter, yearFilter, monthFilter);
   
   const [selectedComparisonYears, setSelectedComparisonYears] = useState<string[]>(['2024', '2025']);
   
@@ -59,14 +53,9 @@ const RatingAnalytics: React.FC = () => {
     };
     getComparisonData();
   }, [selectedComparisonYears, fetchComparisonData]);
-
-  React.useEffect(() => {
-    fetchAverageRating();
-  }, [channelFilter, yearFilter, monthFilter, fetchAverageRating]);
   
   const refreshAllData = () => {
     refreshData();
-    fetchAverageRating();
     const refreshComparisonData = async () => {
       setIsLoadingComparison(true);
       try {
@@ -99,7 +88,7 @@ const RatingAnalytics: React.FC = () => {
         setSelectedComparisonYears={setSelectedComparisonYears}
       />
       
-      <RatingCardsGrid averageRating={averageRating} />
+      <RatingCardsGrid averageRating={0} />
 
       <div className="mb-6">
         <ComparisonChartSection
