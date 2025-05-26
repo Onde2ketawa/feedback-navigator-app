@@ -50,9 +50,15 @@ export function useFeedbackStats(filter?: FeedbackFilter) {
         baseQuery = baseQuery.gte('rating', filter.ratingMin).lte('rating', filter.ratingMax);
       }
       
-      // Get total feedback count with filters applied - fix the select syntax
-      const { count: totalFeedback, error: countError } = await baseQuery
-        .select('*', { count: 'exact' });
+      // Get total feedback count with filters applied - use the correct syntax
+      const { count: totalFeedback, error: countError } = await supabase
+        .from('customer_feedback')
+        .select('*', { count: 'exact', head: true })
+        .eq('channel_id', filter?.channel || 'dummy')
+        .gte('submit_date', filter?.year ? `${filter.year}-01-01` : '1900-01-01')
+        .lt('submit_date', filter?.year ? `${parseInt(filter.year) + 1}-01-01` : '2100-01-01')
+        .gte('rating', filter?.ratingMin || 1)
+        .lte('rating', filter?.ratingMax || 5);
       
       if (countError) throw countError;
       
