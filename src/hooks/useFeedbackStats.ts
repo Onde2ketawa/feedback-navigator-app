@@ -18,12 +18,14 @@ export function useFeedbackStats(filter?: FeedbackFilter) {
     queryKey: ['feedback-stats', filter],
     queryFn: async (): Promise<FeedbackStats> => {
       // Build the base query with the same filters used in useFeedbackData
+      let countQuery = supabase.from('customer_feedback').select('*', { count: 'exact', head: true });
       let baseQuery = supabase.from('customer_feedback').select('*');
       
       // Apply the same filters as useFeedbackData
       if (filter) {
         // Apply channel filter
         if (filter.channel && filter.channel !== 'all') {
+          countQuery = countQuery.eq('channel_id', filter.channel);
           baseQuery = baseQuery.eq('channel_id', filter.channel);
         }
         
@@ -31,6 +33,7 @@ export function useFeedbackStats(filter?: FeedbackFilter) {
         if (filter.year && filter.year !== 'all') {
           const startOfYear = `${filter.year}-01-01`;
           const endOfYear = `${parseInt(filter.year) + 1}-01-01`;
+          countQuery = countQuery.gte('submit_date', startOfYear).lt('submit_date', endOfYear);
           baseQuery = baseQuery.gte('submit_date', startOfYear).lt('submit_date', endOfYear);
         }
         
@@ -43,22 +46,17 @@ export function useFeedbackStats(filter?: FeedbackFilter) {
           const startDateStr = startDate.toISOString().split('T')[0];
           const endDateStr = endDate.toISOString().split('T')[0];
           
+          countQuery = countQuery.gte('submit_date', startDateStr).lte('submit_date', endDateStr);
           baseQuery = baseQuery.gte('submit_date', startDateStr).lte('submit_date', endDateStr);
         }
         
         // Apply rating range filter
+        countQuery = countQuery.gte('rating', filter.ratingMin).lte('rating', filter.ratingMax);
         baseQuery = baseQuery.gte('rating', filter.ratingMin).lte('rating', filter.ratingMax);
       }
       
-      // Get total feedback count with filters applied - use the correct syntax
-      const { count: totalFeedback, error: countError } = await supabase
-        .from('customer_feedback')
-        .select('*', { count: 'exact', head: true })
-        .eq('channel_id', filter?.channel || 'dummy')
-        .gte('submit_date', filter?.year ? `${filter.year}-01-01` : '1900-01-01')
-        .lt('submit_date', filter?.year ? `${parseInt(filter.year) + 1}-01-01` : '2100-01-01')
-        .gte('rating', filter?.ratingMin || 1)
-        .lte('rating', filter?.ratingMax || 5);
+      // Get total feedback count with filters applied
+      const { count: totalFeedback, error: countError } = await countQuery;
       
       if (countError) throw countError;
       
