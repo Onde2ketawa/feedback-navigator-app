@@ -7,6 +7,7 @@ import { FeedbackDataWrapper } from '@/components/dashboard/FeedbackDataWrapper'
 import { DashboardContent } from '@/components/dashboard/DashboardContent';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { DashboardActions } from '@/components/dashboard/DashboardActions';
+import { FeedbackYearCounter } from '@/components/dashboard/FeedbackYearCounter';
 import { useCategoryDialog } from '@/components/dashboard/useCategoryDialog';
 import { useCategoryQueries } from '@/hooks/categories/useCategoryQueries';
 
@@ -58,7 +59,12 @@ const Dashboard: React.FC = () => {
         filter={filter}
       >
         <div className="space-y-4 sm:space-y-6">
-          <DashboardStats filter={filter} />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-3">
+              <DashboardStats filter={filter} />
+            </div>
+            <FeedbackYearCounter year="2024" />
+          </div>
           
           <DashboardContent
             feedbackData={feedbackData || []}
