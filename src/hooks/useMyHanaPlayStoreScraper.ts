@@ -24,11 +24,11 @@ export function useMyHanaPlayStoreScraper() {
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
       
       const mockData: MyHanaPlayStoreData = {
-        appName: "MyHana",
-        rating: 4.1,
-        ratingCount: "12.8K",
+        appName: "MyHana Mobile Banking",
+        rating: 3.3,
+        ratingCount: "2.29K",
         developer: "PT Bank KEB Hana Indonesia",
-        description: "Digital banking application for comprehensive financial services",
+        description: "MyHana Mobile Banking from PT Bank KEB Hana Indonesia",
         lastUpdated: "January 2025"
       };
       
