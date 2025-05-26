@@ -5,7 +5,7 @@ import { Sentiment, positiveKeywords, negativeKeywords, neutralKeywords } from "
  * English-specific sentiment analysis using keywords.
  * Similar to the classic keywords logic but with English-specific handling.
  */
-export function analyzeEnglishSentiment(
+export function analyzeSentiment(
   text: string,
   threshold = 0.3
 ): { sentiment: Sentiment; sentiment_score: number } {

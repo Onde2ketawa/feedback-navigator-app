@@ -1,4 +1,5 @@
-import { analyzeMultilingualSentiment } from "@/utils/sentiment-analysis";
+
+import { analyzeMultilingualSentiment } from "@/utils/sentiment/multilingual-sentiment";
 import { analyzeSentiment } from "@/utils/sentiment/keyword-sentiment";
 
 interface FeedbackItem {
