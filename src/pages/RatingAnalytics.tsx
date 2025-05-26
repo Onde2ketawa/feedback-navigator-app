@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { FilterControls } from '@/components/analytics/FilterControls';
@@ -17,6 +18,7 @@ import { RatingTrendChart } from '@/components/analytics/rating/RatingTrendChart
 import { YearFilter } from '@/components/analytics/YearFilter';
 import { useChannelComparisonData } from '@/hooks/rating/useChannelComparisonData';
 import { RatingTrendData } from '@/hooks/rating/types';
+import { PlayStoreRatingCard } from '@/components/dashboard/PlayStoreRatingCard';
 
 const RatingAnalytics: React.FC = () => {
   const {
@@ -128,6 +130,7 @@ const RatingAnalytics: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <AverageRatingCard rating={averageRating} />
+        <PlayStoreRatingCard />
       </div>
 
       <div className="mb-6">

@@ -8,7 +8,6 @@ import { DashboardContent } from '@/components/dashboard/DashboardContent';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { DashboardActions } from '@/components/dashboard/DashboardActions';
 import { FeedbackYearCounter } from '@/components/dashboard/FeedbackYearCounter';
-import { PlayStoreRatingCard } from '@/components/dashboard/PlayStoreRatingCard';
 import { useCategoryDialog } from '@/components/dashboard/useCategoryDialog';
 import { useCategoryQueries } from '@/hooks/categories/useCategoryQueries';
 
@@ -60,12 +59,11 @@ const Dashboard: React.FC = () => {
         filter={filter}
       >
         <div className="space-y-4 sm:space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <DashboardStats filter={filter} />
             </div>
             <FeedbackYearCounter year="2024" />
-            <PlayStoreRatingCard />
           </div>
           
           <DashboardContent
