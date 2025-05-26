@@ -2,7 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  moduleNameMapper: {
+  moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
@@ -25,4 +25,8 @@ module.exports = {
       isolatedModules: true,
     },
   },
+  // Add Jest globals to the environment
+  testEnvironmentOptions: {
+    url: 'http://localhost'
+  }
 };
