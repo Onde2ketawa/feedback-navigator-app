@@ -89,30 +89,54 @@ export function useFeedbackStats(filter?: FeedbackFilter) {
         item.submit_date && new Date(item.submit_date) >= sevenDaysAgo
       ).length : 0;
       
-      // Get channel distribution from filtered data
-      const feedbackIds = allData ? allData.map(item => item.id) : [];
-      
+      // Get channel distribution using a more efficient approach
       let channelDistribution: { name: string; count: number }[] = [];
       
-      if (feedbackIds.length > 0) {
-        const { data: channelData, error: channelError } = await supabase
-          .from('customer_feedback')
-          .select(`
-            channel:channel_id(name)
-          `)
-          .in('id', feedbackIds);
-        
-        if (channelError) {
-          console.error('Error fetching channel data:', channelError);
-        } else if (channelData) {
-          const channelCounts: Record<string, number> = {};
-          channelData.forEach(item => {
-            const channelName = item.channel?.name || 'Unknown';
-            channelCounts[channelName] = (channelCounts[channelName] || 0) + 1;
-          });
-          
-          channelDistribution = Object.entries(channelCounts).map(([name, count]) => ({ name, count }));
+      // Build channel distribution query with same filters
+      let channelQuery = supabase
+        .from('customer_feedback')
+        .select('channel_id, channel:channel_id(name)');
+      
+      // Apply the same filters to channel query
+      if (filter) {
+        if (filter.channel && filter.channel !== 'all') {
+          channelQuery = channelQuery.eq('channel_id', filter.channel);
         }
+        
+        if (filter.year && filter.year !== 'all') {
+          const startOfYear = `${filter.year}-01-01`;
+          const endOfYear = `${parseInt(filter.year) + 1}-01-01`;
+          channelQuery = channelQuery.gte('submit_date', startOfYear).lt('submit_date', endOfYear);
+        }
+        
+        if (filter.year && filter.year !== 'all' && filter.month && filter.month !== 'all') {
+          const month = parseInt(filter.month);
+          const year = parseInt(filter.year);
+          const startDate = new Date(year, month - 1, 1);
+          const endDate = new Date(year, month, 0);
+          const startDateStr = startDate.toISOString().split('T')[0];
+          const endDateStr = endDate.toISOString().split('T')[0];
+          
+          channelQuery = channelQuery.gte('submit_date', startDateStr).lte('submit_date', endDateStr);
+        }
+        
+        if (filter.ratingMin !== undefined && filter.ratingMax !== undefined) {
+          channelQuery = channelQuery.gte('rating', filter.ratingMin).lte('rating', filter.ratingMax);
+        }
+      }
+      
+      const { data: channelData, error: channelError } = await channelQuery;
+      
+      if (channelError) {
+        console.error('Error fetching channel data:', channelError);
+      } else if (channelData) {
+        const channelCounts: Record<string, number> = {};
+        channelData.forEach(item => {
+          const channelName = item.channel?.name || 'Unknown';
+          channelCounts[channelName] = (channelCounts[channelName] || 0) + 1;
+        });
+        
+        channelDistribution = Object.entries(channelCounts).map(([name, count]) => ({ name, count }));
       }
       
       // Get rating distribution from filtered data
