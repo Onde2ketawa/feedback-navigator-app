@@ -1,65 +1,84 @@
 
-import { detectLanguage } from './language-detector';
-import { analyzeSentiment as analyzeIndonesianSentiment } from './indonesian-sentiment';
-import { analyzeSentiment as analyzeEnglishSentiment } from './english-sentiment';
+import { detectLanguage } from './detect-language';
+import { analyzeEnglishSentiment } from './english-sentiment';
+import { analyzeIndonesianSentiment } from './indonesian-sentiment';
+
+export interface MultilingualSentimentResult {
+  sentiment: string;
+  sentiment_score: number;
+  language: string;
+  modelUsed: string;
+}
 
 export async function analyzeMultilingualSentiment(
   text: string, 
   rating?: number
-): Promise<{ sentiment: string; sentiment_score: number; language: string; modelUsed: string }> {
-  try {
-    // If text is empty or null, use rating as proxy for sentiment
-    if (!text || text.trim() === '') {
-      if (rating !== undefined && rating !== null) {
-        const result = getRatingBasedSentiment(rating);
-        return {
-          sentiment: result.sentiment,
-          sentiment_score: result.sentiment_score,
-          language: 'unknown',
-          modelUsed: 'rating-proxy'
-        };
-      }
-      // Fallback to neutral if no text and no rating
-      return { sentiment: 'neutral', sentiment_score: 0, language: 'unknown', modelUsed: 'default-neutral' };
+): Promise<MultilingualSentimentResult> {
+  // Handle empty feedback - use rating as proxy
+  if (!text || text.trim() === '') {
+    if (rating !== undefined && rating !== null) {
+      const ratingResult = getRatingBasedSentiment(rating);
+      return {
+        ...ratingResult,
+        language: 'unknown',
+        modelUsed: 'RatingProxy'
+      };
     }
-
-    const detectedLanguage = detectLanguage(text);
     
-    let result: { sentiment: string; sentiment_score: number };
-    let modelUsed = '';
+    // No text and no rating - default to neutral
+    return {
+      sentiment: 'neutral',
+      sentiment_score: 0,
+      language: 'unknown',
+      modelUsed: 'Default'
+    };
+  }
 
-    if (detectedLanguage === 'id') {
-      // Indonesian text - use keyword analysis
-      result = analyzeIndonesianSentiment(text);
-      modelUsed = 'indonesian-keywords';
+  try {
+    // Detect language
+    const language = await detectLanguage(text);
+    
+    let result;
+    let modelUsed;
+    
+    // Choose appropriate sentiment analyzer based on language
+    if (language === 'id' || language === 'ms') {
+      result = await analyzeIndonesianSentiment(text);
+      modelUsed = 'IndobertModel';
+    } else if (language === 'en') {
+      result = await analyzeEnglishSentiment(text);
+      modelUsed = 'DistilbertModel';
     } else {
-      // English or other languages - use English sentiment analysis
-      result = analyzeEnglishSentiment(text);
-      modelUsed = 'english-keywords';
+      // Fallback to Indonesian for unknown languages
+      result = await analyzeIndonesianSentiment(text);
+      modelUsed = 'IndobertModel_Fallback';
     }
-
+    
     return {
       sentiment: result.sentiment,
       sentiment_score: result.sentiment_score,
-      language: detectedLanguage,
+      language,
       modelUsed
     };
   } catch (error) {
     console.error('Error in multilingual sentiment analysis:', error);
     
-    // Fallback: try to use rating if available
+    // Fallback: use rating if available, otherwise neutral
     if (rating !== undefined && rating !== null) {
-      const result = getRatingBasedSentiment(rating);
+      const ratingResult = getRatingBasedSentiment(rating);
       return {
-        sentiment: result.sentiment,
-        sentiment_score: result.sentiment_score,
+        ...ratingResult,
         language: 'unknown',
-        modelUsed: 'rating-fallback'
+        modelUsed: 'RatingFallback'
       };
     }
     
-    // Final fallback
-    return { sentiment: 'neutral', sentiment_score: 0, language: 'unknown', modelUsed: 'error-fallback' };
+    return {
+      sentiment: 'neutral',
+      sentiment_score: 0,
+      language: 'unknown',
+      modelUsed: 'ErrorFallback'
+    };
   }
 }
 
@@ -70,21 +89,15 @@ export async function analyzeMultilingualSentiment(
  * rating ≤ 2 = negative
  */
 function getRatingBasedSentiment(rating: number): { sentiment: string; sentiment_score: number } {
-  // Normalize rating to 1-5 scale if needed
   const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
   
   if (normalizedRating >= 4) {
-    // Positive sentiment: rating 4-5
-    // Score between 0.3 and 0.7
-    const score = 0.3 + (normalizedRating - 4) * 0.4; // 4->0.3, 5->0.7
+    const score = 0.3 + (normalizedRating - 4) * 0.4;
     return { sentiment: 'positive', sentiment_score: score };
   } else if (normalizedRating === 3) {
-    // Neutral sentiment: rating 3
     return { sentiment: 'neutral', sentiment_score: 0 };
   } else {
-    // Negative sentiment: rating 1-2
-    // Score between -0.7 and -0.3
-    const score = -0.7 + (normalizedRating - 1) * 0.4; // 1->-0.7, 2->-0.3
+    const score = -0.7 + (normalizedRating - 1) * 0.4;
     return { sentiment: 'negative', sentiment_score: score };
   }
 }

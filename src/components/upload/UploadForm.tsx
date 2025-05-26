@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,8 +45,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onSubmit }) => {
     // Analyze sentiment of the feedback text, using rating as proxy if feedback is empty
     const { sentiment, sentiment_score } = analyzeSentiment(data.feedback, 0.2, data.rating);
     
-    // Include sentiment analysis results in the submission,
-    // using the exact Sentiment union type for `sentiment`
+    // Include sentiment analysis results in the submission
     onSubmit({
       ...data,
       sentiment: sentiment as Sentiment,

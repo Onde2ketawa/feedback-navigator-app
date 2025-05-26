@@ -1,68 +1,103 @@
 
-export type Sentiment = "positive" | "neutral" | "negative";
+export type Sentiment = 'positive' | 'neutral' | 'negative';
 
-// POSITIVE KEYWORDS
-export const positiveKeywords = [
-  // Bahasa Indonesia - Baku
-  "mudah digunakan","cepat","aman","praktis","fitur lengkap","transaksi lancar","notifikasi real-time",
-  "antarmuka intuitif","saldo akurat","layanan responsif",
-  // Bahasa Indonesia - Slang
-  "keren banget","gampang dipakai","nggak lemot","amanah","fiturnya oke punya","top-up cepet",
-  "gak ribet","notifnya nyampe real-time","ui-nya user-friendly","cs-nya ramah",
-  // English - Formal
-  "user-friendly","fast transaction","secure","reliable","great features","smooth performance",
-  "instant notification","easy navigation","good customer support","accurate balance",
-  // English - Informal/Slang
-  "super easy to use","super fast","no lag","super safe","features are lit","money transfer in a snap",
-  "no hassle","notifications are on point","ui is clean","cs is helpful",
-  // Category based positive
-  "aman","secure","verifikasi dua langkah","2fa","transfer instan","instant transfer","cs ramah",
-  "helpful support","aplikasi sering update","frequent updates"
-];
+interface SentimentResult {
+  sentiment: Sentiment;
+  sentiment_score: number;
+}
 
-// NEGATIVE KEYWORDS
-export const negativeKeywords = [
-  "error","lambat","sulit digunakan","tidak aman","aplikasi crash","transaksi gagal","verifikasi lama",
-  "biaya tersembunyi","notifikasi telat","layanan tidak responsif",
-  "lemot banget","error mulu","ribet login","kena charge nggak jelas","notif telat nyampe","cs-nya nyebelin",
-  "gampang hang","kreditnya nggak cair-cair","aplikasi nge-freeze","banyak bug",
-  "glitchy","slow processing","poor security","frequent crashes","transaction failed",
-  "hidden fees","unresponsive support","confusing interface","login issues","delayed notifications",
-  "so buggy","takes forever to load","keeps crashing","wtf, why so many fees","cs is useless",
-  "can’t even log in","money got stuck","worst app ever","notifications mia","ui is a mess",
-  "penipuan","fraud","gagal bayar","payment failed","respon lambat","slow response",
-  "downtime lama","too much maintenance"
-];
-
-// NEUTRAL KEYWORDS
-export const neutralKeywords = [
-  "standar","biasa saja","cukup memadai","tidak ada masalah","sesuai ekspektasi",
-  "lumayanlah","nggak jelek, nggak bagus","ya gitulah","standar aja","gak ada masalah sih",
-  "average","nothing special","works fine","no major issues","meets expectations",
-  "it’s okay, i guess","not bad, not great","does the job","meh","no complaints"
-];
-
-/**
- * Classic keywords logic (unchanged)
- */
-export function analyzeSentiment(text: string, threshold = 0.2): { sentiment: Sentiment; sentiment_score: number } {
-  if (!text) return { sentiment: "neutral", sentiment_score: 0 };
-  const lowerText = text.toLowerCase();
-  let pos = 0, neg = 0, neu = 0;
-
-  positiveKeywords.forEach((kw) => { if (lowerText.includes(kw)) pos++; });
-  negativeKeywords.forEach((kw) => { if (lowerText.includes(kw)) neg++; });
-  neutralKeywords.forEach((kw) => { if (lowerText.includes(kw)) neu++; });
-
-  const total = pos + neg + neu;
-  let score = 0;
-  if (total > 0) {
-    score = (pos - neg) / total;
+export function analyzeSentiment(
+  text: string | null | undefined, 
+  threshold = 0.3, 
+  rating?: number
+): SentimentResult {
+  // If text is empty or null, use rating as proxy for sentiment
+  if (!text || text.trim() === '') {
+    if (rating !== undefined && rating !== null) {
+      return getRatingBasedSentiment(rating);
+    }
+    // Fallback to neutral if no text and no rating
+    return { sentiment: 'neutral', sentiment_score: 0 };
   }
 
-  let sentiment: Sentiment = "neutral";
-  if (score > threshold) sentiment = "positive";
-  else if (score < -threshold) sentiment = "negative";
-
+  const lowercaseText = text.toLowerCase();
+  
+  // Enhanced keyword lists for Indonesian and English
+  const positiveKeywords = [
+    // Indonesian positive keywords
+    'bagus', 'baik', 'suka', 'senang', 'mantap', 'keren', 'hebat', 'luar biasa',
+    'memuaskan', 'sempurna', 'oke', 'ok', 'terima kasih', 'thanks', 'makasih',
+    'puas', 'recommended', 'sukses', 'lancar', 'mudah', 'cepat', 'responsive',
+    
+    // English positive keywords
+    'excellent', 'amazing', 'great', 'good', 'love', 'awesome', 'fantastic', 
+    'wonderful', 'perfect', 'outstanding', 'brilliant', 'superb', 'nice',
+    'satisfied', 'happy', 'pleased', 'impressed', 'recommend', 'helpful'
+  ];
+  
+  const negativeKeywords = [
+    // Indonesian negative keywords
+    'buruk', 'jelek', 'tidak suka', 'kecewa', 'mengecewakan', 'lambat', 'lelet',
+    'rusak', 'error', 'bermasalah', 'sulit', 'ribet', 'susah', 'payah', 'parah',
+    'lemot', 'hang', 'lag', 'stuck', 'loading', 'tidak bisa', 'gabisa',
+    
+    // English negative keywords
+    'bad', 'terrible', 'awful', 'hate', 'worst', 'horrible', 'disappointing', 
+    'slow', 'broken', 'useless', 'frustrating', 'annoying', 'confusing',
+    'difficult', 'hard', 'impossible', 'crash', 'freeze', 'stuck', 'failed'
+  ];
+  
+  let positiveCount = 0;
+  let negativeCount = 0;
+  
+  positiveKeywords.forEach(keyword => {
+    if (lowercaseText.includes(keyword)) {
+      positiveCount++;
+    }
+  });
+  
+  negativeKeywords.forEach(keyword => {
+    if (lowercaseText.includes(keyword)) {
+      negativeCount++;
+    }
+  });
+  
+  const totalKeywords = positiveCount + negativeCount;
+  let score = 0;
+  
+  if (totalKeywords > 0) {
+    score = (positiveCount - negativeCount) / totalKeywords;
+  }
+  
+  let sentiment: Sentiment = 'neutral';
+  if (score > threshold) {
+    sentiment = 'positive';
+  } else if (score < -threshold) {
+    sentiment = 'negative';
+  }
+  
   return { sentiment, sentiment_score: score };
+}
+
+/**
+ * Convert rating to sentiment when feedback text is empty
+ * rating ≥ 4 = positive
+ * rating = 3 = neutral  
+ * rating ≤ 2 = negative
+ */
+function getRatingBasedSentiment(rating: number): SentimentResult {
+  const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
+  
+  if (normalizedRating >= 4) {
+    // Positive sentiment: rating 4-5
+    const score = 0.3 + (normalizedRating - 4) * 0.4;
+    return { sentiment: 'positive', sentiment_score: score };
+  } else if (normalizedRating === 3) {
+    // Neutral sentiment: rating 3
+    return { sentiment: 'neutral', sentiment_score: 0 };
+  } else {
+    // Negative sentiment: rating 1-2
+    const score = -0.7 + (normalizedRating - 1) * 0.4;
+    return { sentiment: 'negative', sentiment_score: score };
+  }
 }

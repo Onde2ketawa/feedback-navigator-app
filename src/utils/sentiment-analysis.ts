@@ -1,3 +1,4 @@
+
 export type Sentiment = 'positive' | 'neutral' | 'negative';
 
 export function analyzeSentiment(text: string | null | undefined, threshold = 0.3, rating?: number): { sentiment: Sentiment; sentiment_score: number } {
@@ -69,7 +70,7 @@ function getRatingBasedSentiment(rating: number): { sentiment: Sentiment; sentim
   
   if (normalizedRating >= 4) {
     // Positive sentiment: rating 4-5
-    // Score between 0.5 and 1.0
+    // Score between 0.3 and 0.7
     const score = 0.3 + (normalizedRating - 4) * 0.4; // 4->0.3, 5->0.7
     return { sentiment: 'positive', sentiment_score: score };
   } else if (normalizedRating === 3) {
@@ -77,7 +78,7 @@ function getRatingBasedSentiment(rating: number): { sentiment: Sentiment; sentim
     return { sentiment: 'neutral', sentiment_score: 0 };
   } else {
     // Negative sentiment: rating 1-2
-    // Score between -1.0 and -0.5
+    // Score between -0.7 and -0.3
     const score = -0.7 + (normalizedRating - 1) * 0.4; // 1->-0.7, 2->-0.3
     return { sentiment: 'negative', sentiment_score: score };
   }
