@@ -65,6 +65,7 @@ export function analyzeSentiment(text: string | null | undefined, threshold = 0.
  * rating ≤ 2 = negative
  */
 function getRatingBasedSentiment(rating: number): { sentiment: Sentiment; sentiment_score: number } {
+  console.log(`Converting rating ${rating} to sentiment`);
   // Normalize rating to 1-5 scale if needed
   const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
   
@@ -72,14 +73,17 @@ function getRatingBasedSentiment(rating: number): { sentiment: Sentiment; sentim
     // Positive sentiment: rating 4-5
     // Score between 0.3 and 0.7
     const score = 0.3 + (normalizedRating - 4) * 0.4; // 4->0.3, 5->0.7
+    console.log(`Rating ${normalizedRating} >= 4, returning positive with score ${score}`);
     return { sentiment: 'positive', sentiment_score: score };
   } else if (normalizedRating === 3) {
     // Neutral sentiment: rating 3
+    console.log(`Rating ${normalizedRating} = 3, returning neutral`);
     return { sentiment: 'neutral', sentiment_score: 0 };
   } else {
     // Negative sentiment: rating 1-2
     // Score between -0.7 and -0.3
     const score = -0.7 + (normalizedRating - 1) * 0.4; // 1->-0.7, 2->-0.3
+    console.log(`Rating ${normalizedRating} <= 2, returning negative with score ${score}`);
     return { sentiment: 'negative', sentiment_score: score };
   }
 }

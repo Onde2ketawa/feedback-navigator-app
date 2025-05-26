@@ -89,15 +89,19 @@ export async function analyzeMultilingualSentiment(
  * rating ≤ 2 = negative
  */
 function getRatingBasedSentiment(rating: number): { sentiment: string; sentiment_score: number } {
+  console.log(`Converting rating ${rating} to sentiment`);
   const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
   
   if (normalizedRating >= 4) {
-    const score = 0.3 + (normalizedRating - 4) * 0.4;
+    const score = 0.3 + (normalizedRating - 4) * 0.4; // Rating 4 = 0.3, Rating 5 = 0.7
+    console.log(`Rating ${normalizedRating} >= 4, returning positive with score ${score}`);
     return { sentiment: 'positive', sentiment_score: score };
   } else if (normalizedRating === 3) {
+    console.log(`Rating ${normalizedRating} = 3, returning neutral`);
     return { sentiment: 'neutral', sentiment_score: 0 };
   } else {
-    const score = -0.7 + (normalizedRating - 1) * 0.4;
+    const score = -0.7 + (normalizedRating - 1) * 0.4; // Rating 1 = -0.7, Rating 2 = -0.3
+    console.log(`Rating ${normalizedRating} <= 2, returning negative with score ${score}`);
     return { sentiment: 'negative', sentiment_score: score };
   }
 }

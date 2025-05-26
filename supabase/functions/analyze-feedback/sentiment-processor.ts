@@ -7,15 +7,19 @@ import type { FeedbackRecord, AnalysisOptions } from "./types.ts";
  * Convert rating to sentiment when feedback text is empty
  */
 function getRatingBasedSentiment(rating: number): { sentiment: string; score: number } {
+  console.log(`Converting rating ${rating} to sentiment`);
   const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
   
   if (normalizedRating >= 4) {
     const score = 0.3 + (normalizedRating - 4) * 0.4;
+    console.log(`Rating ${normalizedRating} >= 4, returning positive with score ${score}`);
     return { sentiment: "positive", score };
   } else if (normalizedRating === 3) {
+    console.log(`Rating ${normalizedRating} = 3, returning neutral`);
     return { sentiment: "neutral", score: 0 };
   } else {
     const score = -0.7 + (normalizedRating - 1) * 0.4;
+    console.log(`Rating ${normalizedRating} <= 2, returning negative with score ${score}`);
     return { sentiment: "negative", score };
   }
 }
