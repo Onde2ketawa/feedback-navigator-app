@@ -204,6 +204,18 @@ export type Database = {
         Args: { subcategory_id: string; name_value: string }
         Returns: undefined
       }
+      get_all_user_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          full_name: string
+          role: string
+          status: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
       get_annual_channel_ratings: {
         Args: Record<PropertyKey, never> | { year_filters?: string[] }
         Returns: {
@@ -288,6 +300,14 @@ export type Database = {
           sentiment_value: string
           sentiment_score_value?: number
         }
+        Returns: undefined
+      }
+      update_user_role: {
+        Args: { user_id: string; new_role: string }
+        Returns: undefined
+      }
+      update_user_status: {
+        Args: { user_id: string; new_status: string }
         Returns: undefined
       }
     }

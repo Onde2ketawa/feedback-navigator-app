@@ -24,14 +24,11 @@ const UserManagement: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all');
 
-  // Fetch all users from profiles table
+  // Fetch all users using the admin-only security definer function
   const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.rpc('get_all_user_profiles');
 
       if (error) {
         throw new Error(error.message);
@@ -59,13 +56,13 @@ const UserManagement: React.FC = () => {
     }
   }, [users, activeTab]);
 
-  // Handle user role change
+  // Handle user role change using the admin-only security definer function
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', userId);
+      const { error } = await supabase.rpc('update_user_role', {
+        user_id: userId,
+        new_role: newRole
+      });
 
       if (error) {
         throw new Error(error.message);
@@ -87,13 +84,13 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // Handle user status change
+  // Handle user status change using the admin-only security definer function
   const handleStatusChange = async (userId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: newStatus })
-        .eq('id', userId);
+      const { error } = await supabase.rpc('update_user_status', {
+        user_id: userId,
+        new_status: newStatus
+      });
 
       if (error) {
         throw new Error(error.message);
