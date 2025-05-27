@@ -12,99 +12,89 @@ export const useCategoryRatingData = (
 
   const fetchCategoryRatingData = async (): Promise<CategoryRatingDataPoint[]> => {
     try {
+      console.log("Fetching category rating data with filters:", { channelFilter, yearFilter, monthFilter });
+      
+      // Build the base query joining customer_feedback with channel to get channel names
       let query = supabase
         .from('customer_feedback')
-        .select('category, rating');
-        
-      // Apply filters based on selected options
+        .select(`
+          rating,
+          channel_id,
+          submit_date,
+          channel:channel_id (
+            id,
+            name
+          )
+        `);
+
+      // Apply channel filter if not 'all'
       if (channelFilter !== 'all') {
-        // Try to get the channel ID if it's a name instead of an ID
-        try {
-          const { data: channelData } = await supabase
-            .from('channel')
-            .select('id')
-            .eq('name', channelFilter)
-            .single();
-          
-          if (channelData) {
-            query = query.eq('channel_id', channelData.id);
-          }
-        } catch (err) {
-          // If it's already an ID, use it directly
-          query = query.eq('channel_id', channelFilter);
-        }
+        query = query.eq('channel_id', channelFilter);
       }
-      
-      // Filter non-null categories
-      query = query.not('category', 'is', null);
-      
-      // Add year filter if not 'all'
+
+      // Apply year filter if not 'all'
       if (yearFilter !== 'all') {
-        const yearStart = `${yearFilter}-01-01`;
-        const yearEnd = `${yearFilter}-12-31`;
-        query = query.gte('submit_date', yearStart).lte('submit_date', yearEnd);
+        const year = parseInt(yearFilter);
+        query = query.gte('submit_date', `${year}-01-01`);
+        query = query.lt('submit_date', `${year + 1}-01-01`);
       }
-      
-      // Add month filter if not 'all'
-      if (monthFilter !== 'all' && yearFilter !== 'all') {
-        const monthNum = parseInt(monthFilter);
-        const monthStr = monthNum < 10 ? `0${monthNum}` : `${monthNum}`;
-        const monthStart = `${yearFilter}-${monthStr}-01`;
-        const lastDay = new Date(parseInt(yearFilter), monthNum, 0).getDate();
-        const monthEnd = `${yearFilter}-${monthStr}-${lastDay}`;
-        query = query.gte('submit_date', monthStart).lte('submit_date', monthEnd);
+
+      // Apply month filter if not 'all'
+      if (monthFilter !== 'all') {
+        const month = parseInt(monthFilter);
+        const year = yearFilter !== 'all' ? parseInt(yearFilter) : new Date().getFullYear();
+        const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+        const endDate = month === 12 
+          ? `${year + 1}-01-01` 
+          : `${year}-${(month + 1).toString().padStart(2, '0')}-01`;
+        
+        query = query.gte('submit_date', startDate);
+        query = query.lt('submit_date', endDate);
       }
-      
+
       const { data, error } = await query;
 
       if (error) throw error;
-      
-      if (data && data.length > 0) {
-        console.log("Category ratings raw data sample:", data.slice(0, 5));
+
+      if (data) {
+        console.log("Category rating raw data:", data);
         return processCategoryRatingData(data);
       }
-      
-      // Return empty array if no data
+
       return [];
     } catch (error) {
       console.error('Error fetching category rating data:', error);
       return [];
     }
   };
-  
+
   const processCategoryRatingData = (data: any[]): CategoryRatingDataPoint[] => {
-    // Group by category and calculate average rating
-    const categoryRatings: Record<string, { sum: number, count: number }> = {};
-    
+    // Group by channel and calculate average rating
+    const channelRatings: Record<string, { total: number; count: number; name: string }> = {};
+
     data.forEach(item => {
-      const category = item.category || 'Uncategorized';
-      const rating = typeof item.rating === 'number' ? item.rating : parseInt(item.rating);
-      
-      if (isNaN(rating)) {
-        console.warn(`Invalid rating value for category ${category}:`, item.rating);
-        return; // Skip this invalid item
+      if (!item.channel || !item.rating) return;
+
+      const channelName = item.channel.name;
+      const rating = typeof item.rating === 'number' ? item.rating : parseFloat(item.rating);
+
+      if (isNaN(rating)) return;
+
+      if (!channelRatings[channelName]) {
+        channelRatings[channelName] = { total: 0, count: 0, name: channelName };
       }
-      
-      if (!categoryRatings[category]) {
-        categoryRatings[category] = { sum: 0, count: 0 };
-      }
-      
-      categoryRatings[category].sum += rating;
-      categoryRatings[category].count++;
+
+      channelRatings[channelName].total += rating;
+      channelRatings[channelName].count += 1;
     });
-    
-    console.log("Processed category ratings:", categoryRatings);
-    
-    // Convert to array of data points
-    const result: CategoryRatingDataPoint[] = Object.entries(categoryRatings)
-      .map(([name, data]) => ({
-        name,
-        rating: data.count > 0 ? Number((data.sum / data.count).toFixed(1)) : 0
-      }))
-      .sort((a, b) => b.rating - a.rating);
-    
-    console.log("Final category rating data:", result);
-    
+
+    // Convert to array format with average ratings
+    const result = Object.values(channelRatings).map(channel => ({
+      name: channel.name,
+      rating: Number((channel.total / channel.count).toFixed(2))
+    }));
+
+    console.log("Processed category rating data:", result);
     return result;
   };
 

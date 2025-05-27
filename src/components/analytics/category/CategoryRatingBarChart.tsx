@@ -53,11 +53,18 @@ export const CategoryRatingBarChart: React.FC<CategoryRatingBarChartProps> = ({
             top: 5,
             right: 30,
             left: 20,
-            bottom: 5,
+            bottom: 60,
           }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="name" stroke="#64748b" />
+          <XAxis 
+            dataKey="name" 
+            stroke="#64748b" 
+            angle={-45}
+            textAnchor="end"
+            height={100}
+            interval={0}
+          />
           <YAxis
             stroke="#64748b"
             domain={[0, 5]}
