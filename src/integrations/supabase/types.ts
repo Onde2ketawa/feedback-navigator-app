@@ -231,6 +231,10 @@ export type Database = {
           color: string
         }[]
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_myhana_rating_stats: {
         Args: Record<PropertyKey, never>
         Returns: {

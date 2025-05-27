@@ -22,17 +22,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
-  // Function to check if user is admin from profiles table directly
+  // Function to check if user is admin using the security definer function
   const checkUserRole = async (userId: string) => {
     try {
       console.log('Checking role for user:', userId);
       
-      // Query profiles table directly for the user's role
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
+      // Use the security definer function to avoid RLS recursion
+      const { data, error } = await supabase.rpc('get_current_user_role');
       
       if (error) {
         console.error('Error fetching user role:', error);
@@ -40,8 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      const isUserAdmin = data?.role === 'admin';
-      console.log('User role data:', data?.role, 'Is admin:', isUserAdmin);
+      const isUserAdmin = data === 'admin';
+      console.log('User role data:', data, 'Is admin:', isUserAdmin);
       setIsAdmin(isUserAdmin);
     } catch (error) {
       console.error('Failed to check user role:', error);
