@@ -4,6 +4,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { Feedback } from '@/models/feedback';
 import { createFeedbackColumns } from './table/FeedbackColumns';
 import { useResponsiveColumns } from './table/useResponsiveColumns';
+import { useFeedbackStats } from '@/hooks/useFeedbackStats';
 import { FeedbackFilter } from '@/hooks/useFeedbackData';
 
 interface FeedbackTableProps {
@@ -27,6 +28,8 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   openSentimentDialog,
   filter,
 }) => {
+  const { data: stats } = useFeedbackStats(filter);
+  
   const columns = React.useMemo(
     () => createFeedbackColumns({
       categories,
@@ -46,7 +49,7 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
         <DataTable 
           columns={visibleColumns} 
           data={data} 
-          totalRecords={data.length}
+          totalRecords={stats?.totalFeedback}
         />
       </div>
     </div>
