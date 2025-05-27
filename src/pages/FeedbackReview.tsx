@@ -6,6 +6,8 @@ import { ExportButtons } from '@/components/feedback-review/ExportButtons';
 import { useFeedbackReview } from '@/hooks/useFeedbackReview';
 import type { SortField } from '@/hooks/useFeedbackReview';
 import { PageHeader } from '@/components/ui/page-header';
+import { useFeedbackStats } from '@/hooks/useFeedbackStats';
+import { FeedbackFilter } from '@/hooks/useFeedbackData';
 
 const FeedbackReview = () => {
   const {
@@ -24,6 +26,17 @@ const FeedbackReview = () => {
     ratingRange,
     setRatingRange,
   } = useFeedbackReview();
+
+  // Create filter object to match useFeedbackStats format
+  const filter: FeedbackFilter = {
+    channel: selectedChannel === 'all' ? null : selectedChannel,
+    year: selectedYear === 'all' ? null : selectedYear,
+    month: selectedMonth === 'all' ? null : selectedMonth,
+    ratingMin: ratingRange[0],
+    ratingMax: ratingRange[1]
+  };
+
+  const { data: stats } = useFeedbackStats(filter);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -69,6 +82,7 @@ const FeedbackReview = () => {
           sortField={sortField}
           sortOrder={sortOrder}
           onSort={handleSort}
+          totalRecords={stats?.totalFeedback}
         />
       </div>
     </div>

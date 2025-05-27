@@ -10,9 +10,10 @@ interface FeedbackTableProps {
   sortField: SortField;
   sortOrder: 'asc' | 'desc';
   onSort: (field: SortField) => void;
+  totalRecords?: number;
 }
 
-export function FeedbackTable({ data, sortField, sortOrder, onSort }: FeedbackTableProps) {
+export function FeedbackTable({ data, sortField, sortOrder, onSort, totalRecords }: FeedbackTableProps) {
   const columns = React.useMemo(
     () => createFeedbackColumns({ sortField, sortOrder, onSort }),
     [sortField, sortOrder, onSort]
@@ -23,7 +24,7 @@ export function FeedbackTable({ data, sortField, sortOrder, onSort }: FeedbackTa
       <Card className="border rounded-lg">
         <CardContent className="p-1 sm:p-2 md:p-4 lg:p-6">
           <div className="overflow-x-auto">
-            <DataTable columns={columns} data={data || []} />
+            <DataTable columns={columns} data={data || []} totalRecords={totalRecords} />
           </div>
         </CardContent>
       </Card>
