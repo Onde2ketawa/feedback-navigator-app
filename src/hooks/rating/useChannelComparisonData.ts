@@ -39,7 +39,10 @@ export const useChannelComparisonData = (years: string[]) => {
       // Group data by year
       const dataByYear: { [key: string]: DatabaseChannelRating[] } = {};
       
-      data.forEach((item: DatabaseChannelRating) => {
+      // Cast the data to the correct type since we know the structure from the function
+      const typedData = data as DatabaseChannelRating[];
+      
+      typedData.forEach((item: DatabaseChannelRating) => {
         const yearKey = item.year.toString();
         if (!dataByYear[yearKey]) {
           dataByYear[yearKey] = [];
