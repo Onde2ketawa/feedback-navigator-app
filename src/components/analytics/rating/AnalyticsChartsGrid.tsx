@@ -34,13 +34,15 @@ export const AnalyticsChartsGrid: React.FC<AnalyticsChartsGridProps> = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <YearOverYearTrendChart data={yoyTrendData} />
+      <YearOverYearTrendChart 
+        data={yoyTrendData} 
+        channelFilter={channelFilter}
+        yearFilter={yearFilter}
+      />
       <RatingDistributionChart data={ratingDistributionData} />
       <div className="lg:col-span-2">
         <CategoryRatingBarChart 
-          data={categoryRatingData}
-          channelFilter={channelFilter}
-          yearFilter={yearFilter}
+          categoryRatings={categoryRatingData}
         />
       </div>
     </div>
