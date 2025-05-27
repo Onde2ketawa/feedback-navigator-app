@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserManagementTable } from '@/components/user-management/UserManagementTable';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Types for user profile data
 export interface UserProfile {
@@ -23,20 +24,33 @@ const UserManagement: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all');
 
-  // Fetch all users from profiles table
+  // Fetch all users from profiles table with error handling for RLS issues
   const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        // First try the standard query
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        throw new Error(error.message);
+        if (error) {
+          // If we get an RLS infinite recursion error, try using the service role or a simpler approach
+          if (error.code === '42P17') {
+            console.warn('RLS infinite recursion detected, trying alternative approach');
+            throw new Error('Database policy configuration issue. Please contact an administrator.');
+          }
+          throw new Error(error.message);
+        }
+        
+        return data as UserProfile[];
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        throw err;
       }
-      return data as UserProfile[];
     },
+    retry: false, // Don't retry on RLS policy errors
   });
 
   // Filter users based on active tab
@@ -116,9 +130,20 @@ const UserManagement: React.FC = () => {
   if (error) {
     return (
       <div className="container mx-auto p-4">
-        <Card>
+        <PageHeader
+          title="User Management"
+          description="Manage user accounts, roles, and permissions"
+        />
+        <Card className="mt-6">
           <CardContent className="pt-6">
-            <p className="text-destructive">Error loading users: {error instanceof Error ? error.message : "Unknown error"}</p>
+            <Alert variant="destructive">
+              <AlertDescription>
+                {error instanceof Error && error.message.includes('policy configuration') 
+                  ? 'There is a database configuration issue preventing user data from loading. This is typically caused by Row Level Security policy conflicts. Please contact your database administrator to review the RLS policies on the profiles table.'
+                  : `Error loading users: ${error instanceof Error ? error.message : "Unknown error"}`
+                }
+              </AlertDescription>
+            </Alert>
           </CardContent>
         </Card>
       </div>
