@@ -39,8 +39,8 @@ export const useChannelComparisonData = (years: string[]) => {
       // Group data by year
       const dataByYear: { [key: string]: DatabaseChannelRating[] } = {};
       
-      // Cast the data to the correct type since we know the structure from the function
-      const typedData = data as DatabaseChannelRating[];
+      // Use double cast to avoid TypeScript error - first to unknown, then to our type
+      const typedData = data as unknown as DatabaseChannelRating[];
       
       typedData.forEach((item: DatabaseChannelRating) => {
         const yearKey = item.year.toString();
