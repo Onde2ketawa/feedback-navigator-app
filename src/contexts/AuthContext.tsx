@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,24 +22,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
-  // Function to check if user is admin using the new metadata function
+  // Function to check if user is admin from profiles table directly
   const checkUserRole = async (userId: string) => {
     try {
       console.log('Checking role for user:', userId);
       
-      // Use the new function that doesn't cause recursion
-      const { data, error } = await supabase.rpc('get_user_role_from_metadata');
+      // Query profiles table directly for the user's role
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
       
       if (error) {
         console.error('Error fetching user role:', error);
+        setIsAdmin(false);
         return;
       }
       
-      const isUserAdmin = data === 'admin';
-      console.log('User role data:', data, 'Is admin:', isUserAdmin);
+      const isUserAdmin = data?.role === 'admin';
+      console.log('User role data:', data?.role, 'Is admin:', isUserAdmin);
       setIsAdmin(isUserAdmin);
     } catch (error) {
       console.error('Failed to check user role:', error);
+      setIsAdmin(false);
     }
   };
 
