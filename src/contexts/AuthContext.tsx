@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -128,16 +129,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signOut() {
     try {
-      await supabase.auth.signOut();
+      // Clear local state immediately
+      setSession(null);
+      setUser(null);
+      setIsAdmin(false);
+      
+      // Attempt to sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      // Only show error if it's not a session-related error
+      if (error && !error.message.includes('session') && !error.message.includes('Session')) {
+        console.error('Sign out error:', error);
+        toast({
+          title: "Sign out warning",
+          description: "You have been signed out locally, but there was an issue with the server.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Signed out",
+          description: "You have been successfully signed out.",
+        });
+      }
+    } catch (error: any) {
+      // Even if logout fails on server, we've cleared local state
+      console.error('Sign out error:', error);
       toast({
         title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Sign out failed",
-        description: error.message || "An error occurred during sign out.",
-        variant: "destructive",
+        description: "You have been signed out locally.",
       });
     }
   }
