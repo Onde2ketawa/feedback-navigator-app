@@ -23,7 +23,11 @@ export function FeedbackTable({ data, sortField, sortOrder, onSort }: FeedbackTa
       <Card className="border rounded-lg">
         <CardContent className="p-1 sm:p-2 md:p-4 lg:p-6">
           <div className="overflow-x-auto">
-            <DataTable columns={columns} data={data || []} />
+            <DataTable 
+              columns={columns} 
+              data={data || []} 
+              totalRecords={data?.length || 0}
+            />
           </div>
         </CardContent>
       </Card>

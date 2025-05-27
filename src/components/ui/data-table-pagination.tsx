@@ -22,9 +22,13 @@ export function DataTablePagination<TData>({
 }: DataTablePaginationProps<TData>) {
   const currentPageSize = table.getState().pagination.pageSize;
   const currentPageIndex = table.getState().pagination.pageIndex;
-  const totalRows = totalRecords || table.getFilteredRowModel().rows.length;
-  const startIndex = currentPageIndex * currentPageSize + 1;
-  const endIndex = Math.min((currentPageIndex + 1) * currentPageSize, totalRows);
+  
+  // Use the actual filtered data length if totalRecords is not provided or seems incorrect
+  const actualDataLength = table.getFilteredRowModel().rows.length;
+  const displayTotalRows = totalRecords && totalRecords > 0 ? totalRecords : actualDataLength;
+  
+  const startIndex = actualDataLength > 0 ? currentPageIndex * currentPageSize + 1 : 0;
+  const endIndex = Math.min((currentPageIndex + 1) * currentPageSize, actualDataLength);
   
   return (
     <div className="flex items-center justify-between space-x-2 py-4">
@@ -48,7 +52,7 @@ export function DataTablePagination<TData>({
           </SelectContent>
         </Select>
         <div className="flex-1 text-sm text-muted-foreground">
-          Showing {startIndex}-{endIndex} of {totalRows.toLocaleString('id-ID')} total records
+          Showing {startIndex}-{endIndex} of {displayTotalRows.toLocaleString('id-ID')} total records
         </div>
       </div>
       <div className="flex items-center space-x-2">
@@ -72,7 +76,7 @@ export function DataTablePagination<TData>({
           <div>Page</div>
           <strong>
             {currentPageIndex + 1} of{' '}
-            {Math.ceil(totalRows / currentPageSize)}
+            {Math.ceil(actualDataLength / currentPageSize)}
           </strong>
         </span>
       </div>
