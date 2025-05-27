@@ -24,33 +24,21 @@ const UserManagement: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all');
 
-  // Fetch all users from profiles table with error handling for RLS issues
+  // Fetch all users from profiles table
   const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      try {
-        // First try the standard query
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        if (error) {
-          // If we get an RLS infinite recursion error, try using the service role or a simpler approach
-          if (error.code === '42P17') {
-            console.warn('RLS infinite recursion detected, trying alternative approach');
-            throw new Error('Database policy configuration issue. Please contact an administrator.');
-          }
-          throw new Error(error.message);
-        }
-        
-        return data as UserProfile[];
-      } catch (err) {
-        console.error('Error fetching users:', err);
-        throw err;
+      if (error) {
+        throw new Error(error.message);
       }
+      
+      return data as UserProfile[];
     },
-    retry: false, // Don't retry on RLS policy errors
   });
 
   // Filter users based on active tab
@@ -138,10 +126,7 @@ const UserManagement: React.FC = () => {
           <CardContent className="pt-6">
             <Alert variant="destructive">
               <AlertDescription>
-                {error instanceof Error && error.message.includes('policy configuration') 
-                  ? 'There is a database configuration issue preventing user data from loading. This is typically caused by Row Level Security policy conflicts. Please contact your database administrator to review the RLS policies on the profiles table.'
-                  : `Error loading users: ${error instanceof Error ? error.message : "Unknown error"}`
-                }
+                Error loading users: {error instanceof Error ? error.message : "Unknown error"}
               </AlertDescription>
             </Alert>
           </CardContent>
