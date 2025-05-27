@@ -231,10 +231,6 @@ export type Database = {
           color: string
         }[]
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       get_myhana_rating_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -261,6 +257,10 @@ export type Database = {
           value: number
           color: string
         }[]
+      }
+      get_user_role_from_metadata: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_yoy_rating_comparison: {
         Args: Record<PropertyKey, never> | { channel_name?: string }

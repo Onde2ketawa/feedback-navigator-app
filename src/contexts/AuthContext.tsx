@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,14 +22,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
-  // Function to check if user is admin using direct table selection
-  // This avoids RLS policy recursion issues
+  // Function to check if user is admin using the new metadata function
   const checkUserRole = async (userId: string) => {
     try {
       console.log('Checking role for user:', userId);
       
-      // Use direct SQL query to avoid RLS policy recursion
-      const { data, error } = await supabase.rpc('get_auth_user_role');
+      // Use the new function that doesn't cause recursion
+      const { data, error } = await supabase.rpc('get_user_role_from_metadata');
       
       if (error) {
         console.error('Error fetching user role:', error);
