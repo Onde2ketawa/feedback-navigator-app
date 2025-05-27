@@ -26,7 +26,6 @@ const RatingAnalytics: React.FC = () => {
     isLoading,
     yoyTrendData,
     ratingDistributionData,
-    monthlyRatingData,
     categoryRatingData,
     refreshData
   } = useRatingAnalyticsData();
@@ -102,7 +101,6 @@ const RatingAnalytics: React.FC = () => {
       <AnalyticsChartsGrid
         isLoading={isLoading}
         yoyTrendData={yoyTrendData}
-        monthlyRatingData={monthlyRatingData}
         ratingDistributionData={ratingDistributionData}
         categoryRatingData={categoryRatingData}
         channelFilter={channelFilter}

@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useYoyTrendData } from './useYoyTrendData';
 import { useRatingDistributionData } from './useRatingDistributionData';
-import { useMonthlyRatingData } from './useMonthlyRatingData';
 import { useCategoryRatingData } from './useCategoryRatingData';
 
 export * from './types';
@@ -22,9 +21,6 @@ export function useRatingAnalyticsData() {
   const { ratingDistributionData, setRatingDistributionData, fetchRatingDistributionData } = 
     useRatingDistributionData(channelFilter);
   
-  const { monthlyRatingData, setMonthlyRatingData, fetchMonthlyRatingData } = 
-    useMonthlyRatingData(channelFilter, yearFilter, monthFilter);
-  
   const { categoryRatingData, setCategoryRatingData, fetchCategoryRatingData } = 
     useCategoryRatingData(channelFilter, yearFilter, monthFilter);
 
@@ -37,16 +33,14 @@ export function useRatingAnalyticsData() {
     setIsLoading(true);
     try {
       console.log("Fetching all rating analytics data...");
-      const [yoyData, distributionData, monthlyData, categoryData] = await Promise.all([
+      const [yoyData, distributionData, categoryData] = await Promise.all([
         fetchYoyTrendData(),
         fetchRatingDistributionData(),
-        fetchMonthlyRatingData(),
         fetchCategoryRatingData()
       ]);
 
       setYoyTrendData(yoyData);
       setRatingDistributionData(distributionData);
-      setMonthlyRatingData(monthlyData);
       setCategoryRatingData(categoryData);
       
     } catch (error) {
@@ -67,7 +61,6 @@ export function useRatingAnalyticsData() {
     isLoading,
     yoyTrendData,
     ratingDistributionData,
-    monthlyRatingData,
     categoryRatingData,
     refreshData: fetchRatingAnalyticsData
   };
