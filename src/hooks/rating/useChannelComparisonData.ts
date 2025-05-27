@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RatingTrendData } from './types';
 
-interface AnnualChannelRating {
+interface DatabaseChannelRating {
   year: number;
   channel_name: string;
   avg_rating: number;
@@ -37,9 +37,9 @@ export const useChannelComparisonData = (years: string[]) => {
       const result: RatingTrendData[] = [];
       
       // Group data by year
-      const dataByYear: { [key: string]: AnnualChannelRating[] } = {};
+      const dataByYear: { [key: string]: DatabaseChannelRating[] } = {};
       
-      data.forEach((item: AnnualChannelRating) => {
+      data.forEach((item: DatabaseChannelRating) => {
         const yearKey = item.year.toString();
         if (!dataByYear[yearKey]) {
           dataByYear[yearKey] = [];
