@@ -55,9 +55,6 @@ export function MyHanaPlayStoreRatingCard() {
               <p className="text-xs text-muted-foreground">
                 by {scrapedData.developer}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Updated: {scrapedData.lastUpdated}
-              </p>
             </div>
 
             <Button
