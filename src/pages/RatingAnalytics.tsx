@@ -30,7 +30,7 @@ const RatingAnalytics: React.FC = () => {
     refreshData
   } = useRatingAnalyticsData();
   
-  const [selectedComparisonYears, setSelectedComparisonYears] = useState<string[]>(['2024', '2025']);
+  const [selectedComparisonYears, setSelectedComparisonYears] = useState<string[]>(['2025']); // Changed from ['2024', '2025'] to ['2025']
   
   const fetchComparisonData = useChannelComparisonData(selectedComparisonYears);
   const [channelComparisonData, setChannelComparisonData] = useState<RatingTrendData[]>([]);

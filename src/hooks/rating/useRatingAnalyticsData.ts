@@ -9,7 +9,7 @@ export * from './types';
 
 export function useRatingAnalyticsData() {
   const [channelFilter, setChannelFilter] = useState<string>('all');
-  const [yearFilter, setYearFilter] = useState<string>('all');
+  const [yearFilter, setYearFilter] = useState<string>('2025'); // Changed from 'all' to '2025'
   const [monthFilter, setMonthFilter] = useState<string>('all');
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
