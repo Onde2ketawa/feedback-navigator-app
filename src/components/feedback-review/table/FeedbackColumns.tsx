@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import type { FeedbackData, SortField } from '@/hooks/useFeedbackReview';
 
 interface CreateFeedbackColumnsProps {
@@ -15,6 +16,13 @@ export function createFeedbackColumns({
   sortOrder, 
   onSort 
 }: CreateFeedbackColumnsProps): ColumnDef<FeedbackData>[] {
+  const getSortIcon = (field: SortField) => {
+    if (sortField === field) {
+      return sortOrder === 'asc' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
+    }
+    return <ArrowUpDown className="ml-2 h-4 w-4" />;
+  };
+
   return [
     {
       accessorKey: "channel.name",
@@ -24,7 +32,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('channel')}
         >
           Channel
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('channel')}
         </Button>
       ),
     },
@@ -36,7 +44,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('rating')}
         >
           Rating
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('rating')}
         </Button>
       ),
     },
@@ -48,7 +56,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('feedback')}
         >
           Feedback
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('feedback')}
         </Button>
       ),
     },
@@ -60,7 +68,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('device')}
         >
           Device
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('device')}
         </Button>
       ),
     },
@@ -72,7 +80,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('app_version')}
         >
           App Version
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('app_version')}
         </Button>
       ),
     },
@@ -84,7 +92,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('language')}
         >
           Language
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('language')}
         </Button>
       ),
     },
@@ -96,7 +104,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('submit_date')}
         >
           Submit Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('submit_date')}
         </Button>
       ),
     },
@@ -108,7 +116,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('submit_time')}
         >
           Submit Time
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('submit_time')}
         </Button>
       ),
     },
@@ -120,7 +128,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('sentiment')}
         >
           Sentiment
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('sentiment')}
         </Button>
       ),
     },
@@ -132,7 +140,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('category')}
         >
           Category
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('category')}
         </Button>
       ),
       cell: ({ row }) => {
@@ -147,7 +155,7 @@ export function createFeedbackColumns({
           onClick={() => onSort('sub_category')}
         >
           Sub Category
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {getSortIcon('sub_category')}
         </Button>
       ),
       cell: ({ row }) => {
