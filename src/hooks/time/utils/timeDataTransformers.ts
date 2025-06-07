@@ -3,8 +3,8 @@ import { TimeDistributionData, CategoryTimeData, DeviceTimeData } from '../types
 
 export const getMonthSortOrder = (monthName: string): number => {
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
   ];
   
   for (let i = 0; i < months.length; i++) {
@@ -28,9 +28,9 @@ export const transformMonthlyData = (monthlyData: Record<string, number>): TimeD
     const [year, monthNum] = month.split('-');
     const monthName = getIndonesianMonthName(parseInt(monthNum));
     return {
-      label: `${monthName} ${year}`,
+      label: `${monthName} '${year.slice(-2)}`,
       count,
-      sortOrder: (parseInt(year) * 100) + parseInt(monthNum)
+      sortOrder: (parseInt(year) * 12) + parseInt(monthNum) - 1
     };
   }).sort((a, b) => a.sortOrder! - b.sortOrder!);
 };
@@ -63,7 +63,7 @@ export const transformCategoryData = (categoryByMonthData: Record<string, Record
       return {
         timeLabel: `${monthName} '${year.slice(-2)}`,
         count,
-        sortOrder: (parseInt(year) * 100) + parseInt(monthNum)
+        sortOrder: (parseInt(year) * 12) + parseInt(monthNum) - 1
       };
     }).sort((a, b) => a.sortOrder! - b.sortOrder!)
   }));
@@ -78,7 +78,7 @@ export const transformDeviceData = (deviceByMonthData: Record<string, Record<str
       return {
         timeLabel: `${monthName} '${year.slice(-2)}`,
         count,
-        sortOrder: (parseInt(year) * 100) + parseInt(monthNum)
+        sortOrder: (parseInt(year) * 12) + parseInt(monthNum) - 1
       };
     }).sort((a, b) => a.sortOrder! - b.sortOrder!)
   }));
