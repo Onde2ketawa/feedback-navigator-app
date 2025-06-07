@@ -55,7 +55,7 @@ export const transformCategoryData = (categoryByMonthData: Record<string, Record
       const date = new Date(parseInt(year), parseInt(monthNum) - 1);
       const monthName = date.toLocaleString('default', { month: 'short' });
       return {
-        timeLabel: `${monthName} ${year}`,
+        timeLabel: `${monthName} '${year.slice(-2)}`,
         count,
         sortOrder: (parseInt(year) * 100) + parseInt(monthNum)
       };
@@ -71,7 +71,7 @@ export const transformDeviceData = (deviceByMonthData: Record<string, Record<str
       const date = new Date(parseInt(year), parseInt(monthNum) - 1);
       const monthName = date.toLocaleString('default', { month: 'short' });
       return {
-        timeLabel: `${monthName} ${year}`,
+        timeLabel: `${monthName} '${year.slice(-2)}`,
         count,
         sortOrder: (parseInt(year) * 100) + parseInt(monthNum)
       };
