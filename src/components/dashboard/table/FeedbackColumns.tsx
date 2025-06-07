@@ -128,7 +128,8 @@ export function createFeedbackColumns({
         const feedback = row.original;
         return (
           <CategoryDisplay
-            feedback={feedback}
+            categoryId={feedback.category}
+            subcategoryId={feedback.subcategory}
             categories={categories}
             subcategories={subcategories}
           />

@@ -7,17 +7,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Tag } from 'lucide-react';
+import { MoreHorizontal, Tag, Brain } from 'lucide-react';
 import { Feedback } from '@/models/feedback';
 
 interface FeedbackRowActionsProps {
   feedback: Feedback;
   openTagDialog: (feedback: Feedback) => void;
+  openSentimentDialog: (feedback: Feedback) => void;
 }
 
 export const FeedbackRowActions: React.FC<FeedbackRowActionsProps> = ({
   feedback,
-  openTagDialog
+  openTagDialog,
+  openSentimentDialog
 }) => {
   return (
     <DropdownMenu>
@@ -31,7 +33,10 @@ export const FeedbackRowActions: React.FC<FeedbackRowActionsProps> = ({
           <Tag className="mr-2 h-4 w-4" />
           <span>Edit Tags</span>
         </DropdownMenuItem>
-        {/* Add more dropdown actions as needed */}
+        <DropdownMenuItem onClick={() => openSentimentDialog(feedback)}>
+          <Brain className="mr-2 h-4 w-4" />
+          <span>Edit Sentiment</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
