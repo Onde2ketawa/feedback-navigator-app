@@ -44,6 +44,26 @@ export function useTimeAnalyticsData(
           return;
         }
 
+        // Get all unique category IDs from the feedback data
+        const categoryIds = [...new Set(feedbackData.map(item => item.category).filter(id => id && id !== 'Uncategorized'))];
+        
+        let categoryNameMap: Record<string, string> = {};
+        
+        if (categoryIds.length > 0) {
+          // Fetch category names from the categories table
+          const { data: categoriesData } = await supabase
+            .from('categories')
+            .select('id, name')
+            .in('id', categoryIds);
+          
+          if (categoriesData) {
+            categoryNameMap = categoriesData.reduce((acc, cat) => {
+              acc[cat.id] = cat.name;
+              return acc;
+            }, {} as Record<string, string>);
+          }
+        }
+
         // Initialize data containers
         const monthlyData: Record<string, number> = {};
         const hourlyData: Record<string, number> = {};
@@ -63,12 +83,12 @@ export function useTimeAnalyticsData(
               dailyData[day] = (dailyData[day] || 0) + 1;
             }
             
-            // Process category data
-            const category = item.category || 'Uncategorized';
-            if (!categoryByMonthData[category]) {
-              categoryByMonthData[category] = {};
+            // Process category data with proper names
+            const categoryName = categoryNameMap[item.category] || item.category || 'Uncategorized';
+            if (!categoryByMonthData[categoryName]) {
+              categoryByMonthData[categoryName] = {};
             }
-            categoryByMonthData[category][monthKey] = (categoryByMonthData[category][monthKey] || 0) + 1;
+            categoryByMonthData[categoryName][monthKey] = (categoryByMonthData[categoryName][monthKey] || 0) + 1;
             
             // Process device data
             const device = item.device || 'Unknown';
