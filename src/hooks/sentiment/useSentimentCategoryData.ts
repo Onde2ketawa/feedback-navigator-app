@@ -14,22 +14,31 @@ export const useSentimentCategoryData = () => {
     try {
       console.log("Fetching sentiment category data with filters:", { channelFilter, yearFilter, monthFilter });
       
-      // Build the base query joining customer_feedback with categories to get category names
+      // Build the base query
       let query = supabase
         .from('customer_feedback')
         .select(`
           sentiment_score,
           category,
           channel_id,
-          submit_date,
-          categories:category (
-            name
-          )
+          submit_date
         `);
 
       // Apply channel filter if not 'all'
       if (channelFilter !== 'all') {
-        query = query.eq('channel_id', channelFilter);
+        // First try to find channel by name
+        const { data: channelData } = await supabase
+          .from('channel')
+          .select('id')
+          .eq('name', channelFilter)
+          .single();
+        
+        if (channelData) {
+          query = query.eq('channel_id', channelData.id);
+        } else {
+          // If not found by name, try using as ID directly
+          query = query.eq('channel_id', channelFilter);
+        }
       }
 
       // Apply year filter if not 'all'
@@ -62,7 +71,27 @@ export const useSentimentCategoryData = () => {
 
       if (data) {
         console.log("Sentiment category raw data:", data);
-        return processSentimentCategoryData(data);
+        
+        // Now get category names for the categories we found
+        const categoryNames = [...new Set(data.map(item => item.category).filter(Boolean))];
+        
+        let categoryNameMap: Record<string, string> = {};
+        
+        if (categoryNames.length > 0) {
+          const { data: categoriesData } = await supabase
+            .from('categories')
+            .select('id, name')
+            .in('id', categoryNames);
+          
+          if (categoriesData) {
+            categoryNameMap = categoriesData.reduce((acc, cat) => {
+              acc[cat.id] = cat.name;
+              return acc;
+            }, {} as Record<string, string>);
+          }
+        }
+        
+        return processSentimentCategoryData(data, categoryNameMap);
       }
 
       return [];
@@ -72,15 +101,18 @@ export const useSentimentCategoryData = () => {
     }
   };
 
-  const processSentimentCategoryData = (data: any[]): SentimentCategoryDataPoint[] => {
+  const processSentimentCategoryData = (
+    data: any[], 
+    categoryNameMap: Record<string, string>
+  ): SentimentCategoryDataPoint[] => {
     // Group by category and calculate average sentiment score
     const categoryScores: Record<string, { total: number; count: number; name: string }> = {};
 
     data.forEach(item => {
       if (!item.sentiment_score || !item.category) return;
 
-      // Use category name from the joined categories table, fallback to category field
-      const categoryName = item.categories?.name || item.category || 'Uncategorized';
+      // Use category name from the map, fallback to category ID or 'Uncategorized'
+      const categoryName = categoryNameMap[item.category] || item.category || 'Uncategorized';
       const score = typeof item.sentiment_score === 'number' ? item.sentiment_score : parseFloat(item.sentiment_score);
 
       if (isNaN(score)) return;
