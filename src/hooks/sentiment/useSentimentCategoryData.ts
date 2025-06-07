@@ -93,10 +93,11 @@ export const useSentimentCategoryData = () => {
       categoryScores[categoryName].count += 1;
     });
 
-    // Convert to array format with average sentiment scores
+    // Convert to array format with average sentiment scores and include count
     const result = Object.values(categoryScores).map(category => ({
       name: category.name,
-      sentiment_score: Number((category.total / category.count).toFixed(3))
+      sentiment_score: Number((category.total / category.count).toFixed(3)),
+      count: category.count
     }));
 
     console.log("Processed sentiment category data:", result);

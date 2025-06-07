@@ -21,19 +21,19 @@ export function useSentimentAnalyticsData() {
     sentimentTrendData, 
     setSentimentTrendData, 
     fetchSentimentTrendData 
-  } = useSentimentTrendData(channelFilter);
+  } = useSentimentTrendData();
   
   const { 
     sentimentDistributionData, 
     setSentimentDistributionData, 
     fetchSentimentDistributionData 
-  } = useSentimentDistributionData(channelFilter);
+  } = useSentimentDistributionData();
   
   const { 
     sentimentCategoryData, 
     setSentimentCategoryData, 
     fetchSentimentCategoryData 
-  } = useSentimentCategoryData(channelFilter);
+  } = useSentimentCategoryData();
 
   // Fetch channels
   useEffect(() => {
@@ -58,9 +58,9 @@ export function useSentimentAnalyticsData() {
     setIsLoading(true);
     try {
       const [trendData, distributionData, categoryData] = await Promise.all([
-        fetchSentimentTrendData(),
-        fetchSentimentDistributionData(),
-        fetchSentimentCategoryData()
+        fetchSentimentTrendData(channelFilter, '2025', 'all'),
+        fetchSentimentDistributionData(channelFilter, '2025', 'all'),
+        fetchSentimentCategoryData(channelFilter, '2025', 'all')
       ]);
 
       setSentimentTrendData(trendData);
