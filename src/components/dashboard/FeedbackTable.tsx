@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import { Feedback } from '@/models/feedback';
 import { createFeedbackColumns } from './table/FeedbackColumns';
@@ -29,6 +29,17 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   filter,
 }) => {
   const { data: stats } = useFeedbackStats(filter);
+  const [sortField, setSortField] = useState<string>('submitDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
   
   const columns = React.useMemo(
     () => createFeedbackColumns({
@@ -37,18 +48,45 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
       openTagDialog,
       setSelectedRows,
       openSentimentDialog,
+      sortField,
+      sortOrder,
+      onSort: handleSort,
     }),
-    [categories, subcategories, openTagDialog, setSelectedRows, openSentimentDialog]
+    [categories, subcategories, openTagDialog, setSelectedRows, openSentimentDialog, sortField, sortOrder]
   );
   
   const visibleColumns = useResponsiveColumns(columns);
+
+  // Sort the data based on current sort state
+  const sortedData = React.useMemo(() => {
+    if (!sortField) return data;
+
+    return [...data].sort((a, b) => {
+      let aValue = a[sortField as keyof Feedback];
+      let bValue = b[sortField as keyof Feedback];
+
+      // Handle null/undefined values
+      if (aValue == null) aValue = '';
+      if (bValue == null) bValue = '';
+
+      // Convert to string for comparison
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+
+      if (sortOrder === 'asc') {
+        return aStr.localeCompare(bStr);
+      } else {
+        return bStr.localeCompare(aStr);
+      }
+    });
+  }, [data, sortField, sortOrder]);
 
   return (
     <div className="overflow-x-auto -mx-4 sm:mx-0">
       <div className="min-w-full inline-block align-middle px-4 sm:px-0">
         <DataTable 
           columns={visibleColumns} 
-          data={data} 
+          data={sortedData} 
           totalRecords={stats?.totalFeedback}
         />
       </div>

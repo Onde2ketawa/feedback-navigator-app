@@ -1,12 +1,15 @@
+
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Input } from '@/components/ui/input';
-import { Feedback } from '@/models/feedback';
-import { RatingStars } from './RatingStars';
 import { Button } from '@/components/ui/button';
-import { Pencil } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { Feedback } from '@/models/feedback';
 import { CategoryDisplay } from './CategoryDisplay';
+import { RatingStars } from './RatingStars';
+import { SentimentBadge } from './SentimentBadge';
 import { FeedbackRowActions } from './FeedbackRowActions';
 
 interface CreateFeedbackColumnsProps {
@@ -15,6 +18,9 @@ interface CreateFeedbackColumnsProps {
   openTagDialog: (feedback: Feedback) => void;
   setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
   openSentimentDialog: (feedback: Feedback) => void;
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
+  onSort?: (field: string) => void;
 }
 
 export function createFeedbackColumns({
@@ -23,36 +29,49 @@ export function createFeedbackColumns({
   openTagDialog,
   setSelectedRows,
   openSentimentDialog,
+  sortField,
+  sortOrder,
+  onSort
 }: CreateFeedbackColumnsProps): ColumnDef<Feedback>[] {
+  const getSortIcon = (field: string) => {
+    if (sortField === field && onSort) {
+      return sortOrder === 'asc' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
+    }
+    return onSort ? <ArrowUpDown className="ml-2 h-4 w-4" /> : null;
+  };
+
+  const createSortableHeader = (label: string, field: string) => {
+    if (!onSort) {
+      return label;
+    }
+    
+    return (
+      <Button
+        variant="ghost"
+        onClick={() => onSort(field)}
+        className="h-auto p-0 font-semibold"
+      >
+        {label}
+        {getSortIcon(field)}
+      </Button>
+    );
+  };
+
   return [
     {
       id: "select",
       header: ({ table }) => (
-        <Input
-          type="checkbox"
-          className="h-4 w-4"
-          checked={
-            table.getFilteredRowModel().rows.length > 0 &&
-            table.getIsAllRowsSelected()
-          }
-          onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
         />
       ),
       cell: ({ row }) => (
-        <Input
-          type="checkbox"
-          className="h-4 w-4"
+        <Checkbox
           checked={row.getIsSelected()}
-          onChange={(e) => {
-            row.toggleSelected(e.target.checked)
-            
-            const id = row.original.id;
-            if (e.target.checked) {
-              setSelectedRows(prev => [...prev, id]);
-            } else {
-              setSelectedRows(prev => prev.filter(rowId => rowId !== id));
-            }
-          }}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
         />
       ),
       enableSorting: false,
@@ -60,106 +79,56 @@ export function createFeedbackColumns({
     },
     {
       accessorKey: "channel",
-      header: "Channel",
+      header: () => createSortableHeader("Channel", "channel"),
+      cell: ({ row }) => {
+        const channel = row.getValue("channel") as string;
+        return <div className="font-medium">{channel || 'Unknown'}</div>;
+      },
     },
     {
       accessorKey: "rating",
-      header: "Rating",
+      header: () => createSortableHeader("Rating", "rating"),
       cell: ({ row }) => {
-        const rating = Number(row.getValue("rating"));
-        return <RatingStars rating={isNaN(rating) ? 1 : rating} />;
+        const rating = row.getValue("rating") as number;
+        return <RatingStars rating={rating} />;
+      },
+    },
+    {
+      accessorKey: "feedback",
+      header: () => createSortableHeader("Feedback", "feedback"),
+      cell: ({ row }) => {
+        const feedback = row.getValue("feedback") as string;
+        return (
+          <div className="max-w-[300px] truncate" title={feedback}>
+            {feedback}
+          </div>
+        );
       },
     },
     {
       accessorKey: "submitDate",
-      header: "Submit Date",
-    },
-    {
-      accessorKey: "submitTime",
-      header: "Submit Time",
-      enableHiding: true,
-    },
-    {
-      accessorKey: "feedback",
-      header: "Feedback",
+      header: () => createSortableHeader("Submit Date", "submitDate"),
       cell: ({ row }) => {
-        const feedback = row.getValue("feedback") as string;
-        return feedback ? (
-          <div className="whitespace-pre-wrap break-words">
-            {feedback}
-          </div>
-        ) : (
-          <span className="text-muted-foreground italic">No feedback</span>
-        );
+        const date = row.getValue("submitDate") as string;
+        return <div className="whitespace-nowrap">{date}</div>;
       },
-    },
-    {
-      accessorKey: "device",
-      header: "Device",
-      enableHiding: true,
-    },
-    {
-      accessorKey: "appVersion",
-      header: "App Version",
-      enableHiding: true,
-    },
-    {
-      accessorKey: "language",
-      header: "Language",
-      enableHiding: true,
     },
     {
       accessorKey: "sentiment",
-      header: "Sentiment",
+      header: () => createSortableHeader("Sentiment", "sentiment"),
       cell: ({ row }) => {
-        const feedback = row.original;
-        const sentiment = feedback.sentiment || 'Neutral';
-        
-        return (
-          <div className="flex items-center gap-2">
-            <Badge 
-              variant="outline"
-              className={
-                sentiment.toLowerCase() === 'positive' ? 'bg-green-500 text-white' :
-                sentiment.toLowerCase() === 'negative' ? 'bg-red-500 text-white' :
-                'bg-white text-gray-900 border-gray-200'
-              }
-            >
-              {sentiment}
-            </Badge>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => openSentimentDialog(feedback)}
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
-            >
-              <Pencil className="h-4 w-4" />
-              <span className="sr-only">Edit sentiment</span>
-            </Button>
-          </div>
-        );
+        const sentiment = row.getValue("sentiment") as string;
+        return <SentimentBadge sentiment={sentiment} />;
       },
-    },
-    {
-      accessorKey: "sentiment_score",
-      header: "Score",
-      cell: ({ row }) => {
-        const score = row.original.sentiment_score;
-        return <span>{score?.toFixed(2) || 'N/A'}</span>;
-      },
-      enableHiding: true,
     },
     {
       accessorKey: "category",
-      header: "Category",
+      header: () => createSortableHeader("Category", "category"),
       cell: ({ row }) => {
-        const categoryId = row.getValue("category") as string | undefined;
-        const subcategoryId = row.original.subcategory;
-        
+        const feedback = row.original;
         return (
           <CategoryDisplay
-            categoryId={categoryId}
-            subcategoryId={subcategoryId}
+            feedback={feedback}
             categories={categories}
             subcategories={subcategories}
           />
@@ -167,10 +136,28 @@ export function createFeedbackColumns({
       },
     },
     {
-      id: "actions",
+      accessorKey: "device",
+      header: () => createSortableHeader("Device", "device"),
       cell: ({ row }) => {
-        return <FeedbackRowActions feedback={row.original} openTagDialog={openTagDialog} />;
+        const device = row.getValue("device") as string;
+        return <div className="text-sm">{device || '-'}</div>;
       },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const feedback = row.original;
+        return (
+          <FeedbackRowActions
+            feedback={feedback}
+            openTagDialog={openTagDialog}
+            openSentimentDialog={openSentimentDialog}
+          />
+        );
+      },
+      enableSorting: false,
+      enableHiding: false,
     },
   ];
 }
