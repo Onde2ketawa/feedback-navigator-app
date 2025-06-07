@@ -76,16 +76,44 @@ export function useCategoryRatings() {
         categoryRatingsMap[category].count++;
       });
       
-      // Calculate averages
-      const result: CategoryRating[] = Object.keys(categoryRatingsMap).map(category => ({
-        name: category,
+      // Calculate averages and prepare result with category IDs
+      const categoryRatingsWithIds: { categoryId: string; rating: number }[] = Object.keys(categoryRatingsMap).map(category => ({
+        categoryId: category,
         rating: Number((categoryRatingsMap[category].sum / categoryRatingsMap[category].count).toFixed(1))
+      }));
+      
+      // Get all unique category IDs (excluding 'Uncategorized')
+      const categoryIds = categoryRatingsWithIds
+        .map(item => item.categoryId)
+        .filter(id => id && id !== 'Uncategorized');
+      
+      let categoryNameMap: Record<string, string> = {};
+      
+      if (categoryIds.length > 0) {
+        // Fetch category names from the categories table
+        const { data: categoriesData } = await supabase
+          .from('categories')
+          .select('id, name')
+          .in('id', categoryIds);
+        
+        if (categoriesData) {
+          categoryNameMap = categoriesData.reduce((acc, cat) => {
+            acc[cat.id] = cat.name;
+            return acc;
+          }, {} as Record<string, string>);
+        }
+      }
+      
+      // Map the data to use proper category names
+      const result: CategoryRating[] = categoryRatingsWithIds.map(item => ({
+        name: categoryNameMap[item.categoryId] || item.categoryId || 'Uncategorized',
+        rating: item.rating
       }));
       
       // Sort by rating, descending
       result.sort((a, b) => b.rating - a.rating);
       
-      console.log('Processed category ratings:', result);
+      console.log('Processed category ratings with names:', result);
       
       setCategoryRatings(result);
       return result;
