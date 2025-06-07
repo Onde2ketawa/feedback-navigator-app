@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 
 export default function DeviceAnalytics() {
   const [channelFilter, setChannelFilter] = useState('all');
-  const [yearFilter, setYearFilter] = useState('all');
+  const [yearFilter, setYearFilter] = useState('2025'); // Changed from 'all' to '2025'
   const [monthFilter, setMonthFilter] = useState('all');
 
   const {

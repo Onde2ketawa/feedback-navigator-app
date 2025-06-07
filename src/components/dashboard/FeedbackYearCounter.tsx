@@ -5,10 +5,10 @@ import { useFeedbackCount } from '@/hooks/useFeedbackCount';
 import { Loader2, Calendar } from 'lucide-react';
 
 interface FeedbackYearCounterProps {
-  year: string;
+  year?: string; // Made optional with default value
 }
 
-export function FeedbackYearCounter({ year }: FeedbackYearCounterProps) {
+export function FeedbackYearCounter({ year = '2025' }: FeedbackYearCounterProps) { // Default to '2025'
   const { data: count, isLoading, error } = useFeedbackCount(year);
   
   if (error) {

@@ -10,7 +10,7 @@ import { useTimeAnalyticsData } from '@/hooks/time/useTimeAnalyticsData';
 export default function TimeAnalytics() {
   // Filter state
   const [channelFilter, setChannelFilter] = useState('all');
-  const [yearFilter, setYearFilter] = useState('all');
+  const [yearFilter, setYearFilter] = useState('2025'); // Changed from 'all' to '2025'
   const [monthFilter, setMonthFilter] = useState('all');
 
   // Get time analytics data
