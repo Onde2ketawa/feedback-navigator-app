@@ -151,17 +151,29 @@ export const DeviceTimeDistribution: React.FC<DeviceTimeDistributionProps> = ({ 
   // Transform the data for the chart
   // We need to have each time period as an object with counts for each device
   const transformedData = (() => {
-    const timeLabels = new Set<string>();
+    const timeLabelsSet = new Set<string>();
+    const timeLabelsWithSort: { label: string; sortOrder: number }[] = [];
     
-    // Collect all time labels
+    // Collect all time labels with their sort orders
     data.forEach(deviceData => {
       deviceData.values.forEach(value => {
-        timeLabels.add(value.timeLabel);
+        if (!timeLabelsSet.has(value.timeLabel)) {
+          timeLabelsSet.add(value.timeLabel);
+          timeLabelsWithSort.push({
+            label: value.timeLabel,
+            sortOrder: value.sortOrder || 0
+          });
+        }
       });
     });
     
+    // Sort by sortOrder to ensure chronological order
+    const sortedTimeLabels = timeLabelsWithSort
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map(item => item.label);
+    
     // Create objects for each time label with counts for each device
-    return Array.from(timeLabels).sort().map(timeLabel => {
+    return sortedTimeLabels.map(timeLabel => {
       const timeObj: Record<string, any> = { timeLabel };
       
       data.forEach(deviceData => {
