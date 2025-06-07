@@ -62,6 +62,26 @@ export function useDeviceAnalyticsData(
 
       if (error) throw error;
 
+      // Get all unique category IDs from the feedback data
+      const categoryIds = [...new Set(data.map(item => item.category).filter(id => id && id !== 'Uncategorized'))];
+      
+      let categoryNameMap: Record<string, string> = {};
+      
+      if (categoryIds.length > 0) {
+        // Fetch category names from the categories table
+        const { data: categoriesData } = await supabase
+          .from('categories')
+          .select('id, name')
+          .in('id', categoryIds);
+        
+        if (categoriesData) {
+          categoryNameMap = categoriesData.reduce((acc, cat) => {
+            acc[cat.id] = cat.name;
+            return acc;
+          }, {} as Record<string, string>);
+        }
+      }
+
       // Process data for device distribution
       const deviceDistribution: DeviceDistribution[] = Object.entries(
         data.reduce((acc: Record<string, number>, item) => {
@@ -70,11 +90,11 @@ export function useDeviceAnalyticsData(
         }, {})
       ).map(([device, count]) => ({ device, count }));
 
-      // Process data for device-category comparison
+      // Process data for device-category comparison with proper category names
       const deviceCategoryData: DeviceCategoryData[] = data.reduce((acc: DeviceCategoryData[], item) => {
-        const key = `${item.device}-${item.category || 'Uncategorized'}`;
+        const categoryName = categoryNameMap[item.category] || item.category || 'Uncategorized';
         const existingEntry = acc.find(entry => 
-          entry.device === item.device && entry.category === (item.category || 'Uncategorized')
+          entry.device === item.device && entry.category === categoryName
         );
 
         if (existingEntry) {
@@ -82,7 +102,7 @@ export function useDeviceAnalyticsData(
         } else {
           acc.push({
             device: item.device,
-            category: item.category || 'Uncategorized',
+            category: categoryName,
             count: 1
           });
         }
