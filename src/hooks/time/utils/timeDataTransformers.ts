@@ -15,11 +15,18 @@ export const getMonthSortOrder = (monthName: string): number => {
   return 12;
 };
 
+const getIndonesianMonthName = (monthNumber: number): string => {
+  const indonesianMonths = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+  ];
+  return indonesianMonths[monthNumber - 1] || 'Unknown';
+};
+
 export const transformMonthlyData = (monthlyData: Record<string, number>): TimeDistributionData[] => {
   return Object.entries(monthlyData).map(([month, count]) => {
     const [year, monthNum] = month.split('-');
-    const date = new Date(parseInt(year), parseInt(monthNum) - 1);
-    const monthName = date.toLocaleString('default', { month: 'long' });
+    const monthName = getIndonesianMonthName(parseInt(monthNum));
     return {
       label: `${monthName} ${year}`,
       count,
@@ -52,8 +59,7 @@ export const transformCategoryData = (categoryByMonthData: Record<string, Record
     category,
     values: Object.entries(monthData).map(([month, count]) => {
       const [year, monthNum] = month.split('-');
-      const date = new Date(parseInt(year), parseInt(monthNum) - 1);
-      const monthName = date.toLocaleString('default', { month: 'short' });
+      const monthName = getIndonesianMonthName(parseInt(monthNum));
       return {
         timeLabel: `${monthName} '${year.slice(-2)}`,
         count,
@@ -68,8 +74,7 @@ export const transformDeviceData = (deviceByMonthData: Record<string, Record<str
     device,
     values: Object.entries(monthData).map(([month, count]) => {
       const [year, monthNum] = month.split('-');
-      const date = new Date(parseInt(year), parseInt(monthNum) - 1);
-      const monthName = date.toLocaleString('default', { month: 'short' });
+      const monthName = getIndonesianMonthName(parseInt(monthNum));
       return {
         timeLabel: `${monthName} '${year.slice(-2)}`,
         count,
