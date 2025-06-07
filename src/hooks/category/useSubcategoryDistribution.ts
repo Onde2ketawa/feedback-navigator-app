@@ -16,15 +16,36 @@ export function useSubcategoryDistribution() {
     if (!category) return [];
     
     try {
+      // First, get the category ID from the category name
+      let categoryId = category;
+      
+      // If the category is not 'Uncategorized', fetch its ID
+      if (category !== 'Uncategorized') {
+        const { data: categoryData } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('name', category)
+          .single();
+        
+        if (categoryData) {
+          categoryId = categoryData.id;
+        } else {
+          console.warn(`Category not found: ${category}`);
+          return [];
+        }
+      }
+
       // Use the Supabase function to get subcategory distribution
       const { data, error } = await supabase.rpc('get_subcategory_distribution', {
-        category_param: category,
+        category_param: categoryId,
         channel_id_param: selectedChannel === 'all' ? null : selectedChannel,
         year_param: selectedYear === 'all' ? null : selectedYear,
         month_param: selectedMonth === 'all' ? null : selectedMonth
       });
       
       if (error) throw error;
+      
+      console.log('Subcategory distribution data:', data);
       
       // Update the subcategory data state with the new data
       setSubcategoryData(prev => ({
