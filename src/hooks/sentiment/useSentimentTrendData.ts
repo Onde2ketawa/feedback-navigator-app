@@ -3,10 +3,14 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { SentimentTrendMonthYearPoint } from './sentimentTrendTransform';
 
-export const useSentimentTrendData = (channelFilter: string) => {
+export const useSentimentTrendData = () => {
   const [sentimentTrendData, setSentimentTrendData] = useState<SentimentTrendMonthYearPoint[]>([]);
 
-  const fetchSentimentTrendData = async (): Promise<SentimentTrendMonthYearPoint[]> => {
+  const fetchSentimentTrendData = async (
+    channelFilter: string,
+    yearFilter: string,
+    monthFilter: string
+  ): Promise<SentimentTrendMonthYearPoint[]> => {
     try {
       console.log(`[SentimentTrend] Fetching trend via RPC for channel:`, channelFilter);
 

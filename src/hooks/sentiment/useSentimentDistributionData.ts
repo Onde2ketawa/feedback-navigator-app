@@ -3,11 +3,15 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { SentimentDistributionDataPoint } from './types';
 
-export const useSentimentDistributionData = (channelFilter: string) => {
+export const useSentimentDistributionData = () => {
   const [sentimentDistributionData, setSentimentDistributionData] = 
     useState<SentimentDistributionDataPoint[]>([]);
   
-  const fetchSentimentDistributionData = async (): Promise<SentimentDistributionDataPoint[]> => {
+  const fetchSentimentDistributionData = async (
+    channelFilter: string,
+    yearFilter: string,
+    monthFilter: string
+  ): Promise<SentimentDistributionDataPoint[]> => {
     try {
       // Base query to get sentiment distribution
       let query = supabase
