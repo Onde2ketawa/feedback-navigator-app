@@ -45,20 +45,55 @@ export function useSubcategoryDistribution() {
       
       if (error) throw error;
       
-      console.log('Subcategory distribution data:', data);
+      console.log('Subcategory distribution raw data:', data);
       
-      // Update the subcategory data state with the new data
+      // Process the data to get proper subcategory names
+      const processedData = await processSubcategoryData(data || [], categoryId);
+      
+      // Update the subcategory data state with the processed data
       setSubcategoryData(prev => ({
         ...prev,
-        [category]: data || []
+        [category]: processedData
       }));
       
-      return data || [];
+      return processedData;
     } catch (error) {
       console.error(`Error fetching subcategory distribution for ${category}:`, error);
       toast.error('Failed to load subcategory distribution data');
       return [];
     }
+  };
+
+  const processSubcategoryData = async (rawData: any[], categoryId: string): Promise<CategoryDataItem[]> => {
+    if (!rawData || rawData.length === 0) return [];
+
+    // Get all unique subcategory IDs from the data (excluding 'Unknown' and null values)
+    const subcategoryIds = [...new Set(rawData.map(item => item.name).filter(id => id && id !== 'Unknown'))];
+    
+    let subcategoryNameMap: Record<string, string> = {};
+    
+    if (subcategoryIds.length > 0) {
+      // Fetch subcategory names from the subcategories table
+      const { data: subcategoriesData } = await supabase
+        .from('subcategories')
+        .select('id, name')
+        .in('id', subcategoryIds)
+        .eq('category_id', categoryId);
+      
+      if (subcategoriesData) {
+        subcategoryNameMap = subcategoriesData.reduce((acc, subcat) => {
+          acc[subcat.id] = subcat.name;
+          return acc;
+        }, {} as Record<string, string>);
+      }
+    }
+    
+    // Map the data to use proper subcategory names
+    return rawData.map(item => ({
+      name: subcategoryNameMap[item.name] || item.name || 'Unknown',
+      value: item.value,
+      color: item.color
+    }));
   };
 
   return {
