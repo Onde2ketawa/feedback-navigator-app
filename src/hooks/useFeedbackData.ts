@@ -21,12 +21,15 @@ export const useFeedbackData = (filter: FeedbackFilter) => {
       
       let query = supabase
         .from('customer_feedback')
-        .select('*')
+        .select(`
+          *,
+          channel!inner(name)
+        `)
         .order('submit_date', { ascending: false });
 
       // Apply filters
       if (filter.channel) {
-        query = query.eq('channel', filter.channel);
+        query = query.eq('channel_id', filter.channel);
       }
 
       if (filter.year) {
@@ -65,7 +68,7 @@ export const useFeedbackData = (filter: FeedbackFilter) => {
 
       return (data || []).map(item => ({
         id: item.id,
-        channel: item.channel || '',
+        channel: item.channel?.name || '',
         rating: item.rating || 0,
         feedback: item.feedback || '',
         submitDate: item.submit_date || '',

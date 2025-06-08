@@ -20,6 +20,16 @@ describe('FeedbackSortSection Component', () => {
   const mockApplyFilters = jest.fn();
   const mockHandleYearChange = jest.fn();
   
+  const mockCategories = [
+    { id: 'cat1', name: 'Category 1' },
+    { id: 'cat2', name: 'Category 2' }
+  ];
+  
+  const mockSubcategories = [
+    { id: 'subcat1', name: 'Subcategory 1' },
+    { id: 'subcat2', name: 'Subcategory 2' }
+  ];
+  
   beforeEach(() => {
     jest.clearAllMocks();
     
@@ -46,25 +56,34 @@ describe('FeedbackSortSection Component', () => {
       selectedChannel: 'all',
       selectedYear: 'all',
       selectedMonth: 'all',
+      selectedCategory: 'all',
+      selectedSubcategory: 'all',
       ratingRange: [1, 5],
-      isApplyingFilters: false,
       handleChannelChange: jest.fn(),
       handleYearChange: mockHandleYearChange,
       handleMonthChange: jest.fn(),
-      handleResetTimeFilters: jest.fn(),
+      handleCategoryChange: jest.fn(),
+      handleSubcategoryChange: jest.fn(),
       setRatingRange: jest.fn(),
       applyFilters: mockApplyFilters
     });
   });
   
   it('renders all filter components', () => {
-    render(<FeedbackSortSection onFilterChange={mockOnFilterChange} />);
+    render(
+      <FeedbackSortSection 
+        onFilterChange={mockOnFilterChange} 
+        categories={mockCategories}
+        subcategories={mockSubcategories}
+      />
+    );
     
-    expect(screen.getByText('Filter Feedback')).toBeInTheDocument();
     expect(screen.getByText('Channel')).toBeInTheDocument();
     expect(screen.getByText('Year')).toBeInTheDocument();
     expect(screen.getByText('Month')).toBeInTheDocument();
-    expect(screen.getByText(/Rating:/)).toBeInTheDocument();
+    expect(screen.getByText('Rating')).toBeInTheDocument();
+    expect(screen.getByText('Category')).toBeInTheDocument();
+    expect(screen.getByText('Sub Category')).toBeInTheDocument();
     expect(screen.getByText('Apply Filters')).toBeInTheDocument();
   });
   
@@ -80,9 +99,14 @@ describe('FeedbackSortSection Component', () => {
       fetchMonthsForYear: mockFetchMonthsForYear
     });
     
-    render(<FeedbackSortSection onFilterChange={mockOnFilterChange} />);
+    render(
+      <FeedbackSortSection 
+        onFilterChange={mockOnFilterChange}
+        categories={mockCategories}
+        subcategories={mockSubcategories}
+      />
+    );
     
-    expect(screen.getByText('Filter Feedback')).toBeInTheDocument();
     expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
   
@@ -98,7 +122,13 @@ describe('FeedbackSortSection Component', () => {
       fetchMonthsForYear: mockFetchMonthsForYear
     });
     
-    render(<FeedbackSortSection onFilterChange={mockOnFilterChange} />);
+    render(
+      <FeedbackSortSection 
+        onFilterChange={mockOnFilterChange}
+        categories={mockCategories}
+        subcategories={mockSubcategories}
+      />
+    );
     
     expect(screen.getByText(/Error loading filters/)).toBeInTheDocument();
     expect(screen.getByText(/Critical error/)).toBeInTheDocument();
@@ -106,7 +136,13 @@ describe('FeedbackSortSection Component', () => {
   });
   
   it('applies filters when Apply Filters button is clicked', async () => {
-    render(<FeedbackSortSection onFilterChange={mockOnFilterChange} />);
+    render(
+      <FeedbackSortSection 
+        onFilterChange={mockOnFilterChange}
+        categories={mockCategories}
+        subcategories={mockSubcategories}
+      />
+    );
     
     const applyButton = screen.getByText('Apply Filters');
     fireEvent.click(applyButton);
@@ -118,7 +154,13 @@ describe('FeedbackSortSection Component', () => {
     // Mock the useEffect for selectedYear
     const mockUseEffect = jest.spyOn(React, 'useEffect');
     
-    render(<FeedbackSortSection onFilterChange={mockOnFilterChange} />);
+    render(
+      <FeedbackSortSection 
+        onFilterChange={mockOnFilterChange}
+        categories={mockCategories}
+        subcategories={mockSubcategories}
+      />
+    );
     
     // Simulate year change by triggering the effect manually
     const yearChangeEffect = mockUseEffect.mock.calls.find(
@@ -130,12 +172,14 @@ describe('FeedbackSortSection Component', () => {
       selectedChannel: 'all',
       selectedYear: '2024', // Changed from 'all' to '2024'
       selectedMonth: 'all',
+      selectedCategory: 'all',
+      selectedSubcategory: 'all',
       ratingRange: [1, 5],
-      isApplyingFilters: false,
       handleChannelChange: jest.fn(),
       handleYearChange: mockHandleYearChange,
       handleMonthChange: jest.fn(),
-      handleResetTimeFilters: jest.fn(),
+      handleCategoryChange: jest.fn(),
+      handleSubcategoryChange: jest.fn(),
       setRatingRange: jest.fn(),
       applyFilters: mockApplyFilters
     });

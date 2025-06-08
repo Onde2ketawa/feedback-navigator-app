@@ -8,6 +8,8 @@ export const useFilterState = () => {
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
   const [ratingRange, setRatingRange] = useState<number[]>([1, 5]);
   const [isApplyingFilters, setIsApplyingFilters] = useState(false);
 
@@ -25,6 +27,19 @@ export const useFilterState = () => {
   const handleMonthChange = (value: string) => {
     console.log("Month changed to:", value);
     setSelectedMonth(value);
+  };
+
+  const handleCategoryChange = (value: string) => {
+    console.log("Category changed to:", value);
+    setSelectedCategory(value);
+    if (value === 'all') {
+      setSelectedSubcategory('all');
+    }
+  };
+
+  const handleSubcategoryChange = (value: string) => {
+    console.log("Subcategory changed to:", value);
+    setSelectedSubcategory(value);
   };
 
   // Reset time filters
@@ -46,6 +61,8 @@ export const useFilterState = () => {
       channel: selectedChannel === 'all' ? null : selectedChannel,
       year: selectedYear === 'all' ? null : selectedYear,
       month: selectedMonth === 'all' ? null : selectedMonth,
+      category: selectedCategory === 'all' ? null : selectedCategory,
+      subcategory: selectedSubcategory === 'all' ? null : selectedSubcategory,
       ratingMin: ratingRange[0],
       ratingMax: ratingRange[1]
     };
@@ -69,11 +86,15 @@ export const useFilterState = () => {
     selectedChannel,
     selectedYear,
     selectedMonth,
+    selectedCategory,
+    selectedSubcategory,
     ratingRange,
     isApplyingFilters,
     handleChannelChange,
     handleYearChange,
     handleMonthChange,
+    handleCategoryChange,
+    handleSubcategoryChange,
     handleResetTimeFilters,
     setRatingRange,
     applyFilters

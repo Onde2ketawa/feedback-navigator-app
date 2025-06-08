@@ -32,6 +32,8 @@ const FeedbackReview = () => {
     channel: selectedChannel === 'all' ? null : selectedChannel,
     year: selectedYear === 'all' ? null : selectedYear,
     month: selectedMonth === 'all' ? null : selectedMonth,
+    category: null,
+    subcategory: null,
     ratingMin: ratingRange[0],
     ratingMax: ratingRange[1]
   };

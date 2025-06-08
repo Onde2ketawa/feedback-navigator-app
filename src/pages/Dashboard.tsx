@@ -17,6 +17,8 @@ const Dashboard: React.FC = () => {
     channel: null,
     year: null,
     month: null,
+    category: null,
+    subcategory: null,
     ratingMin: 1,
     ratingMax: 5
   });

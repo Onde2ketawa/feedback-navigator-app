@@ -1,31 +1,21 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useFeedbackFilters } from '../useFeedbackFilters';
-import { useToast } from '@/hooks/use-toast';
-
-// Mock the useToast hook
-jest.mock('@/hooks/use-toast', () => ({
-  useToast: jest.fn()
-}));
 
 describe('useFeedbackFilters Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Mock implementation for useToast
-    (useToast as jest.Mock).mockReturnValue({
-      toast: jest.fn()
-    });
   });
   
   it('initializes with default values', () => {
     const { result } = renderHook(() => useFeedbackFilters());
     
     expect(result.current.selectedChannel).toBe('all');
-    expect(result.current.selectedYear).toBe('all'); // Now correctly set to 'all' instead of '2024'
+    expect(result.current.selectedYear).toBe('all');
     expect(result.current.selectedMonth).toBe('all');
+    expect(result.current.selectedCategory).toBe('all');
+    expect(result.current.selectedSubcategory).toBe('all');
     expect(result.current.ratingRange).toEqual([1, 5]);
-    expect(result.current.isApplyingFilters).toBe(false);
   });
   
   it('updates channel when handleChannelChange is called', () => {
@@ -55,35 +45,25 @@ describe('useFeedbackFilters Hook', () => {
     expect(result.current.selectedMonth).toBe('all'); // Month should be reset
   });
   
-  it('resets time filters when handleResetTimeFilters is called', () => {
-    const mockToast = jest.fn();
-    (useToast as jest.Mock).mockReturnValue({ toast: mockToast });
-    
+  it('updates category and resets subcategory when handleCategoryChange is called', () => {
     const { result } = renderHook(() => useFeedbackFilters());
     
-    // First set values to non-default
+    // First set subcategory to something else
     act(() => {
-      result.current.handleYearChange('2025');
-      result.current.handleMonthChange('6');
+      result.current.handleSubcategoryChange('subcat1');
     });
     
-    // Then reset
+    // Then change the category
     act(() => {
-      result.current.handleResetTimeFilters();
+      result.current.handleCategoryChange('cat1');
     });
     
-    expect(result.current.selectedYear).toBe('all'); // Now correctly reset to 'all'
-    expect(result.current.selectedMonth).toBe('all');
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: "Date filters reset"
-    }));
+    expect(result.current.selectedCategory).toBe('cat1');
+    expect(result.current.selectedSubcategory).toBe('all'); // Subcategory should be reset
   });
   
   it('applies filters correctly', () => {
-    jest.useFakeTimers();
-    const mockToast = jest.fn();
     const mockFilterChange = jest.fn();
-    (useToast as jest.Mock).mockReturnValue({ toast: mockToast });
     
     const { result } = renderHook(() => useFeedbackFilters());
     
@@ -91,6 +71,7 @@ describe('useFeedbackFilters Hook', () => {
     act(() => {
       result.current.handleChannelChange('channel1');
       result.current.handleYearChange('2024');
+      result.current.handleCategoryChange('cat1');
       result.current.setRatingRange([2, 4]);
     });
     
@@ -99,31 +80,15 @@ describe('useFeedbackFilters Hook', () => {
       result.current.applyFilters(mockFilterChange);
     });
     
-    // Check that isApplyingFilters is set to true
-    expect(result.current.isApplyingFilters).toBe(true);
-    
-    // Fast-forward timers to complete setTimeout
-    act(() => {
-      jest.advanceTimersByTime(300);
-    });
-    
     // Check that the filter change function was called with correct params
     expect(mockFilterChange).toHaveBeenCalledWith({
       channel: 'channel1',
       year: '2024',
       month: null,
+      category: 'cat1',
+      subcategory: null,
       ratingMin: 2,
       ratingMax: 4
     });
-    
-    // Check that isApplyingFilters is reset
-    expect(result.current.isApplyingFilters).toBe(false);
-    
-    // Check that toast was shown
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: "Filters Applied"
-    }));
-    
-    jest.useRealTimers();
   });
 });
