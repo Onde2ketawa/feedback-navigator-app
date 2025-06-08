@@ -26,8 +26,8 @@ describe('FeedbackSortSection Component', () => {
   ];
   
   const mockSubcategories = [
-    { id: 'subcat1', name: 'Subcategory 1' },
-    { id: 'subcat2', name: 'Subcategory 2' }
+    { id: 'subcat1', name: 'Subcategory 1', category_id: 'cat1' },
+    { id: 'subcat2', name: 'Subcategory 2', category_id: 'cat2' }
   ];
   
   beforeEach(() => {
