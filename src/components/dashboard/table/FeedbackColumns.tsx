@@ -99,7 +99,7 @@ export function createFeedbackColumns({
       cell: ({ row }) => {
         const feedback = row.getValue("feedback") as string;
         return (
-          <div className="max-w-[300px] truncate" title={feedback}>
+          <div className="whitespace-normal break-words max-w-md">
             {feedback}
           </div>
         );
