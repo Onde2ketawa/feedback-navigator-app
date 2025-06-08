@@ -9,7 +9,7 @@ import { useFeedbackFilters } from './filters/useFeedbackFilters';
 interface SortSectionProps {
   onFilterChange: (filters: FeedbackFilter) => void;
   categories: { id: string; name: string }[];
-  subcategories: { id: string; name: string }[];
+  subcategories: { id: string; name: string; category_id: string }[];
 }
 
 export const FeedbackSortSection: React.FC<SortSectionProps> = ({ 
@@ -43,6 +43,11 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({
     setRatingRange,
     applyFilters
   } = useFeedbackFilters();
+
+  // Filter subcategories based on selected category
+  const filteredSubcategories = selectedCategory === 'all' 
+    ? []
+    : subcategories.filter(subcat => subcat.category_id === selectedCategory);
 
   const handleFilterSubmit = () => {
     applyFilters(onFilterChange);
@@ -174,13 +179,11 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sub Categories</SelectItem>
-                {subcategories
-                  .filter(subcat => selectedCategory === 'all' || subcat.id.startsWith(selectedCategory))
-                  .map((subcategory) => (
-                    <SelectItem key={subcategory.id} value={subcategory.id}>
-                      {subcategory.name}
-                    </SelectItem>
-                  ))}
+                {filteredSubcategories.map((subcategory) => (
+                  <SelectItem key={subcategory.id} value={subcategory.id}>
+                    {subcategory.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

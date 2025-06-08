@@ -12,7 +12,7 @@ interface DashboardContentProps {
   openTagDialog: (feedback: Feedback) => void;
   onFilterChange: (filters: FeedbackFilter) => void;
   categories: { id: string; name: string }[];
-  subcategories: { id: string; name: string }[];
+  subcategories: { id: string; name: string; category_id: string }[];
   filter?: FeedbackFilter;
 }
 
