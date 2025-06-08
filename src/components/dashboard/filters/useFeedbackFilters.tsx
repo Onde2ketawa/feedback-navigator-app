@@ -1,81 +1,67 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FeedbackFilter } from '@/hooks/useFeedbackData';
-import { useToast } from '@/hooks/use-toast';
 
 export const useFeedbackFilters = () => {
-  const { toast } = useToast();
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
-  const [selectedYear, setSelectedYear] = useState<string>('all'); // Default to 'all' to show all years
+  const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
-  const [ratingRange, setRatingRange] = useState<number[]>([1, 5]);
-  const [isApplyingFilters, setIsApplyingFilters] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
+  const [ratingRange, setRatingRange] = useState<[number, number]>([1, 5]);
 
   const handleChannelChange = (value: string) => {
-    console.log("Channel changed to:", value);
     setSelectedChannel(value);
   };
 
   const handleYearChange = (value: string) => {
-    console.log("Year changed to:", value);
     setSelectedYear(value);
-    // Reset month when year changes
-    setSelectedMonth('all');
+    if (value === 'all') {
+      setSelectedMonth('all');
+    }
   };
 
   const handleMonthChange = (value: string) => {
-    console.log("Month changed to:", value);
     setSelectedMonth(value);
   };
 
-  // Reset time filters
-  const handleResetTimeFilters = () => {
-    setSelectedYear('all'); // Reset to 'all' instead of '2024'
-    setSelectedMonth('all');
-    toast({
-      title: "Date filters reset",
-      description: "Year and month filters have been reset to 'All'",
-    });
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    if (value === 'all') {
+      setSelectedSubcategory('all');
+    }
   };
 
-  // Apply filters with loading state
+  const handleSubcategoryChange = (value: string) => {
+    setSelectedSubcategory(value);
+  };
+
   const applyFilters = (onFilterChange: (filters: FeedbackFilter) => void) => {
-    setIsApplyingFilters(true);
-    
-    // Prepare filter object
     const filters: FeedbackFilter = {
       channel: selectedChannel === 'all' ? null : selectedChannel,
       year: selectedYear === 'all' ? null : selectedYear,
       month: selectedMonth === 'all' ? null : selectedMonth,
+      category: selectedCategory === 'all' ? null : selectedCategory,
+      subcategory: selectedSubcategory === 'all' ? null : selectedSubcategory,
       ratingMin: ratingRange[0],
       ratingMax: ratingRange[1]
     };
     
-    console.log("Filters changed:", filters);
-    
-    // Apply filters with a small delay to show loading state
-    setTimeout(() => {
-      onFilterChange(filters);
-      setIsApplyingFilters(false);
-      
-      // Show toast notification
-      toast({
-        title: "Filters Applied",
-        description: "The feedback list has been updated based on your filters."
-      });
-    }, 300);
+    onFilterChange(filters);
   };
 
   return {
     selectedChannel,
     selectedYear,
     selectedMonth,
+    selectedCategory,
+    selectedSubcategory,
     ratingRange,
-    isApplyingFilters,
     handleChannelChange,
     handleYearChange,
     handleMonthChange,
-    handleResetTimeFilters,
+    handleCategoryChange,
+    handleSubcategoryChange,
     setRatingRange,
     applyFilters
   };

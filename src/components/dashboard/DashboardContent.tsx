@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { FeedbackSortSection } from '@/components/dashboard/FeedbackSortSection';
-import { FeedbackTableContainer } from '@/components/dashboard/FeedbackTableContainer';
+import { FeedbackSortSection } from './FeedbackSortSection';
+import { FeedbackTableContainer } from './FeedbackTableContainer';
 import { Feedback } from '@/models/feedback';
 import { FeedbackFilter } from '@/hooks/useFeedbackData';
 
@@ -16,7 +16,7 @@ interface DashboardContentProps {
   filter?: FeedbackFilter;
 }
 
-export function DashboardContent({
+export const DashboardContent: React.FC<DashboardContentProps> = ({
   feedbackData,
   selectedRows,
   setSelectedRows,
@@ -24,24 +24,25 @@ export function DashboardContent({
   onFilterChange,
   categories,
   subcategories,
-  filter
-}: DashboardContentProps) {
+  filter,
+}) => {
   return (
-    <div className="grid grid-cols-1 gap-4 lg:gap-6">
-      <div className="w-full">
-        <FeedbackSortSection onFilterChange={onFilterChange} />
-      </div>
-      <div className="w-full">
-        <FeedbackTableContainer
-          feedbackData={feedbackData}
-          categories={categories}
-          subcategories={subcategories}
-          selectedRows={selectedRows}
-          setSelectedRows={setSelectedRows}
-          openTagDialog={openTagDialog}
-          filter={filter}
-        />
-      </div>
+    <div className="space-y-4 sm:space-y-6">
+      <FeedbackSortSection 
+        onFilterChange={onFilterChange}
+        categories={categories}
+        subcategories={subcategories}
+      />
+      
+      <FeedbackTableContainer
+        feedbackData={feedbackData}
+        categories={categories}
+        subcategories={subcategories}
+        selectedRows={selectedRows}
+        setSelectedRows={setSelectedRows}
+        openTagDialog={openTagDialog}
+        filter={filter}
+      />
     </div>
   );
-}
+};

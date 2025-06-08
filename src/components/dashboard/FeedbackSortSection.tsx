@@ -8,9 +8,15 @@ import { useFeedbackFilters } from './filters/useFeedbackFilters';
 
 interface SortSectionProps {
   onFilterChange: (filters: FeedbackFilter) => void;
+  categories: { id: string; name: string }[];
+  subcategories: { id: string; name: string }[];
 }
 
-export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange }) => {
+export const FeedbackSortSection: React.FC<SortSectionProps> = ({ 
+  onFilterChange, 
+  categories, 
+  subcategories 
+}) => {
   const { 
     availableChannels, 
     availableYears, 
@@ -26,10 +32,14 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
     selectedChannel,
     selectedYear,
     selectedMonth,
+    selectedCategory,
+    selectedSubcategory,
     ratingRange,
     handleChannelChange,
     handleYearChange,
     handleMonthChange,
+    handleCategoryChange,
+    handleSubcategoryChange,
     setRatingRange,
     applyFilters
   } = useFeedbackFilters();
@@ -123,6 +133,54 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({ onFilterChange
                 <SelectItem value="1-2">1-2 Stars</SelectItem>
                 <SelectItem value="3-3">3 Stars</SelectItem>
                 <SelectItem value="4-5">4-5 Stars</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Second row for Category and Sub Category */}
+        <div className="flex flex-col gap-6 md:flex-row md:items-start">
+          {/* Category Filter */}
+          <div className="space-y-2 w-full md:w-64">
+            <label className="text-sm font-medium">Category</label>
+            <Select
+              value={selectedCategory}
+              onValueChange={handleCategoryChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Sub Category Filter */}
+          <div className="space-y-2 w-full md:w-64">
+            <label className="text-sm font-medium">Sub Category</label>
+            <Select
+              disabled={selectedCategory === 'all'}
+              value={selectedSubcategory}
+              onValueChange={handleSubcategoryChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={selectedCategory === 'all' ? "Select category first" : "Select subcategory"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sub Categories</SelectItem>
+                {subcategories
+                  .filter(subcat => selectedCategory === 'all' || subcat.id.startsWith(selectedCategory))
+                  .map((subcategory) => (
+                    <SelectItem key={subcategory.id} value={subcategory.id}>
+                      {subcategory.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
