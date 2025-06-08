@@ -62,8 +62,24 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
     if (!sortField) return data;
 
     return [...data].sort((a, b) => {
-      let aValue = a[sortField as keyof Feedback];
-      let bValue = b[sortField as keyof Feedback];
+      let aValue: any;
+      let bValue: any;
+
+      // Handle special cases for category and subcategory sorting
+      if (sortField === 'category') {
+        const aCat = categories.find(cat => cat.id === a.category);
+        const bCat = categories.find(cat => cat.id === b.category);
+        aValue = aCat?.name || '';
+        bValue = bCat?.name || '';
+      } else if (sortField === 'subcategory') {
+        const aSubcat = subcategories.find(subcat => subcat.id === a.subcategory);
+        const bSubcat = subcategories.find(subcat => subcat.id === b.subcategory);
+        aValue = aSubcat?.name || '';
+        bValue = bSubcat?.name || '';
+      } else {
+        aValue = a[sortField as keyof Feedback];
+        bValue = b[sortField as keyof Feedback];
+      }
 
       // Handle null/undefined values
       if (aValue == null) aValue = '';
@@ -79,7 +95,7 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
         return bStr.localeCompare(aStr);
       }
     });
-  }, [data, sortField, sortOrder]);
+  }, [data, sortField, sortOrder, categories, subcategories]);
 
   return (
     <div className="overflow-x-auto -mx-4 sm:mx-0">

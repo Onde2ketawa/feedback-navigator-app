@@ -137,6 +137,21 @@ export function createFeedbackColumns({
       },
     },
     {
+      accessorKey: "subcategory",
+      header: () => createSortableHeader("Sub Category", "subcategory"),
+      cell: ({ row }) => {
+        const feedback = row.original;
+        const subcategory = feedback.subcategory 
+          ? subcategories.find(sc => sc.id === feedback.subcategory)
+          : undefined;
+        return (
+          <div className="text-sm">
+            {subcategory ? subcategory.name : '-'}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "device",
       header: () => createSortableHeader("Device", "device"),
       cell: ({ row }) => {
