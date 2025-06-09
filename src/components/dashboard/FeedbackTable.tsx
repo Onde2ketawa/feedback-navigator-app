@@ -15,6 +15,7 @@ interface FeedbackTableProps {
   setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
   openTagDialog: (feedback: Feedback) => void;
   openSentimentDialog: (feedback: Feedback) => void;
+  openMultipleCategoryDialog?: (feedback: Feedback) => void;
   filter?: FeedbackFilter;
 }
 
@@ -26,6 +27,7 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   setSelectedRows,
   openTagDialog,
   openSentimentDialog,
+  openMultipleCategoryDialog,
   filter,
 }) => {
   const { data: stats } = useFeedbackStats(filter);
@@ -48,11 +50,12 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
       openTagDialog,
       setSelectedRows,
       openSentimentDialog,
+      openMultipleCategoryDialog,
       sortField,
       sortOrder,
       onSort: handleSort,
     }),
-    [categories, subcategories, openTagDialog, setSelectedRows, openSentimentDialog, sortField, sortOrder]
+    [categories, subcategories, openTagDialog, setSelectedRows, openSentimentDialog, openMultipleCategoryDialog, sortField, sortOrder]
   );
   
   const visibleColumns = useResponsiveColumns(columns);

@@ -18,6 +18,7 @@ interface CreateFeedbackColumnsProps {
   openTagDialog: (feedback: Feedback) => void;
   setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
   openSentimentDialog: (feedback: Feedback) => void;
+  openMultipleCategoryDialog?: (feedback: Feedback) => void;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
   onSort?: (field: string) => void;
@@ -29,6 +30,7 @@ export function createFeedbackColumns({
   openTagDialog,
   setSelectedRows,
   openSentimentDialog,
+  openMultipleCategoryDialog,
   sortField,
   sortOrder,
   onSort
@@ -132,6 +134,7 @@ export function createFeedbackColumns({
             subcategoryId={feedback.subcategory}
             categories={categories}
             subcategories={subcategories}
+            onMultipleCategoryClick={openMultipleCategoryDialog ? () => openMultipleCategoryDialog(feedback) : undefined}
           />
         );
       },
