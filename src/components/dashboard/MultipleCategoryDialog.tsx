@@ -17,7 +17,7 @@ interface MultipleCategoryDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedFeedback: Feedback | null;
   categories: { id: string; name: string }[];
-  subcategories: { id: string; name: string; category_id: string }[];
+  subcategories: { id: string; name: string }[];
   onSave: (feedbackId: string, selectedCategories: string[]) => void;
   isSubmitting?: boolean;
 }
