@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -158,52 +157,102 @@ const NaturalLanguageQuery = () => {
   const parseQuery = async (userInput: string): Promise<ParsedQuery> => {
     setIsProcessing(true);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    if (!feedbackData) {
-      throw new Error('No data available');
-    }
+    try {
+      console.log('Sending query to OpenAI:', userInput);
+      
+      // Call the OpenAI parsing edge function
+      const response = await fetch('/functions/v1/parse-natural-language-query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: userInput }),
+      });
 
-    let result: ParsedQuery;
-    const lowerInput = userInput.toLowerCase();
-    
-    if (lowerInput.includes('pie chart') || lowerInput.includes('pie')) {
-      const data = generateVisualizationData(lowerInput, feedbackData);
-      result = {
-        chartType: 'pie',
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const aiResult = await response.json();
+      console.log('OpenAI parsed result:', aiResult);
+
+      if (aiResult.error) {
+        console.warn('OpenAI returned error:', aiResult.error);
+        toast({
+          title: "Processing Note",
+          description: `AI parsing had issues: ${aiResult.error}. Using fallback processing.`,
+          variant: "default"
+        });
+      }
+
+      if (!feedbackData) {
+        throw new Error('No data available');
+      }
+
+      // Generate visualization data based on AI-parsed result
+      const data = generateVisualizationData(userInput, feedbackData);
+      
+      const result: ParsedQuery = {
+        chartType: aiResult.chartType || 'table',
+        xAxis: aiResult.xAxis,
+        yAxis: aiResult.yAxis,
         data,
-        title: 'Data Distribution'
+        title: aiResult.title || 'Data Visualization',
+        filters: aiResult.filters
       };
-    } else if (lowerInput.includes('table')) {
-      const data = generateVisualizationData(lowerInput, feedbackData);
-      result = {
-        chartType: 'table',
-        data,
-        title: 'Data Table'
-      };
-    } else if (lowerInput.includes('line chart') || lowerInput.includes('over time')) {
-      const data = generateVisualizationData(lowerInput, feedbackData);
-      result = {
-        chartType: 'line',
-        xAxis: 'month',
-        yAxis: 'count',
-        data,
-        title: 'Trend Over Time'
-      };
-    } else {
-      const data = generateVisualizationData(lowerInput, feedbackData);
-      result = {
-        chartType: 'bar',
-        xAxis: 'category',
-        yAxis: 'count',
-        data,
-        title: 'Data Distribution'
-      };
+
+      console.log('Final parsed result:', result);
+      return result;
+
+    } catch (error) {
+      console.error('Error parsing query:', error);
+      
+      // Fallback to original logic if OpenAI fails
+      if (!feedbackData) {
+        throw new Error('No data available');
+      }
+
+      const lowerInput = userInput.toLowerCase();
+      let result: ParsedQuery;
+      
+      if (lowerInput.includes('pie chart') || lowerInput.includes('pie')) {
+        const data = generateVisualizationData(lowerInput, feedbackData);
+        result = {
+          chartType: 'pie',
+          data,
+          title: 'Data Distribution'
+        };
+      } else if (lowerInput.includes('table')) {
+        const data = generateVisualizationData(lowerInput, feedbackData);
+        result = {
+          chartType: 'table',
+          data,
+          title: 'Data Table'
+        };
+      } else if (lowerInput.includes('line chart') || lowerInput.includes('over time')) {
+        const data = generateVisualizationData(lowerInput, feedbackData);
+        result = {
+          chartType: 'line',
+          xAxis: 'month',
+          yAxis: 'count',
+          data,
+          title: 'Trend Over Time'
+        };
+      } else {
+        const data = generateVisualizationData(lowerInput, feedbackData);
+        result = {
+          chartType: 'bar',
+          xAxis: 'category',
+          yAxis: 'count',
+          data,
+          title: 'Data Distribution'
+        };
+      }
+      
+      return result;
+    } finally {
+      setIsProcessing(false);
     }
-    
-    setIsProcessing(false);
-    return result;
   };
 
   const handleSubmitQuery = async () => {
