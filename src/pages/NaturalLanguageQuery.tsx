@@ -160,20 +160,16 @@ const NaturalLanguageQuery = () => {
     try {
       console.log('Sending query to OpenAI:', userInput);
       
-      // Call the OpenAI parsing edge function
-      const response = await fetch('/functions/v1/parse-natural-language-query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query: userInput }),
+      // Call the Supabase edge function correctly
+      const { data: aiResult, error: functionError } = await supabase.functions.invoke('parse-natural-language-query', {
+        body: { query: userInput },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (functionError) {
+        console.error('Supabase function error:', functionError);
+        throw new Error(`Function error: ${functionError.message}`);
       }
 
-      const aiResult = await response.json();
       console.log('OpenAI parsed result:', aiResult);
 
       if (aiResult.error) {
