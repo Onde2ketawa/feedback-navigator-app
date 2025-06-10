@@ -613,5 +613,3 @@ const NaturalLanguageQuery = () => {
 };
 
 export default NaturalLanguageQuery;
-
-</edits_to_apply>
