@@ -81,8 +81,36 @@ const NaturalLanguageQuery = () => {
     "Show feedback count by device type"
   ];
 
-  const generateVisualizationData = (queryType: string, feedbackData: any[]) => {
+  const generateVisualizationData = (queryType: string, feedbackData: any[], aiResult?: any) => {
     if (!feedbackData) return [];
+
+    console.log('Generating visualization data for:', queryType, 'with AI result:', aiResult);
+    
+    // Handle channel-specific category queries (like "Linebank category trends")
+    if ((queryType.includes('category') || queryType.includes('kategori')) && 
+        (queryType.includes('linebank') || queryType.includes('Linebank') || aiResult?.filters?.channel === 'Linebank')) {
+      
+      // Filter data for Linebank if specified
+      let filteredData = feedbackData;
+      if (queryType.includes('linebank') || queryType.includes('Linebank') || aiResult?.filters?.channel === 'Linebank') {
+        filteredData = feedbackData.filter(item => 
+          item.channel?.name?.toLowerCase().includes('linebank') || 
+          item.channel?.toLowerCase().includes('linebank')
+        );
+      }
+      
+      const categoryCounts: Record<string, number> = {};
+      filteredData.forEach(item => {
+        const category = item.category || 'Uncategorized';
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      });
+      
+      return Object.entries(categoryCounts).map(([name, count]) => ({ 
+        name, 
+        count,
+        value: count // For compatibility with different chart types
+      }));
+    }
 
     if (queryType.includes('channel')) {
       const channelCounts: Record<string, number> = {};
@@ -186,10 +214,10 @@ const NaturalLanguageQuery = () => {
       }
 
       // Generate visualization data based on AI-parsed result
-      const data = generateVisualizationData(userInput, feedbackData);
+      const data = generateVisualizationData(userInput, feedbackData, aiResult);
       
       const result: ParsedQuery = {
-        chartType: aiResult.chartType || 'table',
+        chartType: aiResult.chartType || 'bar',
         xAxis: aiResult.xAxis,
         yAxis: aiResult.yAxis,
         data,
@@ -585,3 +613,5 @@ const NaturalLanguageQuery = () => {
 };
 
 export default NaturalLanguageQuery;
+
+</edits_to_apply>
