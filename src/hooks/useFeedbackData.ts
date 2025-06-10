@@ -11,6 +11,7 @@ export interface FeedbackFilter {
   subcategory: string | null;
   ratingMin: number;
   ratingMax: number;
+  sentiment: string | null;
 }
 
 export const useFeedbackData = (filter: FeedbackFilter) => {
@@ -51,6 +52,10 @@ export const useFeedbackData = (filter: FeedbackFilter) => {
 
       if (filter.subcategory) {
         query = query.eq('sub_category', filter.subcategory);
+      }
+
+      if (filter.sentiment) {
+        query = query.eq('sentiment', filter.sentiment);
       }
 
       if (filter.ratingMin !== undefined && filter.ratingMax !== undefined) {

@@ -19,6 +19,7 @@ const Dashboard: React.FC = () => {
     month: null,
     category: null,
     subcategory: null,
+    sentiment: null,
     ratingMin: 1,
     ratingMax: 5
   });

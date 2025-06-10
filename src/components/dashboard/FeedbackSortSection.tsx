@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FeedbackFilter } from '@/hooks/useFeedbackData';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 import { useFeedbackFilters } from './filters/useFeedbackFilters';
+import { SentimentFilter } from './filters/SentimentFilter';
 
 interface SortSectionProps {
   onFilterChange: (filters: FeedbackFilter) => void;
@@ -34,12 +35,14 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({
     selectedMonth,
     selectedCategory,
     selectedSubcategory,
+    selectedSentiment,
     ratingRange,
     handleChannelChange,
     handleYearChange,
     handleMonthChange,
     handleCategoryChange,
     handleSubcategoryChange,
+    handleSentimentChange,
     setRatingRange,
     applyFilters
   } = useFeedbackFilters();
@@ -143,7 +146,7 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({
           </div>
         </div>
 
-        {/* Second row for Category and Sub Category */}
+        {/* Second row for Category, Sub Category, and Sentiment */}
         <div className="flex flex-col gap-6 md:flex-row md:items-start">
           {/* Category Filter */}
           <div className="space-y-2 w-full md:w-64">
@@ -186,6 +189,15 @@ export const FeedbackSortSection: React.FC<SortSectionProps> = ({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Sentiment Filter */}
+          <div className="w-full md:w-64">
+            <SentimentFilter
+              selectedSentiment={selectedSentiment}
+              onSentimentChange={handleSentimentChange}
+              isLoading={isLoading}
+            />
           </div>
         </div>
 

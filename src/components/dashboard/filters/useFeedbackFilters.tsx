@@ -8,32 +8,39 @@ export const useFeedbackFilters = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
+  const [selectedSentiment, setSelectedSentiment] = useState<string>('all');
   const [ratingRange, setRatingRange] = useState<[number, number]>([1, 5]);
 
-  const handleChannelChange = (value: string) => {
-    setSelectedChannel(value);
+  const handleChannelChange = (channel: string) => {
+    setSelectedChannel(channel);
   };
 
-  const handleYearChange = (value: string) => {
-    setSelectedYear(value);
-    if (value === 'all') {
+  const handleYearChange = (year: string) => {
+    setSelectedYear(year);
+    // Reset month when year changes
+    if (year === 'all') {
       setSelectedMonth('all');
     }
   };
 
-  const handleMonthChange = (value: string) => {
-    setSelectedMonth(value);
+  const handleMonthChange = (month: string) => {
+    setSelectedMonth(month);
   };
 
-  const handleCategoryChange = (value: string) => {
-    setSelectedCategory(value);
-    if (value === 'all') {
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    // Reset subcategory when category changes
+    if (category === 'all') {
       setSelectedSubcategory('all');
     }
   };
 
-  const handleSubcategoryChange = (value: string) => {
-    setSelectedSubcategory(value);
+  const handleSubcategoryChange = (subcategory: string) => {
+    setSelectedSubcategory(subcategory);
+  };
+
+  const handleSentimentChange = (sentiment: string) => {
+    setSelectedSentiment(sentiment);
   };
 
   const applyFilters = (onFilterChange: (filters: FeedbackFilter) => void) => {
@@ -43,10 +50,11 @@ export const useFeedbackFilters = () => {
       month: selectedMonth === 'all' ? null : selectedMonth,
       category: selectedCategory === 'all' ? null : selectedCategory,
       subcategory: selectedSubcategory === 'all' ? null : selectedSubcategory,
+      sentiment: selectedSentiment === 'all' ? null : selectedSentiment,
       ratingMin: ratingRange[0],
       ratingMax: ratingRange[1]
     };
-    
+
     onFilterChange(filters);
   };
 
@@ -56,12 +64,14 @@ export const useFeedbackFilters = () => {
     selectedMonth,
     selectedCategory,
     selectedSubcategory,
+    selectedSentiment,
     ratingRange,
     handleChannelChange,
     handleYearChange,
     handleMonthChange,
     handleCategoryChange,
     handleSubcategoryChange,
+    handleSentimentChange,
     setRatingRange,
     applyFilters
   };
