@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Star,
@@ -9,6 +10,7 @@ import {
   Smartphone,
   FileText,
   Home,
+  Brain,
 } from 'lucide-react';
 
 // allowedRoles: missing means admin only, otherwise ['admin', 'user'] means both etc.
@@ -23,6 +25,12 @@ export const sidebarNavItems = [
     href: "/dashboard",
     title: "Dashboard",
     icon: LayoutDashboard,
+    allowedRoles: ['admin', 'user'],
+  },
+  {
+    href: "/natural-language-query",
+    title: "AI Data Query",
+    icon: Brain,
     allowedRoles: ['admin', 'user'],
   },
   {

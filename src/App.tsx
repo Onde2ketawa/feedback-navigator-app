@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -21,6 +22,7 @@ import NotFound from './pages/NotFound';
 import DeviceAnalytics from './pages/DeviceAnalytics';
 import FeedbackAnalysis from './pages/FeedbackAnalysis';
 import FeedbackReview from './pages/FeedbackReview';
+import NaturalLanguageQuery from './pages/NaturalLanguageQuery';
 
 // Auth Context & Protection
 import { AuthProvider } from './contexts/AuthContext';
@@ -51,6 +53,13 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <Dashboard />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/natural-language-query" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <NaturalLanguageQuery />
                 </MainLayout>
               </ProtectedRoute>
             } />
