@@ -27,7 +27,7 @@ export const generateVisualizationData = (queryType: string, feedbackData: any[]
     if (queryType.includes('linebank') || queryType.includes('Linebank') || aiResult?.filters?.channel === 'Linebank') {
       filteredData = feedbackData.filter(item => 
         item.channel?.name?.toLowerCase().includes('linebank') || 
-        item.channel?.toLowerCase().includes('linebank')
+        (typeof item.channel === 'string' && item.channel.toLowerCase().includes('linebank'))
       );
     }
     
