@@ -34,6 +34,7 @@ const FeedbackReview = () => {
     month: selectedMonth === 'all' ? null : selectedMonth,
     category: null,
     subcategory: null,
+    sentiment: null,
     ratingMin: ratingRange[0],
     ratingMax: ratingRange[1]
   };

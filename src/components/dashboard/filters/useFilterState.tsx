@@ -63,6 +63,7 @@ export const useFilterState = () => {
       month: selectedMonth === 'all' ? null : selectedMonth,
       category: selectedCategory === 'all' ? null : selectedCategory,
       subcategory: selectedSubcategory === 'all' ? null : selectedSubcategory,
+      sentiment: null,
       ratingMin: ratingRange[0],
       ratingMax: ratingRange[1]
     };
