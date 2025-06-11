@@ -11,6 +11,46 @@ export const generateVisualizationData = async (queryType: string, feedbackData:
   console.log('Generating visualization data for:', queryType, 'with AI result:', aiResult);
   console.log('Feedback data sample:', feedbackData.slice(0, 3));
   
+  // Handle app version queries with channel filtering
+  if ((queryType.includes('app version') || queryType.includes('version') || aiResult?.dataSource === 'app_version') && 
+      (queryType.includes('LINE Bank') || queryType.includes('Linebank') || aiResult?.filters?.channel === 'LINE Bank')) {
+    console.log('Processing app version + LINE Bank query:', aiResult?.filters);
+    
+    let filteredData = feedbackData;
+    
+    // Apply channel filter for LINE Bank
+    filteredData = feedbackData.filter(item => {
+      const channelName = item.channel?.name || item.channel || '';
+      const isLineBank = channelName.toLowerCase().includes('line') && channelName.toLowerCase().includes('bank');
+      return isLineBank;
+    });
+    console.log('Filtered data for LINE Bank app versions:', filteredData.length, 'items');
+    
+    if (filteredData.length === 0) {
+      console.log('No data found for LINE Bank app versions');
+      return [];
+    }
+    
+    // Group by app version
+    const versionData: Record<string, number> = {};
+    filteredData.forEach(item => {
+      const version = item.app_version || item.appVersion || 'Unknown';
+      versionData[version] = (versionData[version] || 0) + 1;
+    });
+    
+    const result = Object.entries(versionData)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([version, count]) => ({ 
+        name: version,
+        version,
+        count,
+        value: count
+      }));
+    
+    console.log('App version + LINE Bank result:', result);
+    return result;
+  }
+  
   // Handle specific timeframe queries (like "April 2025") with channel filtering
   if (aiResult?.filters?.timeframe && aiResult?.filters?.channel) {
     console.log('Processing timeframe + channel query:', aiResult.filters);

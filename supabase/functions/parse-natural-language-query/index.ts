@@ -31,7 +31,7 @@ serve(async (req) => {
     const prompt = `
 You are a data visualization assistant. Analyze the following natural language query and extract:
 1. Chart type (pie, bar, line, table)
-2. Data source (channel, sentiment, rating, time, device)
+2. Data source (channel, sentiment, rating, time, device, app_version)
 3. X-axis field (if applicable)
 4. Y-axis field (if applicable)
 5. Filters (if any)
@@ -42,6 +42,7 @@ Available data sources:
 - rating: feedback ratings (1-5 stars)
 - time: feedback over time periods
 - device: feedback grouped by device type
+- app_version: feedback grouped by app version
 
 Query: "${query}"
 
@@ -50,7 +51,7 @@ Respond ONLY with a JSON object in this format:
   "chartType": "pie|bar|line|table",
   "xAxis": "field_name",
   "yAxis": "field_name", 
-  "dataSource": "channel|sentiment|rating|time|device",
+  "dataSource": "channel|sentiment|rating|time|device|app_version",
   "title": "descriptive title",
   "filters": {
     "channel": "specific_channel",
@@ -63,6 +64,8 @@ Examples:
 - "Show feedback by channel as pie chart" → {"chartType": "pie", "dataSource": "channel", "title": "Feedback Distribution by Channel"}
 - "Display rating trends over time" → {"chartType": "line", "xAxis": "month", "yAxis": "rating", "dataSource": "time", "title": "Rating Trends Over Time"}
 - "Average rating by sentiment table" → {"chartType": "table", "dataSource": "sentiment", "title": "Average Rating by Sentiment"}
+- "Show app version distribution for LINE Bank" → {"chartType": "bar", "dataSource": "app_version", "title": "App Version Distribution for LINE Bank", "filters": {"channel": "LINE Bank"}}
+- "jumlah row berdasarkan app version untuk LINE Bank" → {"chartType": "bar", "dataSource": "app_version", "title": "Row Count by App Version for LINE Bank", "filters": {"channel": "LINE Bank"}}
 `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

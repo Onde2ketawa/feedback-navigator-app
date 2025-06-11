@@ -2,6 +2,48 @@
 export const generateGeneralData = (queryType: string, feedbackData: any[], aiResult?: any) => {
   console.log('generateGeneralData called with:', { queryType, dataLength: feedbackData.length, aiResult });
 
+  // Handle app version queries
+  if (queryType.includes('app version') || queryType.includes('version') || aiResult?.dataSource === 'app_version') {
+    console.log('Processing app version query');
+    
+    let filteredData = feedbackData;
+    
+    // Apply channel filter if specified
+    if (queryType.includes('LINE Bank') || queryType.includes('Linebank') || aiResult?.filters?.channel === 'LINE Bank') {
+      filteredData = feedbackData.filter(item => {
+        const channelName = item.channel?.name || item.channel || '';
+        const isLineBank = channelName.toLowerCase().includes('line') && channelName.toLowerCase().includes('bank');
+        console.log('Channel filtering for app version:', channelName, 'matches LINE Bank:', isLineBank);
+        return isLineBank;
+      });
+      console.log('Filtered data for LINE Bank app versions:', filteredData.length, 'items');
+    }
+    
+    if (filteredData.length === 0) {
+      console.log('No data found for app version query');
+      return [];
+    }
+    
+    // Group by app version
+    const versionCounts: Record<string, number> = {};
+    filteredData.forEach(item => {
+      const version = item.app_version || item.appVersion || 'Unknown';
+      versionCounts[version] = (versionCounts[version] || 0) + 1;
+    });
+    
+    const result = Object.entries(versionCounts)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([version, count]) => ({ 
+        name: version,
+        version,
+        count,
+        value: count
+      }));
+    
+    console.log('App version result:', result);
+    return result;
+  }
+
   // Handle time-based queries with specific month-year (like "April 2025")
   if ((queryType.includes('time') || queryType.includes('over time') || aiResult?.filters?.timeframe) && 
       (queryType.includes('april') || queryType.includes('April') || aiResult?.filters?.timeframe?.includes('April'))) {
