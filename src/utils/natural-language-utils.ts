@@ -1,4 +1,3 @@
-
 interface ParsedQuery {
   chartType: 'pie' | 'bar' | 'line' | 'table' | 'grid';
   xAxis?: string;
@@ -13,7 +12,7 @@ interface ParsedQuery {
   };
 }
 
-export const generateVisualizationData = (queryType: string, feedbackData: any[], aiResult?: any) => {
+export const generateVisualizationData = async (queryType: string, feedbackData: any[], aiResult?: any, supabase?: any) => {
   if (!feedbackData || feedbackData.length === 0) {
     console.log('No feedback data available');
     return [];
@@ -50,20 +49,53 @@ export const generateVisualizationData = (queryType: string, feedbackData: any[]
     
     const categoryCounts: Record<string, number> = {};
     filteredData.forEach(item => {
-      const category = item.category || 'Uncategorized';
-      console.log('Processing category:', category);
-      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      const categoryId = item.category;
+      if (categoryId) {
+        categoryCounts[categoryId] = (categoryCounts[categoryId] || 0) + 1;
+      } else {
+        categoryCounts['Uncategorized'] = (categoryCounts['Uncategorized'] || 0) + 1;
+      }
     });
     
-    console.log('Category counts:', categoryCounts);
+    console.log('Category counts by ID:', categoryCounts);
     
-    const result = Object.entries(categoryCounts).map(([name, count]) => ({ 
-      name, 
+    // Fetch category names from the categories table
+    if (supabase && Object.keys(categoryCounts).length > 0) {
+      const categoryIds = Object.keys(categoryCounts).filter(id => id !== 'Uncategorized');
+      
+      if (categoryIds.length > 0) {
+        const { data: categoriesData, error } = await supabase
+          .from('categories')
+          .select('id, name')
+          .in('id', categoryIds);
+        
+        if (!error && categoriesData) {
+          const categoryNameMap: Record<string, string> = {};
+          categoriesData.forEach(cat => {
+            categoryNameMap[cat.id] = cat.name;
+          });
+          
+          // Map category IDs to names
+          const result = Object.entries(categoryCounts).map(([categoryId, count]) => ({
+            name: categoryNameMap[categoryId] || categoryId || 'Uncategorized',
+            count,
+            value: count
+          }));
+          
+          console.log('Final category result with names:', result);
+          return result;
+        }
+      }
+    }
+    
+    // Fallback if no supabase client or category lookup fails
+    const result = Object.entries(categoryCounts).map(([categoryId, count]) => ({ 
+      name: categoryId || 'Uncategorized', 
       count,
-      value: count // For compatibility with different chart types
+      value: count
     }));
     
-    console.log('Final category result:', result);
+    console.log('Final category result (fallback):', result);
     return result;
   }
 
@@ -71,11 +103,42 @@ export const generateVisualizationData = (queryType: string, feedbackData: any[]
   if (queryType.includes('category') || queryType.includes('kategori')) {
     const categoryCounts: Record<string, number> = {};
     feedbackData.forEach(item => {
-      const category = item.category || 'Uncategorized';
-      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      const categoryId = item.category;
+      if (categoryId) {
+        categoryCounts[categoryId] = (categoryCounts[categoryId] || 0) + 1;
+      } else {
+        categoryCounts['Uncategorized'] = (categoryCounts['Uncategorized'] || 0) + 1;
+      }
     });
-    return Object.entries(categoryCounts).map(([name, count]) => ({ 
-      name, 
+    
+    // Fetch category names from the categories table
+    if (supabase && Object.keys(categoryCounts).length > 0) {
+      const categoryIds = Object.keys(categoryCounts).filter(id => id !== 'Uncategorized');
+      
+      if (categoryIds.length > 0) {
+        const { data: categoriesData, error } = await supabase
+          .from('categories')
+          .select('id, name')
+          .in('id', categoryIds);
+        
+        if (!error && categoriesData) {
+          const categoryNameMap: Record<string, string> = {};
+          categoriesData.forEach(cat => {
+            categoryNameMap[cat.id] = cat.name;
+          });
+          
+          return Object.entries(categoryCounts).map(([categoryId, count]) => ({
+            name: categoryNameMap[categoryId] || categoryId || 'Uncategorized',
+            count,
+            value: count
+          }));
+        }
+      }
+    }
+    
+    // Fallback
+    return Object.entries(categoryCounts).map(([categoryId, count]) => ({ 
+      name: categoryId || 'Uncategorized', 
       count,
       value: count
     }));
@@ -176,8 +239,8 @@ export const parseQuery = async (userInput: string, feedbackData: any[], supabas
       throw new Error('No data available');
     }
 
-    // Generate visualization data based on AI-parsed result
-    const data = generateVisualizationData(userInput, feedbackData, aiResult);
+    // Generate visualization data based on AI-parsed result - now passing supabase client
+    const data = await generateVisualizationData(userInput, feedbackData, aiResult, supabase);
     
     const result: ParsedQuery = {
       chartType: aiResult.chartType || 'bar',
@@ -203,21 +266,21 @@ export const parseQuery = async (userInput: string, feedbackData: any[], supabas
     let result: ParsedQuery;
     
     if (lowerInput.includes('pie chart') || lowerInput.includes('pie')) {
-      const data = generateVisualizationData(lowerInput, feedbackData);
+      const data = await generateVisualizationData(lowerInput, feedbackData, undefined, supabase);
       result = {
         chartType: 'pie',
         data,
         title: 'Data Distribution'
       };
     } else if (lowerInput.includes('table')) {
-      const data = generateVisualizationData(lowerInput, feedbackData);
+      const data = await generateVisualizationData(lowerInput, feedbackData, undefined, supabase);
       result = {
         chartType: 'table',
         data,
         title: 'Data Table'
       };
     } else if (lowerInput.includes('line chart') || lowerInput.includes('over time')) {
-      const data = generateVisualizationData(lowerInput, feedbackData);
+      const data = await generateVisualizationData(lowerInput, feedbackData, undefined, supabase);
       result = {
         chartType: 'line',
         xAxis: 'month',
@@ -226,7 +289,7 @@ export const parseQuery = async (userInput: string, feedbackData: any[], supabas
         title: 'Trend Over Time'
       };
     } else {
-      const data = generateVisualizationData(lowerInput, feedbackData);
+      const data = await generateVisualizationData(lowerInput, feedbackData, undefined, supabase);
       result = {
         chartType: 'bar',
         xAxis: 'category',
