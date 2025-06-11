@@ -32,9 +32,10 @@ export const generateVisualizationData = (queryType: string, feedbackData: any[]
     let filteredData = feedbackData;
     if (queryType.includes('linebank') || queryType.includes('Linebank') || aiResult?.filters?.channel === 'Linebank') {
       filteredData = feedbackData.filter(item => {
-        const channelMatch = item.channel?.name?.toLowerCase()?.includes('linebank') || 
-                           (typeof item.channel === 'string' && item.channel.toLowerCase().includes('linebank'));
-        console.log('Channel check for item:', item.channel, 'matches:', channelMatch);
+        const channelName = item.channel?.name || item.channel || '';
+        // More flexible matching for LINE Bank vs Linebank
+        const channelMatch = channelName.toLowerCase().includes('line') && channelName.toLowerCase().includes('bank');
+        console.log('Channel check for item:', item.channel, 'channel name:', channelName, 'matches:', channelMatch);
         return channelMatch;
       });
       console.log('Filtered data for Linebank:', filteredData.length, 'items');
