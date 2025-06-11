@@ -22,15 +22,17 @@ export const generateVisualizationData = (queryType: string, feedbackData: any[]
   console.log('Generating visualization data for:', queryType, 'with AI result:', aiResult);
   console.log('Feedback data sample:', feedbackData.slice(0, 3));
   
-  // Handle channel-specific category queries (like "Linebank category trends")
-  if ((queryType.includes('category') || queryType.includes('kategori')) && 
-      (queryType.includes('linebank') || queryType.includes('Linebank') || aiResult?.filters?.channel === 'Linebank')) {
+  // Handle channel-specific category queries (like "category trends for LINE Bank")
+  if ((queryType.includes('category') || queryType.includes('kategori') || queryType.includes('trends')) && 
+      (queryType.includes('linebank') || queryType.includes('Linebank') || queryType.includes('LINE Bank') || 
+       aiResult?.filters?.channel === 'Linebank' || aiResult?.filters?.channel === 'LINE Bank')) {
     
-    console.log('Processing category query for Linebank');
+    console.log('Processing category query for LINE Bank');
     
-    // Filter data for Linebank if specified
+    // Filter data for LINE Bank if specified
     let filteredData = feedbackData;
-    if (queryType.includes('linebank') || queryType.includes('Linebank') || aiResult?.filters?.channel === 'Linebank') {
+    if (queryType.includes('linebank') || queryType.includes('Linebank') || queryType.includes('LINE Bank') || 
+        aiResult?.filters?.channel === 'Linebank' || aiResult?.filters?.channel === 'LINE Bank') {
       filteredData = feedbackData.filter(item => {
         const channelName = item.channel?.name || item.channel || '';
         // More flexible matching for LINE Bank vs Linebank
@@ -38,11 +40,11 @@ export const generateVisualizationData = (queryType: string, feedbackData: any[]
         console.log('Channel check for item:', item.channel, 'channel name:', channelName, 'matches:', channelMatch);
         return channelMatch;
       });
-      console.log('Filtered data for Linebank:', filteredData.length, 'items');
+      console.log('Filtered data for LINE Bank:', filteredData.length, 'items');
     }
     
     if (filteredData.length === 0) {
-      console.log('No data found for Linebank channel');
+      console.log('No data found for LINE Bank channel');
       return [];
     }
     
@@ -63,6 +65,20 @@ export const generateVisualizationData = (queryType: string, feedbackData: any[]
     
     console.log('Final category result:', result);
     return result;
+  }
+
+  // Handle general category queries
+  if (queryType.includes('category') || queryType.includes('kategori')) {
+    const categoryCounts: Record<string, number> = {};
+    feedbackData.forEach(item => {
+      const category = item.category || 'Uncategorized';
+      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    });
+    return Object.entries(categoryCounts).map(([name, count]) => ({ 
+      name, 
+      count,
+      value: count
+    }));
   }
 
   if (queryType.includes('channel')) {
