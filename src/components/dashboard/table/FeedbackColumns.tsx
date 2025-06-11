@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
@@ -152,6 +151,14 @@ export function createFeedbackColumns({
             {subcategory ? subcategory.name : '-'}
           </div>
         );
+      },
+    },
+    {
+      accessorKey: "appVersion",
+      header: () => createSortableHeader("App Version", "appVersion"),
+      cell: ({ row }) => {
+        const appVersion = row.getValue("appVersion") as string;
+        return <div className="text-sm">{appVersion || '-'}</div>;
       },
     },
     {
