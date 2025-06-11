@@ -14,40 +14,60 @@ interface ParsedQuery {
 }
 
 export const generateVisualizationData = (queryType: string, feedbackData: any[], aiResult?: any) => {
-  if (!feedbackData) return [];
+  if (!feedbackData || feedbackData.length === 0) {
+    console.log('No feedback data available');
+    return [];
+  }
 
   console.log('Generating visualization data for:', queryType, 'with AI result:', aiResult);
+  console.log('Feedback data sample:', feedbackData.slice(0, 3));
   
   // Handle channel-specific category queries (like "Linebank category trends")
   if ((queryType.includes('category') || queryType.includes('kategori')) && 
       (queryType.includes('linebank') || queryType.includes('Linebank') || aiResult?.filters?.channel === 'Linebank')) {
     
+    console.log('Processing category query for Linebank');
+    
     // Filter data for Linebank if specified
     let filteredData = feedbackData;
     if (queryType.includes('linebank') || queryType.includes('Linebank') || aiResult?.filters?.channel === 'Linebank') {
-      filteredData = feedbackData.filter(item => 
-        item.channel?.name?.toLowerCase().includes('linebank') || 
-        (typeof item.channel === 'string' && item.channel.toLowerCase().includes('linebank'))
-      );
+      filteredData = feedbackData.filter(item => {
+        const channelMatch = item.channel?.name?.toLowerCase()?.includes('linebank') || 
+                           (typeof item.channel === 'string' && item.channel.toLowerCase().includes('linebank'));
+        console.log('Channel check for item:', item.channel, 'matches:', channelMatch);
+        return channelMatch;
+      });
+      console.log('Filtered data for Linebank:', filteredData.length, 'items');
+    }
+    
+    if (filteredData.length === 0) {
+      console.log('No data found for Linebank channel');
+      return [];
     }
     
     const categoryCounts: Record<string, number> = {};
     filteredData.forEach(item => {
       const category = item.category || 'Uncategorized';
+      console.log('Processing category:', category);
       categoryCounts[category] = (categoryCounts[category] || 0) + 1;
     });
     
-    return Object.entries(categoryCounts).map(([name, count]) => ({ 
+    console.log('Category counts:', categoryCounts);
+    
+    const result = Object.entries(categoryCounts).map(([name, count]) => ({ 
       name, 
       count,
       value: count // For compatibility with different chart types
     }));
+    
+    console.log('Final category result:', result);
+    return result;
   }
 
   if (queryType.includes('channel')) {
     const channelCounts: Record<string, number> = {};
     feedbackData.forEach(item => {
-      const channelName = item.channel?.name || 'Unknown';
+      const channelName = item.channel?.name || item.channel || 'Unknown';
       channelCounts[channelName] = (channelCounts[channelName] || 0) + 1;
     });
     return Object.entries(channelCounts).map(([name, value]) => ({ name, value }));
@@ -111,6 +131,7 @@ export const generateVisualizationData = (queryType: string, feedbackData: any[]
   }
 
   // Default fallback
+  console.log('No specific query type matched, returning empty array');
   return [];
 };
 
