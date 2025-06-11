@@ -9,6 +9,7 @@ interface ParsedQuery {
     sentiment?: string;
     rating?: { min: number; max: number };
     timeframe?: string;
+    category?: string;
   };
 }
 
@@ -20,6 +21,76 @@ export const generateVisualizationData = async (queryType: string, feedbackData:
 
   console.log('Generating visualization data for:', queryType, 'with AI result:', aiResult);
   console.log('Feedback data sample:', feedbackData.slice(0, 3));
+  
+  // Handle monthly category trends for specific channel (like "Promo trends for LINE Bank monthly")
+  if ((queryType.includes('monthly') || queryType.includes('month')) && 
+      (queryType.includes('category') || queryType.includes('kategori') || queryType.includes('trends') || queryType.includes('promo')) &&
+      (queryType.includes('linebank') || queryType.includes('Linebank') || queryType.includes('LINE Bank') || 
+       aiResult?.filters?.channel === 'Linebank' || aiResult?.filters?.channel === 'LINE Bank')) {
+    
+    console.log('Processing monthly category trends for LINE Bank');
+    
+    // Filter data for LINE Bank
+    let filteredData = feedbackData.filter(item => {
+      const channelName = item.channel?.name || item.channel || '';
+      const channelMatch = channelName.toLowerCase().includes('line') && channelName.toLowerCase().includes('bank');
+      return channelMatch;
+    });
+    
+    console.log('Filtered data for LINE Bank:', filteredData.length, 'items');
+    
+    // Further filter by category if specified (like "Promo")
+    if (queryType.includes('promo') || queryType.includes('Promo') || aiResult?.filters?.category) {
+      const categoryFilter = aiResult?.filters?.category || 'promo';
+      
+      // First get category ID if we have supabase client
+      if (supabase) {
+        const { data: categoriesData, error } = await supabase
+          .from('categories')
+          .select('id, name')
+          .ilike('name', `%${categoryFilter}%`);
+        
+        if (!error && categoriesData && categoriesData.length > 0) {
+          const categoryIds = categoriesData.map(cat => cat.id);
+          filteredData = filteredData.filter(item => 
+            categoryIds.includes(item.category)
+          );
+          console.log('Filtered data by category:', filteredData.length, 'items');
+        }
+      }
+    }
+    
+    if (filteredData.length === 0) {
+      console.log('No data found for the specified criteria');
+      return [];
+    }
+    
+    // Group by month-year
+    const monthlyData: Record<string, number> = {};
+    filteredData.forEach(item => {
+      if (item.submit_date) {
+        const date = new Date(item.submit_date);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        monthlyData[monthLabel] = (monthlyData[monthLabel] || 0) + 1;
+      }
+    });
+    
+    const result = Object.entries(monthlyData)
+      .sort(([a], [b]) => {
+        const dateA = new Date(a + '-01');
+        const dateB = new Date(b + '-01');
+        return dateA.getTime() - dateB.getTime();
+      })
+      .map(([month, count]) => ({
+        month,
+        count,
+        value: count
+      }));
+    
+    console.log('Monthly category trend result:', result);
+    return result;
+  }
   
   // Handle channel-specific category queries (like "category trends for LINE Bank")
   if ((queryType.includes('category') || queryType.includes('kategori') || queryType.includes('trends')) && 

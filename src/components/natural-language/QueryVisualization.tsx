@@ -104,14 +104,20 @@ export const QueryVisualization: React.FC<QueryVisualizationProps> = ({ parsedRe
         );
       
       case 'line':
-        const lineXKey = parsedResult.xAxis || Object.keys(data[0])[0];
-        const lineYKey = parsedResult.yAxis || Object.keys(data[0])[1];
+        // Handle monthly data for line charts
+        const lineXKey = data[0]?.month ? 'month' : (parsedResult.xAxis || Object.keys(data[0])[0]);
+        const lineYKey = data[0]?.count ? 'count' : (parsedResult.yAxis || Object.keys(data[0])[1]);
         return (
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsLineChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey={lineXKey} />
+                <XAxis 
+                  dataKey={lineXKey} 
+                  angle={-45}
+                  textAnchor="end"
+                  height={70}
+                />
                 <YAxis />
                 <Tooltip />
                 <Line 
@@ -126,18 +132,25 @@ export const QueryVisualization: React.FC<QueryVisualizationProps> = ({ parsedRe
         );
       
       default: // bar chart
-        // Use 'count' or 'value' field for bar charts
+        // Handle monthly data for bar charts
         const barDataKey = data[0]?.count !== undefined ? 'count' : 
                           data[0]?.value !== undefined ? 'value' : 
                           Object.keys(data[0])[1];
-        const xAxisKey = data[0]?.name !== undefined ? 'name' : Object.keys(data[0])[0];
+        const xAxisKey = data[0]?.month ? 'month' : 
+                        data[0]?.name !== undefined ? 'name' : 
+                        Object.keys(data[0])[0];
         
         return (
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsBarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey={xAxisKey} />
+                <XAxis 
+                  dataKey={xAxisKey} 
+                  angle={-45}
+                  textAnchor="end"
+                  height={70}
+                />
                 <YAxis />
                 <Tooltip />
                 <Bar dataKey={barDataKey} fill="#8884d8" />
