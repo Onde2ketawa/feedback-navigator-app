@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { BulkActionButtons } from '@/components/dashboard/BulkActionButtons';
-import { TestDataButton } from '@/components/dashboard/TestDataButton';
 import { useToast } from '@/hooks/use-toast';
 import { FeedbackFilter } from '@/hooks/useFeedbackData';
 import { QueryObserverResult } from '@tanstack/react-query';
@@ -40,11 +39,6 @@ export const DashboardActions: React.FC<DashboardActionsProps> = ({
         selectedRows={selectedRows} 
         onExport={handleExport} 
         onBulkTag={handleBulkTag} 
-      />
-      
-      <TestDataButton 
-        filter={filter} 
-        onDataAdded={onRefetch}
       />
     </div>
   );
