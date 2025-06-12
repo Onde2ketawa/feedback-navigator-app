@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RatingDistributionDataPoint } from './types';
@@ -9,7 +10,7 @@ export const useRatingDistributionData = (channelFilter: string) => {
   
   const fetchRatingDistributionData = async (): Promise<RatingDistributionDataPoint[]> => {
     try {
-      console.log("Fetching rating distribution data with channel filter:", channelFilter);
+      console.log("[RatingDistribution] Fetching rating distribution data with channel filter:", channelFilter);
       
       let query = supabase
         .from('customer_feedback')
@@ -17,22 +18,27 @@ export const useRatingDistributionData = (channelFilter: string) => {
         
       // Apply channel filter if not 'all'
       if (channelFilter !== 'all') {
+        console.log("[RatingDistribution] Filtering by channel ID:", channelFilter);
         // Direct filter on channel_id (assuming channelFilter is already the ID)
         query = query.eq('channel_id', channelFilter);
       }
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error("[RatingDistribution] Error fetching data:", error);
+        throw error;
+      }
+      
       if (data) {
-        console.log("Rating distribution raw data count:", data.length);
-        console.log("Rating distribution raw data sample:", data.slice(0, 10));
+        console.log("[RatingDistribution] Rating distribution raw data count:", data.length);
+        console.log("[RatingDistribution] Rating distribution raw data sample:", data.slice(0, 10));
         return processRatingDistributionData(data);
       }
       
       return defaultRatingDistributionData;
     } catch (error) {
-      console.error('Error fetching rating distribution data:', error);
+      console.error('[RatingDistribution] Error fetching rating distribution data:', error);
       return defaultRatingDistributionData;
     }
   };
@@ -57,12 +63,12 @@ export const useRatingDistributionData = (channelFilter: string) => {
       } else if (typeof item.rating === 'string') {
         rating = parseFloat(item.rating);
       } else {
-        console.warn(`Invalid rating type:`, typeof item.rating);
+        console.warn(`[RatingDistribution] Invalid rating type:`, typeof item.rating);
         return; // Skip invalid ratings
       }
       
       if (isNaN(rating) || rating < 1 || rating > 5) {
-        console.warn(`Invalid rating value: ${item.rating}, skipping`);
+        console.warn(`[RatingDistribution] Invalid rating value: ${item.rating}, skipping`);
         return;
       }
       
@@ -73,7 +79,7 @@ export const useRatingDistributionData = (channelFilter: string) => {
       distribution[ratingInt]++;
     });
     
-    console.log("Processed rating distribution:", distribution);
+    console.log("[RatingDistribution] Processed rating distribution:", distribution);
     
     // Colors for different ratings
     const colors = ['#f43f5e', '#f97316', '#facc15', '#a3e635', '#10b981'];
@@ -88,7 +94,7 @@ export const useRatingDistributionData = (channelFilter: string) => {
       });
     }
     
-    console.log("Final rating distribution data:", result);
+    console.log("[RatingDistribution] Final rating distribution data:", result);
     
     return result;
   };

@@ -9,24 +9,46 @@ export const useYoyTrendData = (channelFilter: string) => {
   
   const fetchYoyTrendData = async (): Promise<YoyTrendDataPoint[]> => {
     try {
-      console.log('Fetching YOY trend data with filters:', { channelFilter });
+      console.log('[YoyTrend] Fetching YOY trend data with channel filter:', channelFilter);
+      
+      // Get the channel name from the channel ID if needed
+      let channelName: string | null = null;
+      
+      if (channelFilter !== 'all') {
+        const { data: channelData, error: channelError } = await supabase
+          .from('channel')
+          .select('name')
+          .eq('id', channelFilter)
+          .single();
+          
+        if (channelError) {
+          console.error('[YoyTrend] Error fetching channel name:', channelError);
+          return generateEmptyYoyData();
+        }
+        
+        channelName = channelData?.name || null;
+        console.log(`[YoyTrend] Resolved channel ID ${channelFilter} to name:`, channelName);
+      }
       
       let { data, error } = await supabase.rpc('get_yoy_rating_comparison', {
-        channel_name: channelFilter === 'all' ? null : channelFilter
+        channel_name: channelName
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('[YoyTrend] Error fetching data:', error);
+        throw error;
+      }
 
       // Type the data properly and handle null/undefined cases
       const validData: any[] = data || [];
       
       if (!Array.isArray(validData)) {
-        console.log('Data is not an array, using empty data');
+        console.log('[YoyTrend] Data is not an array, using empty data');
         return generateEmptyYoyData();
       }
 
-      console.log('Raw YOY data count:', validData.length);
-      console.log('Sample raw data:', validData.slice(0, 3));
+      console.log('[YoyTrend] Raw YOY data count:', validData.length);
+      console.log('[YoyTrend] Sample raw data:', validData.slice(0, 3));
       
       if (validData.length === 0) {
         return generateEmptyYoyData();
@@ -34,7 +56,7 @@ export const useYoyTrendData = (channelFilter: string) => {
       
       return processYoyTrendData(validData);
     } catch (error) {
-      console.error('Error fetching YoY trend data:', error);
+      console.error('[YoyTrend] Error fetching YoY trend data:', error);
       return generateEmptyYoyData();
     }
   };
@@ -79,7 +101,7 @@ export const useYoyTrendData = (channelFilter: string) => {
       }
     });
 
-    console.log('Processed YOY trend data:', monthlyData);
+    console.log('[YoyTrend] Processed YOY trend data:', monthlyData);
     return monthlyData;
   };
 
