@@ -14,11 +14,15 @@ export const useSentimentTrendData = () => {
     try {
       console.log(`[SentimentTrend] Fetching trend via RPC for channel:`, channelFilter);
 
-      // Call the Supabase function. Pass NULL for 'all', otherwise pass the channel name
+      // Call the Supabase function. Pass the actual channel name or null for 'all'
       const channelParam = channelFilter === 'all' ? null : channelFilter;
       
+      console.log(`[SentimentTrend] Calling RPC with channel param:`, channelParam);
+      
       const { data, error } = await supabase
-        .rpc('get_sentiment_trend_by_month', { channel_name: channelParam });
+        .rpc('get_sentiment_trend_by_month', { 
+          channel_name: channelParam 
+        });
 
       if (error) {
         console.error('[SentimentTrend] Error fetching data via RPC:', error);
@@ -54,6 +58,12 @@ export const useSentimentTrendData = () => {
       });
 
       console.log('[SentimentTrend] Processed and sorted data:', mapped);
+      console.log('[SentimentTrend] Total data points returned:', mapped.length);
+      
+      // Additional debugging for data validation
+      const hasData = mapped.some(d => d.positive > 0 || d.neutral > 0 || d.negative > 0);
+      console.log('[SentimentTrend] Has actual sentiment data:', hasData);
+      
       return mapped;
     } catch (error) {
       console.error('[SentimentTrend] Error fetching sentiment trend data:', error);

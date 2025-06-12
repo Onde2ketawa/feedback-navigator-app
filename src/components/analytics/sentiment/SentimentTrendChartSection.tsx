@@ -37,6 +37,12 @@ export const SentimentTrendChartSection: React.FC<SentimentTrendChartSectionProp
       const hasNeutral = data.some(d => d.neutral > 0);
       const hasNegative = data.some(d => d.negative > 0);
       console.log('[SentimentTrendChartSection] Data has:', { hasPositive, hasNeutral, hasNegative });
+      
+      // Check total counts per data point
+      data.forEach((point, index) => {
+        const total = point.positive + point.neutral + point.negative;
+        console.log(`[SentimentTrendChartSection] Data point ${index + 1} (${point.month} ${point.year}): P=${point.positive}, N=${point.neutral}, Neg=${point.negative}, Total=${total}`);
+      });
     } else {
       console.log('[SentimentTrendChartSection] No data or empty array received');
     }
@@ -45,12 +51,15 @@ export const SentimentTrendChartSection: React.FC<SentimentTrendChartSectionProp
   const hasData = data && data.length > 0 &&
     data.some(d => d.positive > 0 || d.neutral > 0 || d.negative > 0);
 
-  console.log('[SentimentTrendChartSection] Has valid data:', hasData);
+  console.log('[SentimentTrendChartSection] Has valid data for rendering:', hasData);
 
   if (!hasData) {
     return (
       <div className="h-80 flex items-center justify-center text-muted-foreground">
-        No sentiment trend data available
+        <div className="text-center">
+          <p className="text-lg font-medium">No sentiment trend data available</p>
+          <p className="text-sm mt-2">Try selecting a different channel or check if there's data for the selected period.</p>
+        </div>
       </div>
     );
   }
