@@ -13,34 +13,29 @@ export const useSentimentDistributionData = () => {
     monthFilter: string
   ): Promise<SentimentDistributionDataPoint[]> => {
     try {
+      console.log(`[SentimentDistribution] Fetching data for channel:`, channelFilter);
+      
       // Base query to get sentiment distribution
       let query = supabase
         .from('customer_feedback')
-        .select('sentiment, channel_id');
+        .select('sentiment');
         
       // Apply channel filter if not 'all'
       if (channelFilter !== 'all') {
-        try {
-          const { data: channelData } = await supabase
-            .from('channel')
-            .select('id')
-            .eq('name', channelFilter)
-            .single();
-          
-          if (channelData) {
-            query = query.eq('channel_id', channelData.id);
-          }
-        } catch (err) {
-          // If it's already an ID, use it directly
-          query = query.eq('channel_id', channelFilter);
-        }
+        console.log(`[SentimentDistribution] Filtering by channel ID:`, channelFilter);
+        query = query.eq('channel_id', channelFilter);
       }
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('[SentimentDistribution] Error fetching data:', error);
+        throw error;
+      }
+      
       if (data) {
-        console.log("Sentiment distribution raw data sample:", data.slice(0, 10));
+        console.log(`[SentimentDistribution] Raw data count:`, data.length);
+        console.log(`[SentimentDistribution] Sample data:`, data.slice(0, 5));
         return processSentimentDistributionData(data);
       }
       
@@ -61,7 +56,7 @@ export const useSentimentDistributionData = () => {
     
     // Count sentiments
     data.forEach(item => {
-      const sentiment = item.sentiment || 'neutral';
+      const sentiment = (item.sentiment || 'neutral').toLowerCase();
       
       // Ensure the sentiment is one of our expected values
       if (['positive', 'neutral', 'negative'].includes(sentiment)) {
@@ -71,6 +66,8 @@ export const useSentimentDistributionData = () => {
         distribution.neutral++;
       }
     });
+    
+    console.log(`[SentimentDistribution] Processed distribution:`, distribution);
     
     // Colors for different sentiments
     const colors = {
@@ -86,7 +83,7 @@ export const useSentimentDistributionData = () => {
       color: colors[name as keyof typeof colors]
     }));
     
-    console.log("Final sentiment distribution data:", result);
+    console.log(`[SentimentDistribution] Final result:`, result);
     
     return result;
   };
