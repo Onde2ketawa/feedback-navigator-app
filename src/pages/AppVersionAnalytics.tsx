@@ -6,6 +6,7 @@ import { useAppVersionAnalyticsData } from '@/hooks/app-version/useAppVersionAna
 import { AppVersionDistributionChart } from '@/components/analytics/app-version/AppVersionDistributionChart';
 import { AppVersionCategoryChart } from '@/components/analytics/app-version/AppVersionCategoryChart';
 import { AppVersionSentimentChart } from '@/components/analytics/app-version/AppVersionSentimentChart';
+import { AppVersionSentimentDistributionChart } from '@/components/analytics/app-version/AppVersionSentimentDistributionChart';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const AppVersionAnalytics: React.FC = () => {
@@ -65,25 +66,47 @@ const AppVersionAnalytics: React.FC = () => {
         </div>
 
         {/* Sentiment Analysis by App Version and Channel */}
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {channelData.map((channel) => (
-            <Card key={`sentiment-${channel.name}`}>
-              <CardHeader>
-                <CardTitle>Sentiment Distribution by App Version - {channel.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="h-80 flex items-center justify-center">
-                    <Skeleton className="h-4/5 w-full" />
-                  </div>
-                ) : (
-                  <AppVersionSentimentChart 
-                    data={sentimentData.filter(item => item.channel === channel.name)} 
-                    channelName={channel.name}
-                  />
-                )}
-              </CardContent>
-            </Card>
+            <React.Fragment key={`sentiment-${channel.name}`}>
+              {/* Sentiment Distribution Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sentiment Distribution by App Version - {channel.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="h-80 flex items-center justify-center">
+                      <Skeleton className="h-4/5 w-full" />
+                    </div>
+                  ) : (
+                    <AppVersionSentimentDistributionChart 
+                      data={sentimentData.filter(item => item.channel === channel.name)} 
+                      channelName={channel.name}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Sentiment by App Version Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sentiment by App Version - {channel.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="h-80 flex items-center justify-center">
+                      <Skeleton className="h-4/5 w-full" />
+                    </div>
+                  ) : (
+                    <AppVersionSentimentChart 
+                      data={sentimentData.filter(item => item.channel === channel.name)} 
+                      channelName={channel.name}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            </React.Fragment>
           ))}
         </div>
       </div>
