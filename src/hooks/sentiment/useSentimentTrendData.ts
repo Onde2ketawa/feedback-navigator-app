@@ -14,9 +14,11 @@ export const useSentimentTrendData = () => {
     try {
       console.log(`[SentimentTrend] Fetching trend via RPC for channel:`, channelFilter);
 
-      // Call the new Supabase function directly. Pass NULL for 'all'.
+      // Call the Supabase function. Pass NULL for 'all', otherwise pass the channel name
+      const channelParam = channelFilter === 'all' ? null : channelFilter;
+      
       const { data, error } = await supabase
-        .rpc('get_sentiment_trend_by_month', { channel_name: channelFilter === 'all' ? null : channelFilter });
+        .rpc('get_sentiment_trend_by_month', { channel_name: channelParam });
 
       if (error) {
         console.error('[SentimentTrend] Error fetching data via RPC:', error);
@@ -25,14 +27,22 @@ export const useSentimentTrendData = () => {
 
       console.log('[SentimentTrend] Raw RPC data:', data);
 
+      if (!data || data.length === 0) {
+        console.log('[SentimentTrend] No data returned from RPC');
+        return [];
+      }
+
       // Map SQL result to the trend point for chart/table
-      const mapped: SentimentTrendMonthYearPoint[] = (data || []).map((item: any) => ({
-        month: item.month_short,
-        year: item.year?.toString?.() || '',
-        positive: Number(item.positive_count || 0),
-        neutral: Number(item.neutral_count || 0),
-        negative: Number(item.negative_count || 0)
-      }));
+      const mapped: SentimentTrendMonthYearPoint[] = data.map((item: any) => {
+        console.log('[SentimentTrend] Processing item:', item);
+        return {
+          month: item.month_short || '',
+          year: item.year?.toString?.() || '',
+          positive: Number(item.positive_count || 0),
+          neutral: Number(item.neutral_count || 0),
+          negative: Number(item.negative_count || 0)
+        };
+      });
 
       // Sort by year/month ascending
       mapped.sort((a, b) => {
@@ -43,7 +53,7 @@ export const useSentimentTrendData = () => {
         return months.indexOf(a.month) - months.indexOf(b.month);
       });
 
-      console.log('[SentimentTrend] Processed data:', mapped);
+      console.log('[SentimentTrend] Processed and sorted data:', mapped);
       return mapped;
     } catch (error) {
       console.error('[SentimentTrend] Error fetching sentiment trend data:', error);

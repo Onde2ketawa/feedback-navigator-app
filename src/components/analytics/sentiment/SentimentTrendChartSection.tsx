@@ -16,24 +16,36 @@ export const SentimentTrendChartSection: React.FC<SentimentTrendChartSectionProp
   };
 
   useEffect(() => {
-    console.log('SentimentTrendChart received data:', data?.length || 0, 'data points');
+    console.log('[SentimentTrendChartSection] Received data:', data?.length || 0, 'data points');
+    console.log('[SentimentTrendChartSection] Raw data:', data);
+    
     if (data && data.length > 0) {
-      console.log('First data point:', data[0]);
-      console.log('Last data point:', data[data.length - 1]);
+      console.log('[SentimentTrendChartSection] First data point:', data[0]);
+      console.log('[SentimentTrendChartSection] Last data point:', data[data.length - 1]);
       
       const uniqueYears = [...new Set(data.map(d => d.year))].sort();
-      console.log('Unique years in chart data:', uniqueYears);
+      console.log('[SentimentTrendChartSection] Unique years in chart data:', uniqueYears);
       
       const monthsPerYear: Record<string, string[]> = {};
       uniqueYears.forEach(year => {
         monthsPerYear[year] = [...new Set(data.filter(d => d.year === year).map(d => d.month))];
       });
-      console.log('Months per year:', monthsPerYear);
+      console.log('[SentimentTrendChartSection] Months per year:', monthsPerYear);
+      
+      // Check if data has actual sentiment counts
+      const hasPositive = data.some(d => d.positive > 0);
+      const hasNeutral = data.some(d => d.neutral > 0);
+      const hasNegative = data.some(d => d.negative > 0);
+      console.log('[SentimentTrendChartSection] Data has:', { hasPositive, hasNeutral, hasNegative });
+    } else {
+      console.log('[SentimentTrendChartSection] No data or empty array received');
     }
   }, [data]);
 
   const hasData = data && data.length > 0 &&
     data.some(d => d.positive > 0 || d.neutral > 0 || d.negative > 0);
+
+  console.log('[SentimentTrendChartSection] Has valid data:', hasData);
 
   if (!hasData) {
     return (
@@ -87,6 +99,9 @@ export const SentimentTrendChartSection: React.FC<SentimentTrendChartSectionProp
     return monthBIndex - monthAIndex;
   });
 
+  console.log('[SentimentTrendChartSection] Final chart data:', chartData);
+  console.log('[SentimentTrendChartSection] Final table data:', sortedTableData);
+
   return (
     <div>
       <SentimentTrendLineChart
@@ -98,4 +113,3 @@ export const SentimentTrendChartSection: React.FC<SentimentTrendChartSectionProp
     </div>
   );
 };
-

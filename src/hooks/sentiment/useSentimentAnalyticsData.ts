@@ -51,17 +51,24 @@ export function useSentimentAnalyticsData() {
 
   // Fetch all data when channelFilter changes
   useEffect(() => {
+    console.log('[SentimentAnalytics] Channel filter changed to:', channelFilter);
     fetchSentimentAnalyticsData();
   }, [channelFilter]);
 
   const fetchSentimentAnalyticsData = async () => {
     setIsLoading(true);
     try {
+      console.log('[SentimentAnalytics] Starting data fetch for channel:', channelFilter);
+      
       const [trendData, distributionData, categoryData] = await Promise.all([
         fetchSentimentTrendData(channelFilter, '2025', 'all'),
         fetchSentimentDistributionData(channelFilter, '2025', 'all'),
         fetchSentimentCategoryData(channelFilter, '2025', 'all')
       ]);
+
+      console.log('[SentimentAnalytics] Trend data result:', trendData?.length || 0, 'items');
+      console.log('[SentimentAnalytics] Distribution data result:', distributionData?.length || 0, 'items');
+      console.log('[SentimentAnalytics] Category data result:', categoryData?.length || 0, 'items');
 
       setSentimentTrendData(trendData);
       setSentimentDistributionData(distributionData);
