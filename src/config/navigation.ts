@@ -11,6 +11,7 @@ import {
   FileText,
   Home,
   Brain,
+  Package,
 } from 'lucide-react';
 
 // allowedRoles: missing means admin only, otherwise ['admin', 'user'] means both etc.
@@ -67,6 +68,12 @@ export const sidebarNavItems = [
     href: "/time-analytics",
     title: "Time Analytics",
     icon: Clock,
+    allowedRoles: ['admin'],
+  },
+  {
+    href: "/app-version-analytics",
+    title: "App Version Analytics",
+    icon: Package,
     allowedRoles: ['admin'],
   },
   {

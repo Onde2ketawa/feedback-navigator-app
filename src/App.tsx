@@ -23,6 +23,7 @@ import DeviceAnalytics from './pages/DeviceAnalytics';
 import FeedbackAnalysis from './pages/FeedbackAnalysis';
 import FeedbackReview from './pages/FeedbackReview';
 import NaturalLanguageQuery from './pages/NaturalLanguageQuery';
+import AppVersionAnalytics from './pages/AppVersionAnalytics';
 
 // Auth Context & Protection
 import { AuthProvider } from './contexts/AuthContext';
@@ -95,6 +96,13 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <TimeAnalytics />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/app-version-analytics" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <AppVersionAnalytics />
                 </MainLayout>
               </ProtectedRoute>
             } />
