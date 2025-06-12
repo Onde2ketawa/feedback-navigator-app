@@ -44,6 +44,8 @@ export const useAppVersionAnalyticsData = () => {
     try {
       setIsLoading(true);
       
+      console.log('Fetching app version analytics data...');
+      
       // Fetch all channels first
       const { data: channels, error: channelsError } = await supabase
         .from('channel')
@@ -53,6 +55,7 @@ export const useAppVersionAnalyticsData = () => {
 
       const channelInfo = channels || [];
       setChannelData(channelInfo);
+      console.log('Channels:', channelInfo);
 
       // Fetch app version distribution by channel
       const { data: feedbackData, error: feedbackError } = await supabase
@@ -66,6 +69,8 @@ export const useAppVersionAnalyticsData = () => {
         `);
 
       if (feedbackError) throw feedbackError;
+
+      console.log('Raw feedback data:', feedbackData);
 
       if (feedbackData) {
         // Process app version distribution
@@ -175,6 +180,8 @@ export const useAppVersionAnalyticsData = () => {
             });
           });
         });
+        
+        console.log('Processed sentiment data:', sentimentData);
         setSentimentData(sentimentData);
       }
     } catch (error) {
