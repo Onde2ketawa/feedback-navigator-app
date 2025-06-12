@@ -14,8 +14,27 @@ export const useSentimentTrendData = () => {
     try {
       console.log(`[SentimentTrend] Fetching trend via RPC for channel:`, channelFilter);
 
-      // Call the Supabase function. Pass the actual channel name or null for 'all'
-      const channelParam = channelFilter === 'all' ? null : channelFilter;
+      // For channel filtering, we need to pass the actual channel name from the availableChannels
+      // If channelFilter is 'all', pass null to get all channels
+      // If channelFilter is a UUID (channel ID), we need to get the channel name
+      let channelParam: string | null = null;
+      
+      if (channelFilter !== 'all') {
+        // Get the channel name from the channel ID
+        const { data: channelData, error: channelError } = await supabase
+          .from('channel')
+          .select('name')
+          .eq('id', channelFilter)
+          .single();
+          
+        if (channelError) {
+          console.error('[SentimentTrend] Error fetching channel name:', channelError);
+          return [];
+        }
+        
+        channelParam = channelData?.name || null;
+        console.log(`[SentimentTrend] Resolved channel ID ${channelFilter} to name:`, channelParam);
+      }
       
       console.log(`[SentimentTrend] Calling RPC with channel param:`, channelParam);
       
