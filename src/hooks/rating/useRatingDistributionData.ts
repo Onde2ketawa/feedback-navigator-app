@@ -19,7 +19,6 @@ export const useRatingDistributionData = (channelFilter: string) => {
       // Apply channel filter if not 'all'
       if (channelFilter !== 'all') {
         console.log("[RatingDistribution] Filtering by channel ID:", channelFilter);
-        // Direct filter on channel_id (assuming channelFilter is already the ID)
         query = query.eq('channel_id', channelFilter);
       }
       
