@@ -7,14 +7,12 @@ import { useCategoryRatingData } from './useCategoryRatingData';
 
 export * from './types';
 
-export function useRatingAnalyticsData() {
-  const [channelFilter, setChannelFilter] = useState<string>('all');
-  const [yearFilter, setYearFilter] = useState<string>('2025'); // Changed from 'all' to '2025'
+export function useRatingAnalyticsData(channelFilter: string) {
+  const [yearFilter, setYearFilter] = useState<string>('2025');
   const [monthFilter, setMonthFilter] = useState<string>('all');
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
   
-  // Update to match the updated useYoyTrendData hook signature (removed yearFilter parameter)
   const { yoyTrendData, setYoyTrendData, fetchYoyTrendData } = 
     useYoyTrendData(channelFilter);
   
@@ -52,8 +50,6 @@ export function useRatingAnalyticsData() {
   };
 
   return {
-    channelFilter,
-    setChannelFilter,
     yearFilter,
     setYearFilter,
     monthFilter,

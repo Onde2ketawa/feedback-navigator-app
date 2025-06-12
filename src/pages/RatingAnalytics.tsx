@@ -18,6 +18,7 @@ const RatingAnalytics: React.FC = () => {
     isLoading: isLoadingChannels
   } = useChannelFilter();
 
+  // Pass channelFilter to useRatingAnalyticsData
   const {
     yearFilter, 
     setYearFilter,
@@ -28,9 +29,9 @@ const RatingAnalytics: React.FC = () => {
     ratingDistributionData,
     categoryRatingData,
     refreshData
-  } = useRatingAnalyticsData();
+  } = useRatingAnalyticsData(channelFilter); // Pass channelFilter here
   
-  const [selectedComparisonYears, setSelectedComparisonYears] = useState<string[]>(['2025']); // Changed from ['2024', '2025'] to ['2025']
+  const [selectedComparisonYears, setSelectedComparisonYears] = useState<string[]>(['2025']);
   
   const fetchComparisonData = useChannelComparisonData(selectedComparisonYears);
   const [channelComparisonData, setChannelComparisonData] = useState<RatingTrendData[]>([]);
