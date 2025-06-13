@@ -87,8 +87,8 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
           <BarChart
             data={sortedData}
             layout="vertical"
-            margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
-            barSize={32}
+            margin={{ top: 20, right: 30, left: 140, bottom: 20 }}
+            barSize={40}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={true} vertical={false} />
             <XAxis 
@@ -104,7 +104,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
               tick={{ fontSize: 12, fill: '#475569' }}
               axisLine={false}
               tickLine={false}
-              width={110}
+              width={130}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar 
@@ -160,9 +160,6 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
             </div>
           ))}
         </div>
-        <p className="text-center mt-4 text-sm text-muted-foreground italic">
-          Click on a category to view its subcategories
-        </p>
       </div>
     </div>
   );
