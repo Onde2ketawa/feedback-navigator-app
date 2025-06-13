@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Cell,
 } from 'recharts';
 
 interface CategoryDataItem {
@@ -96,14 +97,13 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
           <Tooltip content={<CustomTooltip />} />
           <Bar 
             dataKey="value" 
-            fill={(entry: any) => entry.color}
             onClick={handleBarClick}
             cursor="pointer"
             radius={[0, 4, 4, 0]}
           >
             {sortedData.map((entry, index) => (
-              <Bar
-                key={`bar-${index}`}
+              <Cell 
+                key={`cell-${index}`}
                 fill={entry.color}
                 stroke={entry.name === selectedCategory ? '#000' : undefined}
                 strokeWidth={entry.name === selectedCategory ? 2 : 0}
