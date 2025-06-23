@@ -5,6 +5,7 @@ import { useCategoryDistribution } from './useCategoryDistribution';
 import { useSubcategoryDistribution } from './useSubcategoryDistribution';
 import { useCategoryRatings } from './useCategoryRatings';
 import { useCategoryAnalyticsState } from './useCategoryAnalyticsState';
+import { useCategoryTrend } from './useCategoryTrend';
 
 // Re-export types from the types file
 export * from './types';
@@ -14,8 +15,9 @@ export function useCategoryAnalyticsData() {
   const COLORS = ['#8b5cf6', '#6366f1', '#ec4899', '#f43f5e', '#f97316', '#14b8a6', '#10b981', '#a3e635'];
   
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [ratingRange, setRatingRange] = useState<number[]>([1, 5]);
   
-  // Use our new smaller hooks
+  // Use our existing hooks
   const { categoryData, setCategoryData, fetchCategoryDistribution } = useCategoryDistribution();
   const { subcategoryData, setSubcategoryData, fetchSubcategoryDistribution } = useSubcategoryDistribution();
   const { categoryRatings, setCategoryRatings, fetchCategoryRatings } = useCategoryRatings();
@@ -31,11 +33,20 @@ export function useCategoryAnalyticsData() {
     availableCategories,
     setAvailableCategories
   } = useCategoryAnalyticsState();
+
+  // Add category trend hook
+  const {
+    categoryTrendData,
+    availableCategories: trendCategories,
+    selectedCategories: selectedTrendCategories,
+    fetchCategoryTrend,
+    toggleCategory
+  } = useCategoryTrend();
   
   // Fetch data when filters change
   useEffect(() => {
     fetchCategoryAnalyticsData();
-  }, [selectedChannel, selectedYear, selectedMonth, selectedCategory]);
+  }, [selectedChannel, selectedYear, selectedMonth, selectedCategory, ratingRange]);
 
   // Main function to fetch all data
   const fetchCategoryAnalyticsData = async () => {
@@ -44,7 +55,8 @@ export function useCategoryAnalyticsData() {
       // Fetch all data in parallel for better performance
       const [categoryDistribution, categoryRatingsData] = await Promise.all([
         fetchCategoryDistribution(selectedChannel, selectedYear, selectedMonth),
-        fetchCategoryRatings(selectedChannel, selectedYear, selectedMonth)
+        fetchCategoryRatings(selectedChannel, selectedYear, selectedMonth),
+        fetchCategoryTrend(selectedChannel, selectedYear, ratingRange[0], ratingRange[1])
       ]);
       
       // Update available categories
@@ -83,6 +95,10 @@ export function useCategoryAnalyticsData() {
     subcategoryData,
     availableCategories,
     categoryRatings,
+    categoryTrendData,
+    availableCategories: trendCategories,
+    selectedTrendCategories,
+    ratingRange,
     selectedChannel,
     setSelectedChannel,
     selectedYear,
@@ -91,5 +107,7 @@ export function useCategoryAnalyticsData() {
     setSelectedMonth,
     selectedCategory,
     setSelectedCategory,
+    setRatingRange,
+    toggleCategory,
   };
 }

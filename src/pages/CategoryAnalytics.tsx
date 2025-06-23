@@ -6,6 +6,8 @@ import { FilterControls } from '@/components/analytics/FilterControls';
 import { CategoryPieChart } from '@/components/analytics/category/CategoryPieChart';
 import { SubcategoryPieChart } from '@/components/analytics/category/SubcategoryPieChart';
 import { CategoryRatingBarChart } from '@/components/analytics/category/CategoryRatingBarChart';
+import { CategoryTrendChart } from '@/components/analytics/category/CategoryTrendChart';
+import { RatingFilter } from '@/components/dashboard/filters/RatingFilter';
 import { useCategoryAnalyticsData } from '@/hooks/category/useCategoryAnalyticsData';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -16,6 +18,9 @@ const CategoryAnalytics: React.FC = () => {
     subcategoryData,
     availableCategories,
     categoryRatings,
+    categoryTrendData,
+    selectedTrendCategories,
+    ratingRange,
     selectedChannel,
     setSelectedChannel,
     selectedYear,
@@ -24,6 +29,8 @@ const CategoryAnalytics: React.FC = () => {
     setSelectedMonth,
     selectedCategory,
     setSelectedCategory,
+    setRatingRange,
+    toggleCategory,
   } = useCategoryAnalyticsData();
 
   return (
@@ -57,16 +64,11 @@ const CategoryAnalytics: React.FC = () => {
                 <Skeleton className="h-4/5 w-4/5 rounded-full" />
               </div>
             ) : categoryData.length > 0 ? (
-              <>
-                <CategoryPieChart 
-                  data={categoryData} 
-                  selectedCategory={selectedCategory}
-                  onCategorySelect={setSelectedCategory}
-                />
-                <p className="text-center mt-4 text-sm text-muted-foreground">
-                  Click on a category to view its subcategories
-                </p>
-              </>
+              <CategoryPieChart 
+                data={categoryData} 
+                selectedCategory={selectedCategory}
+                onCategorySelect={setSelectedCategory}
+              />
             ) : (
               <div className="h-80 flex items-center justify-center">
                 <p className="text-muted-foreground">No category data available</p>
@@ -96,6 +98,39 @@ const CategoryAnalytics: React.FC = () => {
                 setSelectedCategory={setSelectedCategory}
                 availableCategories={availableCategories}
                 subcategoryData={subcategoryData}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Category Trend */}
+        <Card className="col-span-1 lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Category Trend</CardTitle>
+            <CardDescription>
+              Monthly category trends with rating filter
+            </CardDescription>
+            <div className="flex items-center gap-4 mt-4">
+              <div className="w-64">
+                <RatingFilter 
+                  ratingRange={ratingRange}
+                  onRatingChange={setRatingRange}
+                  isLoading={isLoading}
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-80 flex items-center justify-center">
+                <Skeleton className="h-4/5 w-full" />
+              </div>
+            ) : (
+              <CategoryTrendChart
+                data={categoryTrendData}
+                selectedCategories={selectedTrendCategories}
+                onCategoryToggle={toggleCategory}
+                availableCategories={availableCategories}
               />
             )}
           </CardContent>
