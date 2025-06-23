@@ -19,6 +19,7 @@ const CategoryAnalytics: React.FC = () => {
     availableCategories,
     categoryRatings,
     categoryTrendData,
+    trendCategories,
     selectedTrendCategories,
     ratingRange,
     selectedChannel,
@@ -130,7 +131,7 @@ const CategoryAnalytics: React.FC = () => {
                 data={categoryTrendData}
                 selectedCategories={selectedTrendCategories}
                 onCategoryToggle={toggleCategory}
-                availableCategories={availableCategories}
+                availableCategories={trendCategories}
               />
             )}
           </CardContent>

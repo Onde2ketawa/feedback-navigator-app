@@ -96,7 +96,7 @@ export function useCategoryAnalyticsData() {
     availableCategories,
     categoryRatings,
     categoryTrendData,
-    availableCategories: trendCategories,
+    trendCategories,
     selectedTrendCategories,
     ratingRange,
     selectedChannel,
