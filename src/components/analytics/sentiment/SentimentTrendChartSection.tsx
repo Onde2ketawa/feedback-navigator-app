@@ -1,14 +1,21 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SentimentTrendLineChart } from './SentimentTrendLineChart';
+import { SentimentTrendBarChart } from './SentimentTrendBarChart';
 import { SentimentTrendTable } from './SentimentTrendTable';
 import { SentimentTrendMonthYearPoint } from '@/hooks/sentiment/sentimentTrendTransform';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { BarChart3, TrendingUp } from 'lucide-react';
 
 interface SentimentTrendChartSectionProps {
   data: SentimentTrendMonthYearPoint[];
 }
 
+type ChartType = 'line' | 'bar';
+
 export const SentimentTrendChartSection: React.FC<SentimentTrendChartSectionProps> = ({ data }) => {
+  const [chartType, setChartType] = useState<ChartType>('line');
+  
   const config = {
     positive: { color: '#10b981', label: 'Positive' },
     neutral: { color: '#facc15', label: 'Neutral' },
@@ -112,12 +119,39 @@ export const SentimentTrendChartSection: React.FC<SentimentTrendChartSectionProp
   console.log('[SentimentTrendChartSection] Final table data:', sortedTableData);
 
   return (
-    <div>
-      <SentimentTrendLineChart
-        chartData={chartData}
-        years={years}
-        config={config}
-      />
+    <div className="space-y-4">
+      {/* Chart Type Toggle */}
+      <div className="flex justify-end">
+        <ToggleGroup
+          type="single"
+          value={chartType}
+          onValueChange={(value) => value && setChartType(value as ChartType)}
+          className="border rounded-lg"
+        >
+          <ToggleGroupItem value="line" aria-label="Line Chart" className="px-3 py-2">
+            <TrendingUp className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="bar" aria-label="Bar Chart" className="px-3 py-2">
+            <BarChart3 className="h-4 w-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
+      {/* Chart */}
+      {chartType === 'line' ? (
+        <SentimentTrendLineChart
+          chartData={chartData}
+          years={years}
+          config={config}
+        />
+      ) : (
+        <SentimentTrendBarChart
+          chartData={chartData}
+          years={years}
+          config={config}
+        />
+      )}
+
       <SentimentTrendTable tableData={sortedTableData} />
     </div>
   );
