@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { SentimentDataPoint } from '@/hooks/app-version/useAppVersionAnalyticsData';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
@@ -8,6 +8,26 @@ interface AppVersionSentimentChartProps {
   data: SentimentDataPoint[];
   channelName: string;
 }
+
+// Custom label component for bar values
+const CustomBarLabel = (props: any) => {
+  const { x, y, width, height, value } = props;
+  
+  if (value === 0) return null;
+  
+  return (
+    <text
+      x={x + width / 2}
+      y={y - 5}
+      fill="#666"
+      textAnchor="middle"
+      fontSize="10"
+      fontWeight="500"
+    >
+      {value}
+    </text>
+  );
+};
 
 export const AppVersionSentimentChart: React.FC<AppVersionSentimentChartProps> = ({ data, channelName }) => {
   console.log('AppVersionSentimentChart data:', data);
@@ -95,17 +115,23 @@ export const AppVersionSentimentChart: React.FC<AppVersionSentimentChartProps> =
           dataKey="positive" 
           fill={sentimentColors.positive}
           name="Positive"
-        />
+        >
+          <LabelList content={<CustomBarLabel />} />
+        </Bar>
         <Bar 
           dataKey="neutral" 
           fill={sentimentColors.neutral}
           name="Neutral"
-        />
+        >
+          <LabelList content={<CustomBarLabel />} />
+        </Bar>
         <Bar 
           dataKey="negative" 
           fill={sentimentColors.negative}
           name="Negative"
-        />
+        >
+          <LabelList content={<CustomBarLabel />} />
+        </Bar>
       </BarChart>
     </ChartContainer>
   );

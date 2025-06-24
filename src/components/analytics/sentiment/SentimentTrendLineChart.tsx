@@ -7,7 +7,8 @@ import {
   YAxis,
   CartesianGrid,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  LabelList,
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
@@ -20,6 +21,26 @@ interface SentimentTrendLineChartProps {
     negative: { color: string; label: string };
   }
 }
+
+// Custom label component for line values
+const CustomLineLabel = (props: any) => {
+  const { x, y, value } = props;
+  if (value === 0) return null;
+  
+  return (
+    <text
+      x={x}
+      y={y - 10}
+      fill="#666"
+      textAnchor="middle"
+      fontSize="10"
+      fontWeight="500"
+    >
+      {value}
+    </text>
+  );
+};
+
 export const SentimentTrendLineChart: React.FC<SentimentTrendLineChartProps> = ({
   chartData,
   years,
@@ -42,21 +63,27 @@ export const SentimentTrendLineChart: React.FC<SentimentTrendLineChartProps> = (
               strokeWidth={2}
               name={`${year} Positive`}
               activeDot={{ r: 6 }}
-            />
+            >
+              <LabelList content={<CustomLineLabel />} />
+            </Line>
             <Line
               type="monotone"
               dataKey={`${year}_neutral`}
               stroke="#facc15"
               strokeWidth={2}
               name={`${year} Neutral`}
-            />
+            >
+              <LabelList content={<CustomLineLabel />} />
+            </Line>
             <Line
               type="monotone"
               dataKey={`${year}_negative`}
               stroke="#f43f5e"
               strokeWidth={2}
               name={`${year} Negative`}
-            />
+            >
+              <LabelList content={<CustomLineLabel />} />
+            </Line>
           </React.Fragment>
         )) : (
           <Line
