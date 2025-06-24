@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  LabelList,
 } from 'recharts';
 
 interface CategoryTrendData {
@@ -45,6 +46,25 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     );
   }
   return null;
+};
+
+// Custom label component for showing values on data points
+const CustomLabel = (props: any) => {
+  const { x, y, value } = props;
+  if (value === 0) return null;
+  
+  return (
+    <text
+      x={x}
+      y={y - 10}
+      fill="#666"
+      textAnchor="middle"
+      fontSize="10"
+      fontWeight="500"
+    >
+      {value}
+    </text>
+  );
 };
 
 export const CategoryTrendChart: React.FC<CategoryTrendChartProps> = ({
@@ -93,7 +113,7 @@ export const CategoryTrendChart: React.FC<CategoryTrendChartProps> = ({
       {/* Trend Chart */}
       <div className="h-96 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+          <LineChart data={data} margin={{ top: 30, right: 30, left: 20, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis 
               dataKey="month" 
@@ -124,7 +144,9 @@ export const CategoryTrendChart: React.FC<CategoryTrendChartProps> = ({
                   strokeWidth={2}
                   dot={{ r: 4, fill: CATEGORY_COLORS[colorIndex] }}
                   activeDot={{ r: 6, fill: CATEGORY_COLORS[colorIndex] }}
-                />
+                >
+                  <LabelList content={<CustomLabel />} />
+                </Line>
               );
             })}
           </LineChart>

@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
   ReferenceLine,
+  LabelList,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MonthlyRatingDataPoint } from '@/hooks/rating/types';
@@ -17,6 +18,25 @@ import { MonthlyRatingDataPoint } from '@/hooks/rating/types';
 interface MonthlyRatingTrendChartProps {
   data: MonthlyRatingDataPoint[];
 }
+
+// Custom label component for line values
+const CustomLineLabel = (props: any) => {
+  const { x, y, value } = props;
+  if (value === 0) return null;
+  
+  return (
+    <text
+      x={x}
+      y={y - 10}
+      fill="#666"
+      textAnchor="middle"
+      fontSize="10"
+      fontWeight="500"
+    >
+      {value.toFixed(1)}
+    </text>
+  );
+};
 
 export function MonthlyRatingTrendChart({ data }: MonthlyRatingTrendChartProps) {
   // Validate the data to ensure we have valid ratings
@@ -52,7 +72,7 @@ export function MonthlyRatingTrendChart({ data }: MonthlyRatingTrendChartProps) 
               <LineChart
                 data={validData}
                 margin={{
-                  top: 5,
+                  top: 25,
                   right: 30,
                   left: 20,
                   bottom: 5,
@@ -91,7 +111,9 @@ export function MonthlyRatingTrendChart({ data }: MonthlyRatingTrendChartProps) 
                   strokeWidth={2}
                   dot={{ r: 2 }}
                   activeDot={{ r: 6 }}
-                />
+                >
+                  <LabelList content={<CustomLineLabel />} />
+                </Line>
               </LineChart>
             </ResponsiveContainer>
           )}

@@ -10,6 +10,7 @@ import {
   Legend,
   ResponsiveContainer,
   ReferenceLine,
+  LabelList,
 } from 'recharts';
 
 interface CategoryRating {
@@ -20,6 +21,24 @@ interface CategoryRating {
 interface CategoryRatingBarChartProps {
   categoryRatings: CategoryRating[];
 }
+
+// Custom label component for bar values
+const CustomBarLabel = (props: any) => {
+  const { x, y, width, height, value } = props;
+  
+  return (
+    <text
+      x={x + width / 2}
+      y={y - 5}
+      fill="#666"
+      textAnchor="middle"
+      fontSize="11"
+      fontWeight="500"
+    >
+      {value.toFixed(1)}
+    </text>
+  );
+};
 
 export const CategoryRatingBarChart: React.FC<CategoryRatingBarChartProps> = ({
   categoryRatings
@@ -50,7 +69,7 @@ export const CategoryRatingBarChart: React.FC<CategoryRatingBarChartProps> = ({
         <BarChart
           data={validData}
           margin={{
-            top: 5,
+            top: 25,
             right: 30,
             left: 20,
             bottom: 60,
@@ -81,7 +100,9 @@ export const CategoryRatingBarChart: React.FC<CategoryRatingBarChartProps> = ({
               strokeDasharray="3 3" 
             />
           )}
-          <Bar dataKey="rating" fill="#8b5cf6" name="Average Rating" />
+          <Bar dataKey="rating" fill="#8b5cf6" name="Average Rating">
+            <LabelList content={<CustomBarLabel />} />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>

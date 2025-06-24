@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
+  LabelList,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
@@ -19,6 +20,26 @@ interface RatingDistributionChartProps {
     color: string;
   }>;
 }
+
+// Custom label component for bar values
+const CustomBarLabel = (props: any) => {
+  const { x, y, width, height, value } = props;
+  
+  if (value === 0) return null;
+  
+  return (
+    <text
+      x={x + width / 2}
+      y={y - 5}
+      fill="#666"
+      textAnchor="middle"
+      fontSize="11"
+      fontWeight="500"
+    >
+      {value}
+    </text>
+  );
+};
 
 export function RatingDistributionChart({ data }: RatingDistributionChartProps) {
   // Validate data to ensure we have valid counts and properly formatted data
@@ -55,7 +76,7 @@ export function RatingDistributionChart({ data }: RatingDistributionChartProps) 
               <BarChart
                 data={sortedData}
                 margin={{
-                  top: 5,
+                  top: 25,
                   right: 30,
                   left: 20,
                   bottom: 5,
@@ -72,6 +93,7 @@ export function RatingDistributionChart({ data }: RatingDistributionChartProps) 
                   {sortedData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
+                  <LabelList content={<CustomBarLabel />} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>

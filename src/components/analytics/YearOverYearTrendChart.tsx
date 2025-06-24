@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LabelList,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { YoyTrendDataPoint } from '@/hooks/rating/types';
@@ -18,6 +19,25 @@ interface YearOverYearTrendChartProps {
   channelFilter: string;
   yearFilter: string;
 }
+
+// Custom label component for line values
+const CustomLineLabel = (props: any) => {
+  const { x, y, value } = props;
+  if (value === 0) return null;
+  
+  return (
+    <text
+      x={x}
+      y={y - 10}
+      fill="#666"
+      textAnchor="middle"
+      fontSize="10"
+      fontWeight="500"
+    >
+      {value.toFixed(1)}
+    </text>
+  );
+};
 
 export function YearOverYearTrendChart({
   data,
@@ -54,7 +74,7 @@ export function YearOverYearTrendChart({
             <LineChart
               data={data}
               margin={{
-                top: 5,
+                top: 25,
                 right: 30,
                 left: 20,
                 bottom: 5,
@@ -82,7 +102,9 @@ export function YearOverYearTrendChart({
                   activeDot={{ r: 8 }}
                   name={`${currentYear}`}
                   connectNulls={false}
-                />
+                >
+                  <LabelList content={<CustomLineLabel />} />
+                </Line>
               )}
               {hasPreviousYearData && (
                 <Line
@@ -93,7 +115,9 @@ export function YearOverYearTrendChart({
                   activeDot={{ r: 8 }}
                   name={`${previousYear}`}
                   connectNulls={false}
-                />
+                >
+                  <LabelList content={<CustomLineLabel />} />
+                </Line>
               )}
             </LineChart>
           </ResponsiveContainer>
